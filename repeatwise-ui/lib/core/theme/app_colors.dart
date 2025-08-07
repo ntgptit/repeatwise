@@ -218,13 +218,13 @@ class AppColors {
 
   // Opacity helpers
   static Color withOpacity(Color color, double opacity) {
-    return color.withOpacity(opacity);
+    return color.withValues(alpha: opacity);
   }
 
-  static Color primaryWithOpacity(double opacity) => primary.withOpacity(opacity);
-  static Color secondaryWithOpacity(double opacity) => secondary.withOpacity(opacity);
-  static Color successWithOpacity(double opacity) => success.withOpacity(opacity);
-  static Color warningWithOpacity(double opacity) => warning.withOpacity(opacity);
-  static Color errorWithOpacity(double opacity) => error.withOpacity(opacity);
-  static Color grayWithOpacity(double opacity) => gray500.withOpacity(opacity);
+  static Color primaryWithOpacity(double opacity) => primary.withValues(alpha: opacity);
+  static Color secondaryWithOpacity(double opacity) => secondary.withValues(alpha: opacity);
+  static Color successWithOpacity(double opacity) => success.withValues(alpha: opacity);
+  static Color warningWithOpacity(double opacity) => warning.withValues(alpha: opacity);
+  static Color errorWithOpacity(double opacity) => error.withValues(alpha: opacity);
+  static Color grayWithOpacity(double opacity) => gray500.withValues(alpha: opacity);
 }

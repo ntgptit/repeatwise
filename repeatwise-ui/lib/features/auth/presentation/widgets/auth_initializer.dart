@@ -29,11 +29,10 @@ class _AuthInitializerState extends ConsumerState<AuthInitializer> {
     try {
       final storageService = ref.read(storageServiceProvider);
       final token = await storageService.getToken();
-      final userData = await storageService.getUser();
 
-      if (token != null && userData != null) {
-        // User is already authenticated, update state
-        ref.read(authNotifierProvider.notifier).setAuthenticatedUser(userData);
+      if (token != null) {
+        // Try to get current user from API to validate token
+        await ref.read(authNotifierProvider.notifier).getCurrentUser();
       }
     } catch (e) {
       // Clear invalid data

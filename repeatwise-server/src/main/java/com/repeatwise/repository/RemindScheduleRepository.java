@@ -188,5 +188,5 @@ public interface RemindScheduleRepository extends JpaRepository<RemindSchedule, 
     
     // Find overflow reminders for a specific user
     @Query("SELECT r FROM RemindSchedule r WHERE r.scheduledDate = :date AND r.user.id = :userId AND r.status = 'PENDING' AND r.deletedAt IS NULL ORDER BY r.createdAt")
-    List<RemindSchedule> findOverflowRemindersForUser(@Param("date") LocalDate date, @Param("userId") UUID userId, @Param("limit") int limit);
+    List<RemindSchedule> findOverflowRemindersForUser(@Param("date") LocalDate date, @Param("userId") UUID userId);
 } 

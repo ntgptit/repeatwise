@@ -18,7 +18,8 @@ GoRouter appRouter(Ref ref) {
 @riverpod
 ApiRepository apiRepository(Ref ref) {
   final dioService = ref.watch(dioServiceProvider);
-  return ApiRepository(dioService);
+  final storageService = ref.watch(storageServiceProvider);
+  return ApiRepository(dioService, storageService);
 }
 
 @riverpod

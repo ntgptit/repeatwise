@@ -1,4 +1,3 @@
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../models/api_response.dart';
@@ -8,13 +7,15 @@ import '../models/set.dart';
 import '../models/set_cycle.dart';
 import '../models/remind_schedule.dart';
 import 'dio_service.dart';
+import 'storage_service.dart';
 
 part 'api_repository.g.dart';
 
 class ApiRepository {
   final DioService _dioService;
+  final StorageService _storageService;
 
-  ApiRepository(this._dioService);
+  ApiRepository(this._dioService, this._storageService);
 
   // Auth endpoints
   Future<ApiResponse<User>> login(String email, String password) async {
@@ -28,6 +29,10 @@ class ApiRepository {
       );
 
       if (data['success'] == true && data['user'] != null) {
+        // Save token if provided
+        if (data['token'] != null) {
+          await _storageService.saveToken(data['token'] as String);
+        }
         return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
       } else {
         return ApiResponse.error((data['message'] as String?) ?? 'Login failed');
@@ -51,6 +56,10 @@ class ApiRepository {
       );
 
       if (data['success'] == true && data['user'] != null) {
+        // Save token if provided
+        if (data['token'] != null) {
+          await _storageService.saveToken(data['token'] as String);
+        }
         return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
       } else {
         return ApiResponse.error((data['message'] as String?) ?? 'Registration failed');
@@ -65,7 +74,20 @@ class ApiRepository {
   Future<ApiResponse<void>> logout() async {
     try {
       await _dioService.post('/auth/logout');
+      // Clear token after successful logout
+      await _storageService.removeToken();
       return ApiResponse.success(null);
+    } on ApiException catch (e) {
+      return ApiResponse.error(e.message);
+    } catch (e) {
+      return ApiResponse.error('Unexpected error: $e');
+    }
+  }
+
+  Future<ApiResponse<User>> getCurrentUser() async {
+    try {
+      final data = await _dioService.get<Map<String, dynamic>>('/auth/me');
+      return ApiResponse.success(User.fromJson(data));
     } on ApiException catch (e) {
       return ApiResponse.error(e.message);
     } catch (e) {
@@ -239,5 +261,6 @@ class ApiRepository {
 @riverpod
 ApiRepository apiRepository(Ref ref) {
   final dioService = ref.watch(dioServiceProvider);
-  return ApiRepository(dioService);
+  final storageService = ref.watch(storageServiceProvider);
+  return ApiRepository(dioService, storageService);
 }

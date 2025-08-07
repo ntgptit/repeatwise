@@ -208,7 +208,7 @@ public class ReminderSchedulerServiceImpl implements ReminderSchedulerService {
         
         for (UUID userId : userIds) {
             List<RemindSchedule> overflowReminders = remindScheduleRepository
-                    .findOverflowRemindersForUser(date, userId, MAX_REMINDERS_PER_DAY);
+                    .findOverflowRemindersForUser(date, userId);
             
             // Apply limit manually since JPA doesn't support LIMIT in JPQL
             List<RemindSchedule> limitedOverflowReminders = overflowReminders.stream()

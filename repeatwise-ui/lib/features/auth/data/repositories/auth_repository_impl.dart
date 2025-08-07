@@ -19,9 +19,9 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _apiRepository.login(email, password);
     
     if (response.isSuccess) {
-      // Save user data and token to local storage
+      // Save user data to local storage
       await _storageService.saveUser(response.data!.toJson());
-      // TODO: Save token when API returns it
+      // Token is already saved by ApiRepository
     }
     
     return response;
@@ -32,9 +32,9 @@ class AuthRepositoryImpl implements AuthRepository {
     final response = await _apiRepository.register(name, email, password);
     
     if (response.isSuccess) {
-      // Save user data and token to local storage
+      // Save user data to local storage
       await _storageService.saveUser(response.data!.toJson());
-      // TODO: Save token when API returns it
+      // Token is already saved by ApiRepository
     }
     
     return response;
@@ -44,6 +44,11 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<void> logout() async {
     await _storageService.removeToken();
     await _storageService.removeUser();
+  }
+
+  @override
+  Future<ApiResponse<User>> getCurrentUser() async {
+    return await _apiRepository.getCurrentUser();
   }
 
   @override

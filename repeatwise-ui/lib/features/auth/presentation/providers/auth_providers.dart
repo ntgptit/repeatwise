@@ -7,6 +7,7 @@ import '../../../../core/models/user.dart';
 import '../../../../core/services/storage_service.dart';
 import '../../domain/usecases/login_usecase.dart';
 import '../../domain/usecases/register_usecase.dart';
+import '../../domain/usecases/get_current_user_usecase.dart';
 
 part 'auth_providers.g.dart';
 
@@ -99,6 +100,37 @@ class AuthNotifier extends _$AuthNotifier {
 
   void clearError() {
     state = state.copyWith(error: null);
+  }
+
+  Future<void> getCurrentUser() async {
+    state = state.copyWith(isLoading: true, error: null);
+    
+    try {
+      final getCurrentUserUseCase = ref.read(getCurrentUserUseCaseProvider);
+      final response = await getCurrentUserUseCase();
+      
+      if (response.isSuccess) {
+        state = state.copyWith(
+          isLoading: false,
+          user: response.data,
+          error: null,
+        );
+      } else {
+        state = state.copyWith(
+          isLoading: false,
+          error: response.error,
+        );
+        // If getting current user fails, clear authentication
+        await logout();
+      }
+    } catch (e) {
+      state = state.copyWith(
+        isLoading: false,
+        error: 'An unexpected error occurred: $e',
+      );
+      // If getting current user fails, clear authentication
+      await logout();
+    }
   }
 
   void setAuthenticatedUser(Map<String, dynamic> userData) {

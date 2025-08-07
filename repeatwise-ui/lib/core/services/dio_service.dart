@@ -1,14 +1,13 @@
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../models/api_response.dart';
 import '../models/api_exception.dart';
 import '../config/network_config.dart';
 import 'storage_service.dart';
 import 'network_interceptor.dart';
+import 'error_handler.dart';
 
 part 'dio_service.g.dart';
 
@@ -70,97 +69,18 @@ class DioService {
   }
 
   void _handleError(DioException error) {
-    switch (error.type) {
-      case DioExceptionType.connectionTimeout:
-      case DioExceptionType.sendTimeout:
-      case DioExceptionType.receiveTimeout:
-        throw ApiException(
-          message: 'Connection timeout',
-          statusCode: 408,
-        );
-      case DioExceptionType.badResponse:
-        final statusCode = error.response?.statusCode;
-        final responseData = error.response?.data;
-        
-        if (statusCode == 401) {
-          // Handle unauthorized - clear token and redirect to login
-          _storageService.removeToken();
-          throw ApiException(
-            message: 'Unauthorized access',
-            statusCode: 401,
-          );
-        } else if (statusCode == 403) {
-          throw ApiException(
-            message: 'Access forbidden',
-            statusCode: 403,
-          );
-        } else if (statusCode == 404) {
-          throw ApiException(
-            message: 'Resource not found',
-            statusCode: 404,
-          );
-        } else if (statusCode == 422) {
-          final message = _extractValidationMessage(responseData);
-          throw ApiException(
-            message: message,
-            statusCode: 422,
-          );
-        } else if (statusCode! >= 500) {
-          throw ApiException(
-            message: 'Server error',
-            statusCode: statusCode,
-          );
-        } else {
-          final message = _extractErrorMessage(responseData);
-          throw ApiException(
-            message: message,
-            statusCode: statusCode,
-          );
-        }
-      case DioExceptionType.cancel:
-        throw ApiException(
-          message: 'Request cancelled',
-          statusCode: 0,
-        );
-      case DioExceptionType.connectionError:
-        throw ApiException(
-          message: 'No internet connection',
-          statusCode: 0,
-        );
-      default:
-        throw ApiException(
-          message: 'Network error occurred',
-          statusCode: 0,
-        );
+    // Use ErrorHandler to handle DioException with ErrorResponse parsing
+    final apiException = ErrorHandler.handleDioException(error);
+    
+    // Handle authentication errors by clearing token
+    if (ErrorHandler.isAuthenticationError(apiException)) {
+      _storageService.removeToken();
     }
+    
+    throw apiException;
   }
 
-  String _extractErrorMessage(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      return (responseData['message'] as String?) ?? 
-             (responseData['error'] as String?) ?? 
-             'An error occurred';
-    } else if (responseData is String) {
-      try {
-        final parsed = json.decode(responseData);
-        return (parsed['message'] as String?) ?? 'An error occurred';
-      } catch (e) {
-        return responseData;
-      }
-    }
-    return 'An error occurred';
-  }
 
-  String _extractValidationMessage(dynamic responseData) {
-    if (responseData is Map<String, dynamic>) {
-      final errors = responseData['errors'];
-      if (errors is Map<String, dynamic>) {
-        return errors.values.first.toString();
-      }
-      return (responseData['message'] as String?) ?? 'Validation failed';
-    }
-    return 'Validation failed';
-  }
 
   // Generic GET request
   Future<T> get<T>(
