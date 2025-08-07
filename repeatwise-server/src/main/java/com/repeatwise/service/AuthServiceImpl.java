@@ -42,23 +42,18 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public AuthResponseDto register(String name, String email, String password) {
+    public AuthResponseDto register(String name, String username, String email, String password) {
         if (userRepository.findByEmail(email).isPresent()) {
             throw new AuthenticationException("Email already exists");
         }
 
-        String username = email.split("@")[0];
-        // Check if username already exists, if so, append a number
-        int counter = 1;
-        String finalUsername = username;
-        while (userRepository.existsByUsernameIgnoreCase(finalUsername)) {
-            finalUsername = username + counter;
-            counter++;
+        if (userRepository.existsByUsernameIgnoreCase(username)) {
+            throw new AuthenticationException("Username already exists");
         }
 
         User user = User.builder()
                 .name(name)
-                .username(finalUsername)
+                .username(username)
                 .email(email)
                 .password(passwordEncoder.encode(password))
                 .build();

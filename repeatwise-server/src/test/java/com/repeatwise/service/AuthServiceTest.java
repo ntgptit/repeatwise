@@ -53,6 +53,7 @@ class AuthServiceTest {
 
         registerRequest = new RegisterRequestDto();
         registerRequest.setName("New User");
+        registerRequest.setUsername("newuser");
         registerRequest.setEmail("new@example.com");
         registerRequest.setPassword("password123");
     }
@@ -145,7 +146,7 @@ class AuthServiceTest {
         when(jwtService.generateRefreshToken(any(User.class))).thenReturn("refresh-token");
 
         // Act
-        AuthResponseDto response = authService.register("New User", "new@example.com", "password123");
+        AuthResponseDto response = authService.register("New User", "newuser", "new@example.com", "password123");
 
         // Assert
         assertNotNull(response);
@@ -163,7 +164,19 @@ class AuthServiceTest {
 
         // Act & Assert
         assertThrows(AuthenticationException.class, () -> {
-            authService.register("New User", "existing@example.com", "password123");
+            authService.register("New User", "newuser", "existing@example.com", "password123");
+        });
+    }
+
+    @Test
+    void register_WithExistingUsername_ShouldThrowAuthenticationException() {
+        // Arrange
+        when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
+        when(userRepository.existsByUsernameIgnoreCase("existinguser")).thenReturn(true);
+
+        // Act & Assert
+        assertThrows(AuthenticationException.class, () -> {
+            authService.register("New User", "existinguser", "new@example.com", "password123");
         });
     }
 

@@ -14,6 +14,7 @@ class RegisterForm extends ConsumerStatefulWidget {
 class _RegisterFormState extends ConsumerState<RegisterForm> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
@@ -23,6 +24,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
   @override
   void dispose() {
     _nameController.dispose();
+    _usernameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
@@ -33,6 +35,7 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
     if (_formKey.currentState!.validate()) {
       ref.read(authNotifierProvider.notifier).register(
         _nameController.text.trim(),
+        _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
       );
@@ -80,6 +83,31 @@ class _RegisterFormState extends ConsumerState<RegisterForm> {
               }
               if (value.length < 2) {
                 return 'Name must be at least 2 characters';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 16),
+          
+          // Username field
+          TextFormField(
+            controller: _usernameController,
+            decoration: const InputDecoration(
+              labelText: 'Username',
+              prefixIcon: Icon(Icons.alternate_email),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Please enter a username';
+              }
+              if (value.length < 3) {
+                return 'Username must be at least 3 characters';
+              }
+              if (value.length > 64) {
+                return 'Username must be less than 64 characters';
+              }
+              if (!RegExp(r'^[a-zA-Z0-9_]+$').hasMatch(value)) {
+                return 'Username can only contain letters, numbers, and underscores';
               }
               return null;
             },

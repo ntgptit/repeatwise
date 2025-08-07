@@ -13,8 +13,8 @@ class RegisterUseCase {
 
   RegisterUseCase(this._authRepository);
 
-  Future<ApiResponse<User>> call(String name, String email, String password) async {
-    return await _authRepository.register(name, email, password);
+  Future<ApiResponse<User>> call(String name, String username, String email, String password) async {
+    return await _authRepository.register(name, username, email, password);
   }
 }
 

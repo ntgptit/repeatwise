@@ -44,12 +44,13 @@ class ApiRepository {
     }
   }
 
-  Future<ApiResponse<User>> register(String name, String email, String password) async {
+  Future<ApiResponse<User>> register(String name, String username, String email, String password) async {
     try {
       final data = await _dioService.post<Map<String, dynamic>>(
         '/auth/register',
         data: {
           'name': name,
+          'username': username,
           'email': email,
           'password': password,
         },

@@ -56,6 +56,7 @@ public class AuthController {
     public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
         final var response = this.authService.register(
                 registerRequest.getName(),
+                registerRequest.getUsername(),
                 registerRequest.getEmail(),
                 registerRequest.getPassword());
         return ResponseEntity.status(HttpStatus.CREATED).body(response);

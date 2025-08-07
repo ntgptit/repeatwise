@@ -28,8 +28,8 @@ class AuthRepositoryImpl implements AuthRepository {
   }
 
   @override
-  Future<ApiResponse<User>> register(String name, String email, String password) async {
-    final response = await _apiRepository.register(name, email, password);
+  Future<ApiResponse<User>> register(String name, String username, String email, String password) async {
+    final response = await _apiRepository.register(name, username, email, password);
     
     if (response.isSuccess) {
       // Save user data to local storage

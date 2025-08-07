@@ -49,12 +49,12 @@ class AuthNotifier extends _$AuthNotifier {
     }
   }
 
-  Future<void> register(String name, String email, String password) async {
+  Future<void> register(String name, String username, String email, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
       final registerUseCase = ref.read(registerUseCaseProvider);
-      final response = await registerUseCase(name, email, password);
+      final response = await registerUseCase(name, username, email, password);
       
       if (response.isSuccess) {
         state = state.copyWith(
