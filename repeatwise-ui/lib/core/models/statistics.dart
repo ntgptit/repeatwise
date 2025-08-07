@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'statistics.freezed.dart';
 part 'statistics.g.dart';
@@ -89,9 +88,8 @@ extension SetStatisticsExtension on SetStatistics {
 
 extension CycleStatisticsExtension on CycleStatistics {
   bool get isCompleted => completedAt != null;
-  bool get isInProgress => startedAt != null && completedAt == null;
+  bool get isInProgress => completedAt == null;
   Duration? get actualDuration {
-    if (startedAt == null) return null;
     final endTime = completedAt ?? DateTime.now();
     return endTime.difference(startedAt);
   }

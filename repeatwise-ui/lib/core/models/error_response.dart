@@ -9,7 +9,7 @@ abstract class ErrorResponse with _$ErrorResponse {
     required bool success,
     required String message,
     Map<String, String>? errors,
-    @JsonKey(name: 'timestamp') DateTime? timestamp,
+    DateTime? timestamp,
   }) = _ErrorResponse;
 
   factory ErrorResponse.fromJson(Map<String, dynamic> json) =>

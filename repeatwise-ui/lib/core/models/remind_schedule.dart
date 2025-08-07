@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'remind_schedule.freezed.dart';
 part 'remind_schedule.g.dart';
@@ -85,7 +84,7 @@ abstract class RemindScheduleUpdateRequest with _$RemindScheduleUpdateRequest {
 // Extension cho RemindScheduleCreateRequest
 extension RemindScheduleCreateRequestExtension on RemindScheduleCreateRequest {
   bool get isValid => setId.isNotEmpty && remindTime.isAfter(DateTime.now());
-  bool get hasValidSetId => setId.length > 0;
+  bool get hasValidSetId => setId.isNotEmpty;
   bool get hasValidRemindTime => remindTime.isAfter(DateTime.now());
   bool get hasValidMessage => message == null || message!.length <= 200;
 }

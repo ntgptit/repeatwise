@@ -1,9 +1,7 @@
-import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
-import '../models/api_exception.dart';
 import '../config/network_config.dart';
 import 'storage_service.dart';
 import 'network_interceptor.dart';

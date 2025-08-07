@@ -1,5 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 
 part 'set_cycle.freezed.dart';
 part 'set_cycle.g.dart';
@@ -84,5 +83,5 @@ abstract class SetCycleCreateRequest with _$SetCycleCreateRequest {
 // Extension cho SetCycleCreateRequest
 extension SetCycleCreateRequestExtension on SetCycleCreateRequest {
   bool get isValid => setId.isNotEmpty;
-  bool get hasValidSetId => setId.length > 0;
+  bool get hasValidSetId => setId.isNotEmpty;
 }
