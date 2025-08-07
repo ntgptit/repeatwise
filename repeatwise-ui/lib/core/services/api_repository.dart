@@ -28,12 +28,18 @@ class ApiRepository {
         },
       );
 
+
+
       if (data['success'] == true && data['user'] != null) {
         // Save token if provided
         if (data['token'] != null) {
           await _storageService.saveToken(data['token'] as String);
         }
-        return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
+        try {
+          return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
+        } catch (e) {
+          return ApiResponse.error('Failed to parse user data: $e');
+        }
       } else {
         return ApiResponse.error((data['message'] as String?) ?? 'Login failed');
       }
@@ -61,7 +67,11 @@ class ApiRepository {
         if (data['token'] != null) {
           await _storageService.saveToken(data['token'] as String);
         }
-        return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
+        try {
+          return ApiResponse.success(User.fromJson(data['user'] as Map<String, dynamic>));
+        } catch (e) {
+          return ApiResponse.error('Failed to parse user data: $e');
+        }
       } else {
         return ApiResponse.error((data['message'] as String?) ?? 'Registration failed');
       }
