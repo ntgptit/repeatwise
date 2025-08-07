@@ -1,7 +1,8 @@
 package com.repeatwise.service;
 
-import com.repeatwise.dto.AuthRequestDto;
 import com.repeatwise.dto.AuthResponseDto;
+import com.repeatwise.dto.LoginRequestDto;
+import com.repeatwise.dto.RegisterRequestDto;
 import com.repeatwise.dto.UserDto;
 import com.repeatwise.exception.AuthenticationException;
 import com.repeatwise.model.User;
@@ -35,8 +36,8 @@ class AuthServiceTest {
     private AuthServiceImpl authService;
 
     private User testUser;
-    private AuthRequestDto loginRequest;
-    private AuthRequestDto registerRequest;
+    private LoginRequestDto loginRequest;
+    private RegisterRequestDto registerRequest;
 
     @BeforeEach
     void setUp() {
@@ -46,11 +47,11 @@ class AuthServiceTest {
                 .password("encodedPassword")
                 .build();
 
-        loginRequest = new AuthRequestDto();
-        loginRequest.setEmail("test@example.com");
+        loginRequest = new LoginRequestDto();
+        loginRequest.setEmailOrUsername("test@example.com");
         loginRequest.setPassword("password123");
 
-        registerRequest = new AuthRequestDto();
+        registerRequest = new RegisterRequestDto();
         registerRequest.setName("New User");
         registerRequest.setEmail("new@example.com");
         registerRequest.setPassword("password123");
@@ -97,6 +98,40 @@ class AuthServiceTest {
         // Act & Assert
         assertThrows(AuthenticationException.class, () -> {
             authService.login("test@example.com", "wrongpassword");
+        });
+    }
+
+    @Test
+    void login_WithValidUsername_ShouldReturnAuthResponse() {
+        // Arrange
+        when(userRepository.findByEmail("testuser")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("testuser")).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches("password123", "encodedPassword")).thenReturn(true);
+        when(jwtService.generateToken(testUser)).thenReturn("jwt-token");
+        when(jwtService.generateRefreshToken(testUser)).thenReturn("refresh-token");
+
+        // Act
+        AuthResponseDto response = authService.login("testuser", "password123");
+
+        // Assert
+        assertNotNull(response);
+        assertTrue(response.isSuccess());
+        assertEquals("Login successful", response.getMessage());
+        assertNotNull(response.getToken());
+        assertNotNull(response.getRefreshToken());
+        assertNotNull(response.getUser());
+        assertEquals(testUser.getEmail(), response.getUser().getEmail());
+    }
+
+    @Test
+    void login_WithInvalidUsername_ShouldThrowAuthenticationException() {
+        // Arrange
+        when(userRepository.findByEmail("invaliduser")).thenReturn(Optional.empty());
+        when(userRepository.findByUsername("invaliduser")).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(AuthenticationException.class, () -> {
+            authService.login("invaliduser", "password123");
         });
     }
 

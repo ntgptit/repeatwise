@@ -24,6 +24,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
 
     /**
+     * Find user by username
+     */
+    Optional<User> findByUsername(String username);
+
+    /**
      * Find user by username (case-insensitive)
      */
     Optional<User> findByUsernameIgnoreCase(String username);

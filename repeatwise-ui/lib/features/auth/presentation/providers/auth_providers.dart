@@ -22,12 +22,12 @@ class AuthNotifier extends _$AuthNotifier {
     );
   }
 
-  Future<void> login(String email, String password) async {
+  Future<void> login(String emailOrUsername, String password) async {
     state = state.copyWith(isLoading: true, error: null);
     
     try {
       final loginUseCase = ref.read(loginUseCaseProvider);
-      final response = await loginUseCase(email, password);
+      final response = await loginUseCase(emailOrUsername, password);
       
       if (response.isSuccess) {
         state = state.copyWith(

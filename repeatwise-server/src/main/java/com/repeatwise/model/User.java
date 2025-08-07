@@ -19,7 +19,7 @@ import java.util.List;
 @AllArgsConstructor
 public class User extends BaseEntity {
 
-    @Column(name = "username", nullable = false, length = 64)
+    @Column(name = "username", nullable = false, unique = true, length = 64)
     private String username;
 
     @Column(name = "email", nullable = false, unique = true, length = 128)

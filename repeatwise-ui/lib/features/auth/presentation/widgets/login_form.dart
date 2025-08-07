@@ -13,13 +13,13 @@ class LoginForm extends ConsumerStatefulWidget {
 
 class _LoginFormState extends ConsumerState<LoginForm> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _emailOrUsernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
 
   @override
   void dispose() {
-    _emailController.dispose();
+    _emailOrUsernameController.dispose();
     _passwordController.dispose();
     super.dispose();
   }
@@ -27,7 +27,7 @@ class _LoginFormState extends ConsumerState<LoginForm> {
   void _submitForm() {
     if (_formKey.currentState!.validate()) {
       ref.read(authNotifierProvider.notifier).login(
-        _emailController.text.trim(),
+        _emailOrUsernameController.text.trim(),
         _passwordController.text,
       );
     }
@@ -61,20 +61,17 @@ class _LoginFormState extends ConsumerState<LoginForm> {
           ),
           const SizedBox(height: 32),
           
-          // Email field
+          // Email or Username field
           TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
+            controller: _emailOrUsernameController,
+            keyboardType: TextInputType.text,
             decoration: const InputDecoration(
-              labelText: 'Email',
-              prefixIcon: Icon(Icons.email),
+              labelText: 'Email or Username',
+              prefixIcon: Icon(Icons.person),
             ),
             validator: (value) {
               if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(value)) {
-                return 'Please enter a valid email';
+                return 'Please enter your email or username';
               }
               return null;
             },

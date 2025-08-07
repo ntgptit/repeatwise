@@ -19,12 +19,14 @@ public class AuthServiceImpl implements AuthService {
     private final JwtService jwtService;
 
     @Override
-    public AuthResponseDto login(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new AuthenticationException("Invalid email or password"));
+    public AuthResponseDto login(String emailOrUsername, String password) {
+        // Try to find user by email first, then by username
+        User user = userRepository.findByEmail(emailOrUsername)
+                .orElseGet(() -> userRepository.findByUsername(emailOrUsername)
+                        .orElseThrow(() -> new AuthenticationException("Invalid email/username or password")));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new AuthenticationException("Invalid email or password");
+            throw new AuthenticationException("Invalid email/username or password");
         }
 
         String token = jwtService.generateToken(user);

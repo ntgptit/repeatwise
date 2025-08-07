@@ -15,8 +15,8 @@ class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl(this._apiRepository, this._storageService);
 
   @override
-  Future<ApiResponse<User>> login(String email, String password) async {
-    final response = await _apiRepository.login(email, password);
+  Future<ApiResponse<User>> login(String emailOrUsername, String password) async {
+    final response = await _apiRepository.login(emailOrUsername, password);
     
     if (response.isSuccess) {
       // Save user data to local storage

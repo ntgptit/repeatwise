@@ -13,8 +13,8 @@ class LoginUseCase {
 
   LoginUseCase(this._authRepository);
 
-  Future<ApiResponse<User>> call(String email, String password) async {
-    return await _authRepository.login(email, password);
+  Future<ApiResponse<User>> call(String emailOrUsername, String password) async {
+    return await _authRepository.login(emailOrUsername, password);
   }
 }
 

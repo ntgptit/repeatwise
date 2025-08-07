@@ -10,8 +10,9 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.repeatwise.dto.AuthRequestDto;
 import com.repeatwise.dto.AuthResponseDto;
+import com.repeatwise.dto.LoginRequestDto;
+import com.repeatwise.dto.RegisterRequestDto;
 import com.repeatwise.dto.UserDto;
 import com.repeatwise.service.AuthService;
 
@@ -37,9 +38,9 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    @Operation(summary = "User login", description = "Authenticates user with email and password")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody AuthRequestDto loginRequest) {
-        final var response = this.authService.login(loginRequest.getEmail(), loginRequest.getPassword());
+    @Operation(summary = "User login", description = "Authenticates user with email/username and password")
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginRequestDto loginRequest) {
+        final var response = this.authService.login(loginRequest.getEmailOrUsername(), loginRequest.getPassword());
         return ResponseEntity.ok(response);
     }
 
@@ -52,7 +53,7 @@ public class AuthController {
 
     @PostMapping("/register")
     @Operation(summary = "User registration", description = "Registers a new user")
-    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody AuthRequestDto registerRequest) {
+    public ResponseEntity<AuthResponseDto> register(@Valid @RequestBody RegisterRequestDto registerRequest) {
         final var response = this.authService.register(
                 registerRequest.getName(),
                 registerRequest.getEmail(),

@@ -18,12 +18,12 @@ class ApiRepository {
   ApiRepository(this._dioService, this._storageService);
 
   // Auth endpoints
-  Future<ApiResponse<User>> login(String email, String password) async {
+  Future<ApiResponse<User>> login(String emailOrUsername, String password) async {
     try {
       final data = await _dioService.post<Map<String, dynamic>>(
         '/auth/login',
         data: {
-          'email': email,
+          'emailOrUsername': emailOrUsername,
           'password': password,
         },
       );
