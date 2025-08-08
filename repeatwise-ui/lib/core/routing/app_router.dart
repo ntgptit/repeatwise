@@ -7,6 +7,10 @@ import '../../features/auth/presentation/widgets/auth_guard.dart';
 import '../../features/dashboard/presentation/pages/dashboard_page.dart';
 import '../../features/sets/presentation/pages/sets_page.dart';
 import '../../features/sets/presentation/pages/set_detail_page.dart';
+import '../../features/sets/presentation/pages/create_set_page.dart';
+import '../../features/sets/presentation/pages/edit_set_page.dart';
+import '../../features/sets/presentation/pages/review_page.dart';
+import '../../features/sets/presentation/pages/statistics_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 
 class AppRouter {
@@ -49,12 +53,35 @@ class AppRouter {
               builder: (context, state) => const SetsPage(),
             ),
             GoRoute(
+              path: '/sets/create',
+              name: 'create-set',
+              builder: (context, state) => const CreateSetPage(),
+            ),
+            GoRoute(
               path: '/sets/:id',
               name: 'set-detail',
               builder: (context, state) {
                 final setId = state.pathParameters['id']!;
                 return SetDetailPage(setId: setId);
               },
+            ),
+            GoRoute(
+              path: '/sets/:id/edit',
+              name: 'edit-set',
+              builder: (context, state) {
+                final setId = state.pathParameters['id']!;
+                return EditSetPage(setId: setId);
+              },
+            ),
+            GoRoute(
+              path: '/sets/review',
+              name: 'review-sets',
+              builder: (context, state) => const ReviewPage(),
+            ),
+            GoRoute(
+              path: '/sets/statistics',
+              name: 'statistics',
+              builder: (context, state) => const StatisticsPage(),
             ),
             GoRoute(
               path: '/profile',

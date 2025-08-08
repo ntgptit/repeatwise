@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart' hide DateUtils;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/theme/app_dimens.dart';
@@ -18,7 +19,7 @@ class RecentSets extends ConsumerWidget {
           title: 'Recent Sets',
           actionText: 'View All',
           onActionPressed: () {
-            // TODO: Navigate to all sets
+            context.go('/sets');
           },
         ),
         const SizedBox(height: 16),
@@ -30,11 +31,13 @@ class RecentSets extends ConsumerWidget {
           itemBuilder: (context, index) {
             return RepeatWiseCard(
               onTap: () {
-                // TODO: Navigate to set detail
+                context.go('/sets/${index + 1}');
               },
               child: RepeatWiseListTile(
                 leading: CircleAvatar(
-                  backgroundColor: Theme.of(context).primaryColor.withOpacity(0.1),
+                  backgroundColor: Theme.of(
+                    context,
+                  ).primaryColor.withOpacity(0.1),
                   child: Icon(
                     Icons.list,
                     color: Theme.of(context).primaryColor,
@@ -57,7 +60,7 @@ class RecentSets extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       'Last reviewed: ${DateUtils.formatRelativeDate(DateTime.now().subtract(Duration(days: index)))}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: AppDimens.textSize12,
                         color: AppColors.gray500,
                       ),
@@ -72,6 +75,4 @@ class RecentSets extends ConsumerWidget {
       ],
     );
   }
-
-
 }

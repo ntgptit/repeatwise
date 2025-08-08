@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-import '../../../../core/theme/app_theme.dart';
+import '../../../../core/theme/app_colors.dart';
 import '../../../auth/presentation/providers/auth_providers.dart';
 import '../widgets/dashboard_stats.dart';
 import '../widgets/recent_sets.dart';
 import '../widgets/upcoming_reminders.dart';
+import '../widgets/set_actions.dart';
+import '../widgets/learning_sets.dart';
+import '../widgets/progress_summary.dart';
 
 class DashboardPage extends ConsumerWidget {
   const DashboardPage({super.key});
@@ -52,21 +56,33 @@ class DashboardPage extends ConsumerWidget {
                 const SizedBox(height: 8),
                 Text(
                   'Ready to continue your learning journey?',
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.grey[600],
-                  ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyLarge?.copyWith(color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 24),
               ],
-              
+
               // Dashboard stats
               const DashboardStats(),
               const SizedBox(height: 24),
-              
+
+              // Progress summary
+              const ProgressSummary(),
+              const SizedBox(height: 24),
+
+              // Set actions
+              const SetActions(),
+              const SizedBox(height: 24),
+
+              // Learning sets
+              const LearningSets(),
+              const SizedBox(height: 24),
+
               // Recent sets
               const RecentSets(),
               const SizedBox(height: 24),
-              
+
               // Upcoming reminders
               const UpcomingReminders(),
             ],
@@ -75,9 +91,9 @@ class DashboardPage extends ConsumerWidget {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Navigate to create set
+          context.go('/sets/create');
         },
-        backgroundColor: AppTheme.primaryColor,
+        backgroundColor: AppColors.primary,
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );

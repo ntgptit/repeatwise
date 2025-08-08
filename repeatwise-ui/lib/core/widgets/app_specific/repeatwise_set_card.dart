@@ -19,7 +19,7 @@ class RepeatWiseSetCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return RepeatWiseCard(
       onTap: onTap,
       child: Column(
@@ -39,17 +39,17 @@ class RepeatWiseSetCard extends StatelessWidget {
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      set.description,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color: theme.colorScheme.onSurfaceVariant,
+                    if (set.description != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        set.description!,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurfaceVariant,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
+                    ],
                   ],
                 ),
               ),
@@ -67,7 +67,7 @@ class RepeatWiseSetCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                '${set.totalItems} items',
+                '${set.wordCount} items',
                 style: theme.textTheme.bodySmall?.copyWith(
                   color: theme.colorScheme.onSurfaceVariant,
                 ),
@@ -115,6 +115,9 @@ class RepeatWiseSetCard extends StatelessWidget {
       case SetStatus.archived:
         // TODO: Handle this case.
         throw UnimplementedError();
+      case SetStatus.learning:
+        // TODO: Handle this case.
+        throw UnimplementedError();
     }
 
     return Container(
@@ -132,6 +135,4 @@ class RepeatWiseSetCard extends StatelessWidget {
       ),
     );
   }
-
-
 }
