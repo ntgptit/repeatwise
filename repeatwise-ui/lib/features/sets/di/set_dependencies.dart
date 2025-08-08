@@ -7,65 +7,61 @@ import '../domain/usecases/usecases.dart';
 part 'set_dependencies.g.dart';
 
 @riverpod
-SetRepository setRepository(SetRepositoryRef ref) {
+SetRepository setRepository(Ref ref) {
   final apiRepository = ref.watch(apiRepositoryProvider);
   return SetRepositoryImpl(apiRepository);
 }
 
 @riverpod
-GetSetsUseCase getSetsUseCase(GetSetsUseCaseRef ref) {
+GetSetsUseCase getSetsUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return GetSetsUseCase(repository);
 }
 
 @riverpod
-GetSetByIdUseCase getSetByIdUseCase(GetSetByIdUseCaseRef ref) {
+GetSetByIdUseCase getSetByIdUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return GetSetByIdUseCase(repository);
 }
 
 @riverpod
-CreateSetUseCase createSetUseCase(CreateSetUseCaseRef ref) {
+CreateSetUseCase createSetUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return CreateSetUseCase(repository);
 }
 
 @riverpod
-UpdateSetUseCase updateSetUseCase(UpdateSetUseCaseRef ref) {
+UpdateSetUseCase updateSetUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return UpdateSetUseCase(repository);
 }
 
 @riverpod
-DeleteSetUseCase deleteSetUseCase(DeleteSetUseCaseRef ref) {
+DeleteSetUseCase deleteSetUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return DeleteSetUseCase(repository);
 }
 
 @riverpod
-StartLearningUseCase startLearningUseCase(StartLearningUseCaseRef ref) {
+StartLearningUseCase startLearningUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return StartLearningUseCase(repository);
 }
 
 @riverpod
-MarkAsMasteredUseCase markAsMasteredUseCase(MarkAsMasteredUseCaseRef ref) {
+MarkAsMasteredUseCase markAsMasteredUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return MarkAsMasteredUseCase(repository);
 }
 
 @riverpod
-GetDailyReviewSetsUseCase getDailyReviewSetsUseCase(
-  GetDailyReviewSetsUseCaseRef ref,
-) {
+GetDailyReviewSetsUseCase getDailyReviewSetsUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return GetDailyReviewSetsUseCase(repository);
 }
 
 @riverpod
-GetSetStatisticsUseCase getSetStatisticsUseCase(
-  GetSetStatisticsUseCaseRef ref,
-) {
+GetSetStatisticsUseCase getSetStatisticsUseCase(Ref ref) {
   final repository = ref.watch(setRepositoryProvider);
   return GetSetStatisticsUseCase(repository);
 }
