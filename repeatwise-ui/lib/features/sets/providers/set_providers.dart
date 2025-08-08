@@ -6,6 +6,12 @@ part 'set_providers.g.dart';
 
 @riverpod
 class SetsNotifier extends _$SetsNotifier {
+  bool _isCreating = false;
+  String? _createError;
+
+  bool get isCreating => _isCreating;
+  String? get createError => _createError;
+
   @override
   Future<List<Set>> build() async {
     return _loadSets();
@@ -28,16 +34,38 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<void> createSet(SetCreateRequest request) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
-    const userId = 'current-user-id'; // This should come from auth state
+    if (_isCreating) return; // Prevent multiple simultaneous requests
 
-    final response = await apiRepository.createSet(userId, request);
-    response.fold(
-      onSuccess: (newSet) {
-        state = state.whenData((sets) => [newSet, ...sets]);
-      },
-      onError: (message) => throw Exception(message),
-    );
+    _isCreating = true;
+    _createError = null;
+    ref.notifyListeners();
+
+    try {
+      final apiRepository = ref.read(apiRepositoryProvider);
+      const userId = 'current-user-id'; // This should come from auth state
+
+      final response = await apiRepository.createSet(userId, request);
+      response.fold(
+        onSuccess: (newSet) {
+          state = state.whenData((sets) => [newSet, ...sets]);
+        },
+        onError: (message) {
+          _createError = message;
+          throw Exception(message);
+        },
+      );
+    } catch (e) {
+      _createError = e.toString();
+      rethrow;
+    } finally {
+      _isCreating = false;
+      ref.notifyListeners();
+    }
+  }
+
+  void clearCreateError() {
+    _createError = null;
+    ref.notifyListeners();
   }
 
   Future<void> updateSet(String id, SetUpdateRequest request) async {
@@ -48,9 +76,7 @@ class SetsNotifier extends _$SetsNotifier {
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
-          (sets) => sets
-              .map((set) => set.id == id ? updatedSet : set)
-              .toList(),
+          (sets) => sets.map((set) => set.id == id ? updatedSet : set).toList(),
         );
       },
       onError: (message) => throw Exception(message),
@@ -80,9 +106,7 @@ class SetsNotifier extends _$SetsNotifier {
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
-          (sets) => sets
-              .map((set) => set.id == id ? updatedSet : set)
-              .toList(),
+          (sets) => sets.map((set) => set.id == id ? updatedSet : set).toList(),
         );
       },
       onError: (message) => throw Exception(message),
@@ -97,9 +121,7 @@ class SetsNotifier extends _$SetsNotifier {
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
-          (sets) => sets
-              .map((set) => set.id == id ? updatedSet : set)
-              .toList(),
+          (sets) => sets.map((set) => set.id == id ? updatedSet : set).toList(),
         );
       },
       onError: (message) => throw Exception(message),

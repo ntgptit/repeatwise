@@ -4,23 +4,56 @@ import '../../../../core/models/set.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../providers/set_providers.dart';
 
-class CreateSetForm extends ConsumerStatefulWidget {
+class CreateSetForm extends ConsumerWidget {
   final VoidCallback? onSuccess;
 
   const CreateSetForm({super.key, this.onSuccess});
 
   @override
-  ConsumerState<CreateSetForm> createState() => _CreateSetFormState();
+  Widget build(BuildContext context, WidgetRef ref) {
+    final setsNotifier = ref.watch(setsNotifierProvider.notifier);
+    final isCreating = setsNotifier.isCreating;
+    final createError = setsNotifier.createError;
+
+    return _CreateSetFormContent(
+      isCreating: isCreating,
+      createError: createError,
+      onSuccess: onSuccess,
+      onClearError: () => setsNotifier.clearCreateError(),
+    );
+  }
 }
 
-class _CreateSetFormState extends ConsumerState<CreateSetForm> {
+class _CreateSetFormContent extends ConsumerStatefulWidget {
+  final bool isCreating;
+  final String? createError;
+  final VoidCallback? onSuccess;
+  final VoidCallback onClearError;
+
+  const _CreateSetFormContent({
+    required this.isCreating,
+    required this.createError,
+    required this.onSuccess,
+    required this.onClearError,
+  });
+
+  @override
+  ConsumerState<_CreateSetFormContent> createState() =>
+      _CreateSetFormContentState();
+}
+
+class _CreateSetFormContentState extends ConsumerState<_CreateSetFormContent> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _wordCountController = TextEditingController();
 
-  bool _isLoading = false;
-  String? _errorMessage;
+  @override
+  void initState() {
+    super.initState();
+    // Clear error when form is initialized
+    widget.onClearError();
+  }
 
   @override
   void dispose() {
@@ -32,11 +65,6 @@ class _CreateSetFormState extends ConsumerState<CreateSetForm> {
 
   Future<void> _submitForm() async {
     if (!_formKey.currentState!.validate()) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
 
     try {
       final request = SetCreateRequest(
@@ -56,16 +84,14 @@ class _CreateSetFormState extends ConsumerState<CreateSetForm> {
         widget.onSuccess?.call();
       }
     } catch (e) {
+      // Error is already handled by the notifier
       if (mounted) {
-        setState(() {
-          _errorMessage = e.toString();
-        });
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to create set: ${e.toString()}'),
+            backgroundColor: AppTheme.errorColor,
+          ),
+        );
       }
     }
   }
@@ -140,7 +166,7 @@ class _CreateSetFormState extends ConsumerState<CreateSetForm> {
             },
           ),
           const SizedBox(height: 24),
-          if (_errorMessage != null)
+          if (widget.createError != null)
             Container(
               padding: const EdgeInsets.all(12),
               margin: const EdgeInsets.only(bottom: 16),
@@ -149,19 +175,31 @@ class _CreateSetFormState extends ConsumerState<CreateSetForm> {
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(color: AppTheme.errorColor),
               ),
-              child: Text(
-                _errorMessage!,
-                style: TextStyle(color: AppTheme.errorColor),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.createError!,
+                      style: TextStyle(color: AppTheme.errorColor),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close, color: AppTheme.errorColor),
+                    onPressed: widget.onClearError,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                ],
               ),
             ),
           ElevatedButton(
-            onPressed: _isLoading ? null : _submitForm,
+            onPressed: widget.isCreating ? null : _submitForm,
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.primaryColor,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: _isLoading
+            child: widget.isCreating
                 ? const SizedBox(
                     height: 20,
                     width: 20,
