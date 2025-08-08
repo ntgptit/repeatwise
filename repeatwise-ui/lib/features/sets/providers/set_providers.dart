@@ -1,6 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import '../../../../core/models/set.dart';
-import '../../../../core/services/api_repository.dart';
+import '../di/set_dependencies.dart';
 
 part 'set_providers.g.dart';
 
@@ -18,10 +18,10 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<List<Set>> _loadSets() async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final getSetsUseCase = ref.read(getSetsUseCaseProvider);
     // TODO: Get current user ID from auth state
     const userId = 'current-user-id'; // This should come from auth state
-    final response = await apiRepository.getSetsByUser(userId);
+    final response = await getSetsUseCase.execute(userId);
     return response.fold(
       onSuccess: (sets) => sets,
       onError: (message) => throw Exception(message),
@@ -41,10 +41,10 @@ class SetsNotifier extends _$SetsNotifier {
     ref.notifyListeners();
 
     try {
-      final apiRepository = ref.read(apiRepositoryProvider);
+      final createSetUseCase = ref.read(createSetUseCaseProvider);
       const userId = 'current-user-id'; // This should come from auth state
 
-      final response = await apiRepository.createSet(userId, request);
+      final response = await createSetUseCase.execute(userId, request);
       response.fold(
         onSuccess: (newSet) {
           state = state.whenData((sets) => [newSet, ...sets]);
@@ -69,10 +69,10 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<void> updateSet(String id, SetUpdateRequest request) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final updateSetUseCase = ref.read(updateSetUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.updateSet(id, userId, request);
+    final response = await updateSetUseCase.execute(id, userId, request);
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
@@ -84,10 +84,10 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<void> deleteSet(String id) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final deleteSetUseCase = ref.read(deleteSetUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.deleteSet(id, userId);
+    final response = await deleteSetUseCase.execute(id, userId);
     response.fold(
       onSuccess: (_) {
         state = state.whenData(
@@ -99,10 +99,10 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<void> startLearning(String id) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final startLearningUseCase = ref.read(startLearningUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.startLearning(id, userId);
+    final response = await startLearningUseCase.execute(id, userId);
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
@@ -114,10 +114,10 @@ class SetsNotifier extends _$SetsNotifier {
   }
 
   Future<void> markAsMastered(String id) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final markAsMasteredUseCase = ref.read(markAsMasteredUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.markAsMastered(id, userId);
+    final response = await markAsMasteredUseCase.execute(id, userId);
     response.fold(
       onSuccess: (updatedSet) {
         state = state.whenData(
@@ -137,10 +137,10 @@ class SetDetailNotifier extends _$SetDetailNotifier {
   }
 
   Future<Set?> _loadSet(String setId) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
-    final response = await apiRepository.getSetById(setId);
+    final getSetByIdUseCase = ref.read(getSetByIdUseCaseProvider);
+    final response = await getSetByIdUseCase.execute(setId);
     return response.fold(
-      onSuccess: (set) => set as Set?,
+      onSuccess: (set) => set,
       onError: (message) => throw Exception(message),
     );
   }
@@ -154,10 +154,10 @@ class SetDetailNotifier extends _$SetDetailNotifier {
     final currentSet = state.value;
     if (currentSet == null) return;
 
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final updateSetUseCase = ref.read(updateSetUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.updateSet(
+    final response = await updateSetUseCase.execute(
       currentSet.id,
       userId,
       request,
@@ -174,10 +174,10 @@ class SetDetailNotifier extends _$SetDetailNotifier {
     final currentSet = state.value;
     if (currentSet == null) return;
 
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final startLearningUseCase = ref.read(startLearningUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.startLearning(currentSet.id, userId);
+    final response = await startLearningUseCase.execute(currentSet.id, userId);
     response.fold(
       onSuccess: (updatedSet) {
         state = AsyncValue.data(updatedSet);
@@ -190,10 +190,10 @@ class SetDetailNotifier extends _$SetDetailNotifier {
     final currentSet = state.value;
     if (currentSet == null) return;
 
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final markAsMasteredUseCase = ref.read(markAsMasteredUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.markAsMastered(currentSet.id, userId);
+    final response = await markAsMasteredUseCase.execute(currentSet.id, userId);
     response.fold(
       onSuccess: (updatedSet) {
         state = AsyncValue.data(updatedSet);
@@ -211,12 +211,12 @@ class SetStatisticsNotifier extends _$SetStatisticsNotifier {
   }
 
   Future<Map<String, dynamic>?> _loadStatistics(String setId) async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final getSetStatisticsUseCase = ref.read(getSetStatisticsUseCaseProvider);
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.getSetStatistics(setId, userId);
+    final response = await getSetStatisticsUseCase.execute(setId, userId);
     return response.fold(
-      onSuccess: (statistics) => statistics as Map<String, dynamic>?,
+      onSuccess: (statistics) => statistics,
       onError: (message) => throw Exception(message),
     );
   }
@@ -237,10 +237,12 @@ class DailyReviewSetsNotifier extends _$DailyReviewSetsNotifier {
   }
 
   Future<List<Set>> _loadDailyReviewSets() async {
-    final apiRepository = ref.read(apiRepositoryProvider);
+    final getDailyReviewSetsUseCase = ref.read(
+      getDailyReviewSetsUseCaseProvider,
+    );
     const userId = 'current-user-id'; // This should come from auth state
 
-    final response = await apiRepository.getDailyReviewSets(userId);
+    final response = await getDailyReviewSetsUseCase.execute(userId);
     return response.fold(
       onSuccess: (sets) => sets,
       onError: (message) => throw Exception(message),
