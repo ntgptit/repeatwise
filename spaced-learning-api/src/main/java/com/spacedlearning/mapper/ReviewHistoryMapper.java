@@ -4,18 +4,17 @@ import com.spacedlearning.dto.review.ReviewHistoryCreateRequest;
 import com.spacedlearning.dto.review.ReviewHistoryResponse;
 import com.spacedlearning.dto.review.ReviewHistoryUpdateRequest;
 import com.spacedlearning.entity.ReviewHistory;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class ReviewHistoryMapper {
 
-    @Autowired
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
 
     public ReviewHistory toEntity(ReviewHistoryCreateRequest request) {
         return modelMapper.map(request, ReviewHistory.class);
@@ -48,6 +47,6 @@ public class ReviewHistoryMapper {
     public List<ReviewHistoryResponse> toResponseList(List<ReviewHistory> entities) {
         return entities.stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

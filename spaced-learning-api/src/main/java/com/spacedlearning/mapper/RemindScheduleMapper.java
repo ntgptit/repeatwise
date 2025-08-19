@@ -4,18 +4,17 @@ import com.spacedlearning.dto.reminder.RemindScheduleCreateRequest;
 import com.spacedlearning.dto.reminder.RemindScheduleResponse;
 import com.spacedlearning.dto.reminder.RemindScheduleUpdateRequest;
 import com.spacedlearning.entity.RemindSchedule;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class RemindScheduleMapper {
 
-    @Autowired
-    private ModelMapper modelMapper;
+    private final ModelMapper modelMapper;
 
     public RemindSchedule toEntity(RemindScheduleCreateRequest request) {
         return modelMapper.map(request, RemindSchedule.class);
@@ -45,6 +44,6 @@ public class RemindScheduleMapper {
     public List<RemindScheduleResponse> toResponseList(List<RemindSchedule> entities) {
         return entities.stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 }

@@ -1,6 +1,7 @@
 package com.spacedlearning.security;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -51,8 +52,9 @@ public class CustomUserDetailsService implements UserDetailsService {
      */
     private UserDetails buildUserDetails(User user) {
         // Map roles to authorities
-        final Collection<GrantedAuthority> authorities = user.getRoles().stream()
-                .map(role -> new SimpleGrantedAuthority(role.getName())).collect(Collectors.toList());
+        final List<GrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.getName()))
+                .collect(Collectors.toList());
 
         // Additional log to help with debugging
         log.debug("Built UserDetails for user: {}, with authorities: {}", user.getUsername(), authorities);

@@ -1,13 +1,5 @@
 package com.spacedlearning.mapper;
 
-import java.util.stream.Collectors;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
-
 import com.spacedlearning.dto.auth.RegisterRequest;
 import com.spacedlearning.dto.user.UserDetailedResponse;
 import com.spacedlearning.dto.user.UserResponse;
@@ -16,8 +8,12 @@ import com.spacedlearning.entity.Role;
 import com.spacedlearning.entity.User;
 import com.spacedlearning.entity.enums.UserStatus;
 import com.spacedlearning.security.CustomUserDetailsService;
-
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
 /**
  * Mapper for User entity and DTOs
@@ -97,7 +93,7 @@ public class UserMapper {
                 .displayName(user.getName())
                 .createdAt(user.getCreatedAt())
                 .roles(user.getRoles() != null
-                        ? user.getRoles().stream().map(Role::getName).collect(Collectors.toList())
+                        ? user.getRoles().stream().map(Role::getName).toList()
                         : null)
                 .build();
     }

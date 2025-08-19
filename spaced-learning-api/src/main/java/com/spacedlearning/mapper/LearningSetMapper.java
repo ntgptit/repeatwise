@@ -5,24 +5,19 @@ import com.spacedlearning.dto.set.LearningSetDetailResponse;
 import com.spacedlearning.dto.set.LearningSetResponse;
 import com.spacedlearning.dto.set.LearningSetUpdateRequest;
 import com.spacedlearning.entity.LearningSet;
+import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Component
+@RequiredArgsConstructor
 public class LearningSetMapper {
 
-    @Autowired
-    private ModelMapper modelMapper;
-
-    @Autowired
-    private ReviewHistoryMapper reviewHistoryMapper;
-
-    @Autowired
-    private RemindScheduleMapper remindScheduleMapper;
+    private final ModelMapper modelMapper;
+    private final ReviewHistoryMapper reviewHistoryMapper;
+    private final RemindScheduleMapper remindScheduleMapper;
 
     public LearningSet toEntity(LearningSetCreateRequest request) {
         return modelMapper.map(request, LearningSet.class);
@@ -55,7 +50,7 @@ public class LearningSetMapper {
             response.setReviewHistories(
                 entity.getReviewHistories().stream()
                     .map(reviewHistoryMapper::toResponse)
-                    .collect(Collectors.toList())
+                    .toList()
             );
         }
         
@@ -64,7 +59,7 @@ public class LearningSetMapper {
             response.setRemindSchedules(
                 entity.getRemindSchedules().stream()
                     .map(remindScheduleMapper::toResponse)
-                    .collect(Collectors.toList())
+                    .toList()
             );
         }
         
@@ -74,12 +69,12 @@ public class LearningSetMapper {
     public List<LearningSetResponse> toResponseList(List<LearningSet> entities) {
         return entities.stream()
                 .map(this::toResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public List<LearningSetDetailResponse> toDetailResponseList(List<LearningSet> entities) {
         return entities.stream()
                 .map(this::toDetailResponse)
-                .collect(Collectors.toList());
+                .toList();
     }
 }
