@@ -1,0 +1,41 @@
+version: '3.9'
+
+services:
+  # Spring Boot API Application (mô phỏng Render)
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spaced-learning-api-render-test
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      # Spring Boot Config
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-prod}
+      JDBC_DATABASE_URL: ${JDBC_DATABASE_URL}
+      JDBC_DATABASE_USERNAME: ${JDBC_DATABASE_USERNAME}
+      JDBC_DATABASE_PASSWORD: ${JDBC_DATABASE_PASSWORD}
+      # JPA Config (mô phỏng production)
+      SPRING_JPA_HIBERNATE_DDL_AUTO: ${SPRING_JPA_HIBERNATE_DDL_AUTO:-validate}
+      SPRING_FLYWAY_ENABLED: ${SPRING_FLYWAY_ENABLED:-true}
+      # JWT Config
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_EXPIRATION: ${JWT_EXPIRATION:-86400000}  # 1 ngày
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION:-604800000}  # 7 ngày
+      # CORS Config
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:3000}
+      # JVM Options
+      JAVA_OPTS: ${JAVA_OPTS:--Xmx512m -Xms256m}
+    volumes:
+      - ./logs:/app/logs  # Mount thư mục logs để kiểm tra cục bộ
+    networks:
+      - render-test-network
+
+volumes:
+  render_logs:  # Volume để lưu logs nếu cần
+
+networks:
+  render-test-network:
+    name: render-test-network
+    driver: bridge
