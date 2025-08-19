@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:spaced_learning_app/core/theme/app_dimens.dart'; // Import AppDimens
+import 'package:spaced_learning_app/core/theme/app_dimens.dart';
 
+/// Typography configuration for the application
+/// Provides consistent text styles following Material 3 design system
 class AppTypography {
+  const AppTypography._();
+  /// Get text theme based on brightness
   static TextTheme getTextTheme(Brightness brightness) {
-    final baseTextTheme = GoogleFonts.interTextTheme(); // Use this if available
+    final baseTextTheme = GoogleFonts.interTextTheme();
 
     final isLight = brightness == Brightness.light;
     final textColor = isLight ? Colors.black87 : Colors.white;
-    final subtleTextColor =
-        isLight
-            ? Colors.black.withValues(alpha: AppDimens.opacityTextSubtle)
-            : Colors.white.withValues(alpha: AppDimens.opacityTextSubtle);
+    final subtleTextColor = isLight
+        ? Colors.black.withValues(alpha: AppDimens.opacityTextSubtle)
+        : Colors.white.withValues(alpha: AppDimens.opacityTextSubtle);
 
     return baseTextTheme.copyWith(
       displayLarge: baseTextTheme.displayLarge?.copyWith(
@@ -93,7 +96,7 @@ class AppTypography {
         fontSize: AppDimens.fontM, // 12.0
         fontWeight: FontWeight.w400,
         letterSpacing: 0.4,
-        color: subtleTextColor, // Updated
+        color: subtleTextColor,
         height: 1.33, // ~16/12
       ),
 
@@ -119,5 +122,30 @@ class AppTypography {
         height: 1.45, // ~16/11
       ),
     );
+  }
+
+  /// Get display text style
+  static TextStyle? getDisplayStyle(TextTheme textTheme, {bool isLarge = true}) {
+    return isLarge ? textTheme.displayLarge : textTheme.displayMedium;
+  }
+
+  /// Get headline text style
+  static TextStyle? getHeadlineStyle(TextTheme textTheme, {bool isLarge = true}) {
+    return isLarge ? textTheme.headlineLarge : textTheme.headlineMedium;
+  }
+
+  /// Get title text style
+  static TextStyle? getTitleStyle(TextTheme textTheme, {bool isLarge = true}) {
+    return isLarge ? textTheme.titleLarge : textTheme.titleMedium;
+  }
+
+  /// Get body text style
+  static TextStyle? getBodyStyle(TextTheme textTheme, {bool isLarge = true}) {
+    return isLarge ? textTheme.bodyLarge : textTheme.bodyMedium;
+  }
+
+  /// Get label text style
+  static TextStyle? getLabelStyle(TextTheme textTheme, {bool isLarge = true}) {
+    return isLarge ? textTheme.labelLarge : textTheme.labelMedium;
   }
 }

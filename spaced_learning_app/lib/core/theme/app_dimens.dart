@@ -1,4 +1,7 @@
+/// Design system dimensions and measurements
+/// Provides consistent spacing, sizing, and layout values
 class AppDimens {
+  const AppDimens._();
   static const double paddingXXS = 2.0;
   static const double paddingXS = 4.0;
   static const double paddingS = 8.0;
@@ -175,6 +178,36 @@ class AppDimens {
   static const double opacityShadow = 0.1; // For subtle shadows
   static const double opacityLow = 0.3;
 
-  static const double scaleFactorSmall = 0.85; // Cho màn hình nhỏ
-  static const double scaleFactorLarge = 1.15; // Cho màn hình lớn
+  static const double scaleFactorSmall = 0.85; // For small screens
+  static const double scaleFactorLarge = 1.15; // For large screens
+
+  /// Get responsive padding based on screen size
+  static double getResponsivePadding(double basePadding, double screenWidth) {
+    if (screenWidth < breakpointS) {
+      return basePadding * scaleFactorSmall;
+    } else if (screenWidth > breakpointL) {
+      return basePadding * scaleFactorLarge;
+    }
+    return basePadding;
+  }
+
+  /// Get responsive font size based on screen size
+  static double getResponsiveFontSize(double baseFontSize, double screenWidth) {
+    if (screenWidth < breakpointS) {
+      return baseFontSize * scaleFactorSmall;
+    } else if (screenWidth > breakpointL) {
+      return baseFontSize * scaleFactorLarge;
+    }
+    return baseFontSize;
+  }
+
+  /// Get responsive radius based on screen size
+  static double getResponsiveRadius(double baseRadius, double screenWidth) {
+    if (screenWidth < breakpointS) {
+      return baseRadius * scaleFactorSmall;
+    } else if (screenWidth > breakpointL) {
+      return baseRadius * scaleFactorLarge;
+    }
+    return baseRadius;
+  }
 }
