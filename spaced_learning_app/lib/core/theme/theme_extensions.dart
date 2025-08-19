@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:spaced_learning_app/core/extensions/color_extensions.dart';
 import 'package:spaced_learning_app/core/theme/app_color_scheme.dart';
 
 /// Enum for cycle study states
