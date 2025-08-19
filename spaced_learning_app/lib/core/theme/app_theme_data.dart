@@ -16,88 +16,88 @@ abstract final class AppTheme {
 
   /// Light theme configuration with Material 3 design system
   static ThemeData get light => FlexThemeData.light(
-        colorScheme: lightColorScheme,
-        subThemesData: const FlexSubThemesData(
-          interactionEffects: true,
-          tintedDisabledControls: true,
-          useM2StyleDividerInM3: true,
-          inputDecoratorIsFilled: true,
-          inputDecoratorBorderType: FlexInputBorderType.outline,
-          alignedDropdown: true,
-          navigationRailUseIndicator: true,
-          elevatedButtonSchemeColor: SchemeColor.primary,
-          outlinedButtonOutlineSchemeColor: SchemeColor.outline,
-          toggleButtonsSchemeColor: SchemeColor.primary,
-          segmentedButtonSchemeColor: SchemeColor.primary,
-          bottomSheetRadius: 28.0,
-          bottomSheetElevation: 8.0,
-          navigationBarSelectedLabelSchemeColor: SchemeColor.primary,
-          navigationBarUnselectedLabelSchemeColor: SchemeColor.onSurface,
-          navigationBarSelectedIconSchemeColor: SchemeColor.primary,
-          navigationBarUnselectedIconSchemeColor: SchemeColor.onSurface,
-          navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
-          navigationBarIndicatorOpacity: 1.0,
-          navigationRailSelectedLabelSchemeColor: SchemeColor.primary,
-          navigationRailUnselectedLabelSchemeColor: SchemeColor.onSurface,
-          navigationRailSelectedIconSchemeColor: SchemeColor.primary,
-          navigationRailUnselectedIconSchemeColor: SchemeColor.onSurface,
-          navigationRailIndicatorSchemeColor: SchemeColor.primaryContainer,
-          navigationRailIndicatorOpacity: 1.0,
-        ),
-        keyColors: const FlexKeyColors(
-          useSecondary: true,
-          useTertiary: true,
-          useError: true,
-        ),
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-        useMaterial3: true,
-        textTheme: AppTypography.getTextTheme(Brightness.light),
-        primaryTextTheme: AppTypography.getTextTheme(Brightness.light),
-      );
+    colorScheme: lightColorScheme,
+    subThemesData: const FlexSubThemesData(
+      interactionEffects: true,
+      tintedDisabledControls: true,
+      useM2StyleDividerInM3: true,
+      inputDecoratorIsFilled: true,
+      inputDecoratorBorderType: FlexInputBorderType.outline,
+      alignedDropdown: true,
+      navigationRailUseIndicator: true,
+      elevatedButtonSchemeColor: SchemeColor.primary,
+      outlinedButtonOutlineSchemeColor: SchemeColor.outline,
+      toggleButtonsSchemeColor: SchemeColor.primary,
+      segmentedButtonSchemeColor: SchemeColor.primary,
+      bottomSheetRadius: 28.0,
+      bottomSheetElevation: 8.0,
+      navigationBarSelectedLabelSchemeColor: SchemeColor.primary,
+      navigationBarUnselectedLabelSchemeColor: SchemeColor.onSurface,
+      navigationBarSelectedIconSchemeColor: SchemeColor.primary,
+      navigationBarUnselectedIconSchemeColor: SchemeColor.onSurface,
+      navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
+      navigationBarIndicatorOpacity: 1.0,
+      navigationRailSelectedLabelSchemeColor: SchemeColor.primary,
+      navigationRailUnselectedLabelSchemeColor: SchemeColor.onSurface,
+      navigationRailSelectedIconSchemeColor: SchemeColor.primary,
+      navigationRailUnselectedIconSchemeColor: SchemeColor.onSurface,
+      navigationRailIndicatorSchemeColor: SchemeColor.primaryContainer,
+      navigationRailIndicatorOpacity: 1.0,
+    ),
+    keyColors: const FlexKeyColors(
+      useSecondary: true,
+      useTertiary: true,
+      useError: true,
+    ),
+    visualDensity: FlexColorScheme.comfortablePlatformDensity,
+    cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
+    useMaterial3: true,
+    textTheme: AppTypography.getTextTheme(Brightness.light),
+    primaryTextTheme: AppTypography.getTextTheme(Brightness.light),
+  );
 
   /// Dark theme configuration with Material 3 design system
   static ThemeData get dark => FlexThemeData.dark(
-        colorScheme: darkColorScheme,
-        subThemesData: const FlexSubThemesData(
-          interactionEffects: true,
-          tintedDisabledControls: true,
-          blendOnColors: true,
-          useM2StyleDividerInM3: true,
-          inputDecoratorIsFilled: true,
-          inputDecoratorBorderType: FlexInputBorderType.outline,
-          alignedDropdown: true,
-          navigationRailUseIndicator: true,
-          elevatedButtonSchemeColor: SchemeColor.primary,
-          outlinedButtonOutlineSchemeColor: SchemeColor.outline,
-          toggleButtonsSchemeColor: SchemeColor.primary,
-          segmentedButtonSchemeColor: SchemeColor.primary,
-          bottomSheetRadius: 28.0,
-          bottomSheetElevation: 8.0,
-          navigationBarSelectedLabelSchemeColor: SchemeColor.primary,
-          navigationBarUnselectedLabelSchemeColor: SchemeColor.onSurface,
-          navigationBarSelectedIconSchemeColor: SchemeColor.primary,
-          navigationBarUnselectedIconSchemeColor: SchemeColor.onSurface,
-          navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
-          navigationBarIndicatorOpacity: 1.0,
-          navigationRailSelectedLabelSchemeColor: SchemeColor.primary,
-          navigationRailUnselectedLabelSchemeColor: SchemeColor.onSurface,
-          navigationRailSelectedIconSchemeColor: SchemeColor.primary,
-          navigationRailUnselectedIconSchemeColor: SchemeColor.onSurface,
-          navigationRailIndicatorSchemeColor: SchemeColor.primaryContainer,
-          navigationRailIndicatorOpacity: 1.0,
-        ),
-        keyColors: const FlexKeyColors(
-          useSecondary: true,
-          useTertiary: true,
-          useError: true,
-        ),
-        visualDensity: FlexColorScheme.comfortablePlatformDensity,
-        cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
-        useMaterial3: true,
-        textTheme: AppTypography.getTextTheme(Brightness.dark),
-        primaryTextTheme: AppTypography.getTextTheme(Brightness.dark),
-      );
+    colorScheme: darkColorScheme,
+    subThemesData: const FlexSubThemesData(
+      interactionEffects: true,
+      tintedDisabledControls: true,
+      blendOnColors: true,
+      useM2StyleDividerInM3: true,
+      inputDecoratorIsFilled: true,
+      inputDecoratorBorderType: FlexInputBorderType.outline,
+      alignedDropdown: true,
+      navigationRailUseIndicator: true,
+      elevatedButtonSchemeColor: SchemeColor.primary,
+      outlinedButtonOutlineSchemeColor: SchemeColor.outline,
+      toggleButtonsSchemeColor: SchemeColor.primary,
+      segmentedButtonSchemeColor: SchemeColor.primary,
+      bottomSheetRadius: 28.0,
+      bottomSheetElevation: 8.0,
+      navigationBarSelectedLabelSchemeColor: SchemeColor.primary,
+      navigationBarUnselectedLabelSchemeColor: SchemeColor.onSurface,
+      navigationBarSelectedIconSchemeColor: SchemeColor.primary,
+      navigationBarUnselectedIconSchemeColor: SchemeColor.onSurface,
+      navigationBarIndicatorSchemeColor: SchemeColor.primaryContainer,
+      navigationBarIndicatorOpacity: 1.0,
+      navigationRailSelectedLabelSchemeColor: SchemeColor.primary,
+      navigationRailUnselectedLabelSchemeColor: SchemeColor.onSurface,
+      navigationRailSelectedIconSchemeColor: SchemeColor.primary,
+      navigationRailUnselectedIconSchemeColor: SchemeColor.onSurface,
+      navigationRailIndicatorSchemeColor: SchemeColor.primaryContainer,
+      navigationRailIndicatorOpacity: 1.0,
+    ),
+    keyColors: const FlexKeyColors(
+      useSecondary: true,
+      useTertiary: true,
+      useError: true,
+    ),
+    visualDensity: FlexColorScheme.comfortablePlatformDensity,
+    cupertinoOverrideTheme: const CupertinoThemeData(applyThemeToAll: true),
+    useMaterial3: true,
+    textTheme: AppTypography.getTextTheme(Brightness.dark),
+    primaryTextTheme: AppTypography.getTextTheme(Brightness.dark),
+  );
 
   /// Get theme data based on brightness
   static ThemeData getTheme(Brightness brightness) {
@@ -137,7 +137,7 @@ class ThemeModeState extends _$ThemeModeState {
     try {
       final storageService = ref.read(storageServiceProvider);
       final current = state;
-      
+
       if (current == ThemeMode.dark) {
         await storageService.saveDarkMode(false);
         state = ThemeMode.light;
@@ -145,7 +145,7 @@ class ThemeModeState extends _$ThemeModeState {
         await storageService.saveDarkMode(true);
         state = ThemeMode.dark;
       }
-      
+
       // Invalidate isDarkModeProvider để cập nhật giá trị mới
       ref.invalidate(isDarkModeProvider);
     } catch (e) {
@@ -159,10 +159,10 @@ class ThemeModeState extends _$ThemeModeState {
     try {
       final storageService = ref.read(storageServiceProvider);
       final isDark = mode == ThemeMode.dark;
-      
+
       await storageService.saveDarkMode(isDark);
       state = mode;
-      
+
       // Invalidate isDarkModeProvider để cập nhật giá trị mới
       ref.invalidate(isDarkModeProvider);
     } catch (e) {

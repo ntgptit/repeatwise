@@ -89,7 +89,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _validateFirstName() {
     setState(() {
-      _firstNameError = _firstNameController.text.isEmpty
+      _firstNameError = _firstNameController.text.trim().isEmpty
           ? 'First name is required'
           : null;
     });
@@ -97,7 +97,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
   void _validateLastName() {
     setState(() {
-      _lastNameError = _lastNameController.text.isEmpty
+      _lastNameError = _lastNameController.text.trim().isEmpty
           ? 'Last name is required'
           : null;
     });
@@ -117,20 +117,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         _confirmPasswordError == null &&
         _firstNameError == null &&
         _lastNameError == null) {
+      // Clear any previous errors
+      ref.read(authErrorProvider.notifier).clearError();
+
       final authNotifier = ref.read(authStateProvider.notifier);
       final success = await authNotifier.register(
-        _usernameController.text,
-        _emailController.text,
+        _usernameController.text.trim(),
+        _emailController.text.trim(),
         _passwordController.text,
-        _firstNameController.text,
-        _lastNameController.text,
+        _firstNameController.text.trim(),
+        _lastNameController.text.trim(),
       );
 
       if (success &&
           mounted &&
           ref.read(authStateProvider).valueOrNull == true) {
-        // Sử dụng NavigationHelper để clear stack và đi đến home
-        NavigationHelper.clearStackAndGo(context, '/');
+        // Navigate to home screen
+        if (context.mounted) {
+          NavigationHelper.clearStackAndGo(context, '/');
+        }
       }
     }
   }

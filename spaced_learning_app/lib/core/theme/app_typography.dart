@@ -6,6 +6,7 @@ import 'package:spaced_learning_app/core/theme/app_dimens.dart';
 /// Provides consistent text styles following Material 3 design system
 class AppTypography {
   const AppTypography._();
+
   /// Get text theme based on brightness
   static TextTheme getTextTheme(Brightness brightness) {
     final baseTextTheme = GoogleFonts.interTextTheme();
@@ -125,12 +126,18 @@ class AppTypography {
   }
 
   /// Get display text style
-  static TextStyle? getDisplayStyle(TextTheme textTheme, {bool isLarge = true}) {
+  static TextStyle? getDisplayStyle(
+    TextTheme textTheme, {
+    bool isLarge = true,
+  }) {
     return isLarge ? textTheme.displayLarge : textTheme.displayMedium;
   }
 
   /// Get headline text style
-  static TextStyle? getHeadlineStyle(TextTheme textTheme, {bool isLarge = true}) {
+  static TextStyle? getHeadlineStyle(
+    TextTheme textTheme, {
+    bool isLarge = true,
+  }) {
     return isLarge ? textTheme.headlineLarge : textTheme.headlineMedium;
   }
 

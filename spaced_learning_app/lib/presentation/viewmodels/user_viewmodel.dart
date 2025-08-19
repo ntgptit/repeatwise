@@ -1,6 +1,7 @@
 // lib/presentation/viewmodels/user_viewmodel.dart
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:spaced_learning_app/domain/models/user.dart';
+import 'package:spaced_learning_app/domain/models/user/user_update_request.dart';
 
 import '../../core/di/providers.dart';
 
@@ -16,7 +17,7 @@ class UserState extends _$UserState {
   Future<User?> loadCurrentUser() async {
     state = const AsyncValue.loading();
     try {
-      final user = await ref.read(userRepositoryProvider).getCurrentUser();
+      final user = await ref.read(userServiceProvider).getCurrentUser();
       state = AsyncValue.data(user);
       return user;
     } catch (e) {
@@ -25,7 +26,14 @@ class UserState extends _$UserState {
     }
   }
 
-  Future<bool> updateProfile({String? displayName, String? password}) async {
+  Future<bool> updateProfile({
+    String? username,
+    String? email,
+    String? firstName,
+    String? lastName,
+    String? displayName,
+    String? password,
+  }) async {
     if (state.value == null) {
       state = AsyncValue.error('User is not loaded', StackTrace.current);
       return false;
@@ -33,18 +41,46 @@ class UserState extends _$UserState {
 
     state = const AsyncValue.loading();
     try {
+      final request = UserUpdateRequest(
+        username: username,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+        displayName: displayName,
+        password: password,
+      );
+
       final result = await ref
-          .read(userRepositoryProvider)
-          .updateUser(
-            state.value!.id,
-            displayName: displayName,
-            password: password,
-          );
+          .read(userServiceProvider)
+          .updateUser(state.value!.id, request);
+      
       state = AsyncValue.data(result);
       return true;
     } catch (e) {
       state = AsyncValue.error(e, StackTrace.current);
       return false;
+    }
+  }
+
+  Future<bool> deleteProfile() async {
+    if (state.value == null) {
+      return false;
+    }
+
+    try {
+      await ref.read(userServiceProvider).deleteUser(state.value!.id);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<User?> getUserById(String id) async {
+    try {
+      final user = await ref.read(userServiceProvider).getUserById(id);
+      return user;
+    } catch (e) {
+      return null;
     }
   }
 

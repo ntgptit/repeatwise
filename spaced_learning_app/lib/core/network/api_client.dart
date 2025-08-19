@@ -28,6 +28,9 @@ class ApiClient {
     _dio.interceptors.add(AuthInterceptor());
   }
 
+  // Getter để truy cập Dio instance
+  Dio get dio => _dio;
+
   Future<dynamic> get(
     String url, {
     Map<String, dynamic>? queryParameters,

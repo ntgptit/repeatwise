@@ -41,9 +41,15 @@ class ThemeHelper {
     double vertical = AppDimens.paddingM,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final responsiveHorizontal = AppDimens.getResponsivePadding(horizontal, screenWidth);
-    final responsiveVertical = AppDimens.getResponsivePadding(vertical, screenWidth);
-    
+    final responsiveHorizontal = AppDimens.getResponsivePadding(
+      horizontal,
+      screenWidth,
+    );
+    final responsiveVertical = AppDimens.getResponsivePadding(
+      vertical,
+      screenWidth,
+    );
+
     return EdgeInsets.symmetric(
       horizontal: responsiveHorizontal,
       vertical: responsiveVertical,
@@ -57,9 +63,15 @@ class ThemeHelper {
     double vertical = AppDimens.paddingM,
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final responsiveHorizontal = AppDimens.getResponsivePadding(horizontal, screenWidth);
-    final responsiveVertical = AppDimens.getResponsivePadding(vertical, screenWidth);
-    
+    final responsiveHorizontal = AppDimens.getResponsivePadding(
+      horizontal,
+      screenWidth,
+    );
+    final responsiveVertical = AppDimens.getResponsivePadding(
+      vertical,
+      screenWidth,
+    );
+
     return EdgeInsets.symmetric(
       horizontal: responsiveHorizontal,
       vertical: responsiveVertical,
@@ -73,7 +85,7 @@ class ThemeHelper {
   }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final responsiveRadius = AppDimens.getResponsiveRadius(radius, screenWidth);
-    
+
     return BorderRadius.circular(responsiveRadius);
   }
 
@@ -269,5 +281,4 @@ class ThemeHelper {
   static Color getOnInverseSurfaceColor(BuildContext context) {
     return getColorScheme(context).onInverseSurface;
   }
-
 }
