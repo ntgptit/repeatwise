@@ -1,17 +1,42 @@
-import 'package:freezed_annotation/freezed_annotation.dart';
 import 'package:spaced_learning_app/domain/models/user.dart';
 
-part 'auth_response.freezed.dart';
-part 'auth_response.g.dart';
+/// Authentication response model containing token and user information
+class AuthResponse {
+  final String token;
+  final String? refreshToken;
+  final User user;
 
-@freezed
-abstract class AuthResponse with _$AuthResponse {
-  const factory AuthResponse({
-    required String token,
+  const AuthResponse({
+    required this.token,
+    this.refreshToken,
+    required this.user,
+  });
+
+  factory AuthResponse.fromJson(Map<String, dynamic> json) {
+    return AuthResponse(
+      token: json['token'] as String,
+      refreshToken: json['refreshToken'] as String?,
+      user: User.fromJson(json['user'] as Map<String, dynamic>),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'token': token,
+      'refreshToken': refreshToken,
+      'user': user.toJson(),
+    };
+  }
+
+  AuthResponse copyWith({
+    String? token,
     String? refreshToken,
-    required User user,
-  }) = _AuthResponse;
-
-  factory AuthResponse.fromJson(Map<String, dynamic> json) =>
-      _$AuthResponseFromJson(json);
+    User? user,
+  }) {
+    return AuthResponse(
+      token: token ?? this.token,
+      refreshToken: refreshToken ?? this.refreshToken,
+      user: user ?? this.user,
+    );
+  }
 }
