@@ -1,7 +1,9 @@
 package com.spacedlearning.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import com.spacedlearning.entity.enums.UserStatus;
@@ -14,6 +16,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -73,19 +76,22 @@ public class User extends BaseEntity {
     @JoinTable(name = "user_roles", schema = "spaced_learning", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Role> roles = new HashSet<>();
 
+
+
     @Builder.Default
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_books", schema = "spaced_learning", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "book_id"))
-    private Set<Book> books = new HashSet<>();
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    private List<LearningSet> sets = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    private List<ActivityLog> activityLogs = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    private List<NotificationLog> notificationLogs = new ArrayList<>();
 
     @Column(name = "last_active_date")
     private LocalDateTime lastActiveDate;
-
-    // Book methods
-    public void addBook(Book book) {
-        this.books.add(book);
-        book.getUsers().add(this);
-    }
 
     // Role methods
     public void addRole(Role role) {
@@ -96,15 +102,33 @@ public class User extends BaseEntity {
         return this.roles.stream().anyMatch(role -> role.getName().equals(roleName));
     }
 
-    public boolean removeBook(Book book) {
-        if (this.books.remove(book)) {
-            book.getUsers().remove(this);
+    public boolean removeRole(Role role) {
+        return this.roles.remove(role);
+    }
+
+    // Set methods
+    public void addSet(LearningSet set) {
+        this.sets.add(set);
+        set.setUser(this);
+    }
+
+    public boolean removeSet(LearningSet set) {
+        if (this.sets.remove(set)) {
+            set.setUser(null);
             return true;
         }
         return false;
     }
 
-    public boolean removeRole(Role role) {
-        return this.roles.remove(role);
+    // Activity log methods
+    public void addActivityLog(ActivityLog activityLog) {
+        this.activityLogs.add(activityLog);
+        activityLog.setUser(this);
+    }
+
+    // Notification log methods
+    public void addNotificationLog(NotificationLog notificationLog) {
+        this.notificationLogs.add(notificationLog);
+        notificationLog.setUser(this);
     }
 }

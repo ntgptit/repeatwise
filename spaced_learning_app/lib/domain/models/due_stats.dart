@@ -4,6 +4,7 @@ part 'due_stats.freezed.dart';
 
 @freezed
 abstract class DueStats with _$DueStats {
+  /// Statistics about due items for different time periods
   const factory DueStats({
     required int dueToday,
     required int dueThisWeek,

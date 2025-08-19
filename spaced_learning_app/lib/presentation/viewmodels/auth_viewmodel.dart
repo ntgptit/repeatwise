@@ -1,6 +1,7 @@
 // lib/presentation/viewmodels/auth_viewmodel.dart
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
+import 'package:spaced_learning_app/domain/models/auth/register_request.dart';
 import 'package:spaced_learning_app/domain/models/auth_response.dart';
 import 'package:spaced_learning_app/domain/models/user.dart';
 
@@ -24,7 +25,7 @@ class AuthState extends _$AuthState {
 
       try {
         final isValid = await ref
-            .read(authRepositoryProvider)
+            .read(authServiceProvider)
             .validateToken(token);
 
         if (isValid) {
@@ -56,7 +57,7 @@ class AuthState extends _$AuthState {
     state = const AsyncValue.loading();
     try {
       final response = await ref
-          .read(authRepositoryProvider)
+          .read(authServiceProvider)
           .login(usernameOrEmail, password);
       await _handleAuthResponse(response);
       state = const AsyncValue.data(true);
@@ -72,20 +73,54 @@ class AuthState extends _$AuthState {
     String username,
     String email,
     String password,
-    String firstName,
-    String lastName,
+    String? firstName,
+    String? lastName,
   ) async {
     state = const AsyncValue.loading();
     try {
-      final response = await ref
-          .read(authRepositoryProvider)
-          .register(username, email, password, firstName, lastName);
-      await _handleAuthResponse(response);
+      final request = RegisterRequest(
+        username: username,
+        email: email,
+        password: password,
+        firstName: firstName,
+        lastName: lastName,
+      );
+
+      final user = await ref.read(authServiceProvider).register(request);
+
+      // Sau khi register thành công, tự động login
+      final loginResponse = await ref
+          .read(authServiceProvider)
+          .login(username, password);
+
+      await _handleAuthResponse(loginResponse);
       state = const AsyncValue.data(true);
       return true;
     } catch (e) {
       debugPrint('Registration error: $e');
       state = AsyncValue.error(e, StackTrace.current);
+      return false;
+    }
+  }
+
+  Future<bool> refreshToken() async {
+    try {
+      final refreshToken = await ref
+          .read(storageServiceProvider)
+          .getRefreshToken();
+      if (refreshToken == null || refreshToken.isEmpty) {
+        return false;
+      }
+
+      final response = await ref
+          .read(authServiceProvider)
+          .refreshToken(refreshToken);
+
+      await _handleAuthResponse(response);
+      return true;
+    } catch (e) {
+      debugPrint('Refresh token error: $e');
+      await ref.read(storageServiceProvider).clearTokens();
       return false;
     }
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+/// Light color scheme for the application
+/// Follows Material 3 design system with custom brand colors
 const ColorScheme lightColorScheme = ColorScheme(
   brightness: Brightness.light,
   primary: Color(0xff65558f),
@@ -49,6 +51,8 @@ const ColorScheme lightColorScheme = ColorScheme(
   surfaceContainerHighest: Color(0xffe6e0e9),
 );
 
+/// Dark color scheme for the application
+/// Follows Material 3 design system with custom brand colors
 const ColorScheme darkColorScheme = ColorScheme(
   brightness: Brightness.dark,
   primary: Color(0xffcfbdfe),
@@ -98,35 +102,92 @@ const ColorScheme darkColorScheme = ColorScheme(
   surfaceContainerHighest: Color(0xff36343a),
 );
 
-// Additional colors for compatibility with original code
-const List<Color> primaryGradient = [
-  Color(0xff65558f), // Light primary
-  Color(0xffcfbdfe), // Dark primary
-];
+/// Additional colors for compatibility with original code
+/// These colors provide semantic meaning and are used throughout the app
+class AppColors {
+  const AppColors._();
 
-const List<Color> greyGradient = [
-  Color(0xfff8f2fa), // Light surfaceContainerLow
-  Color(0xffe6e0e9), // Light surfaceContainerHighest
-];
+  /// Primary gradient colors
+  static const List<Color> primaryGradient = [
+    Color(0xff65558f), // Light primary
+    Color(0xffcfbdfe), // Dark primary
+  ];
 
-const Color primaryAlpha10 = Color(0x1A65558f); // 10% alpha of light primary
-const Color primaryAlpha20 = Color(0x3365558f); // 20% alpha of light primary
-const Color greyAlpha10 = Color(
-  0x1A49454e,
-); // 10% alpha of light onSurfaceVariant
+  /// Grey gradient colors
+  static const List<Color> greyGradient = [
+    Color(0xfff8f2fa), // Light surfaceContainerLow
+    Color(0xffe6e0e9), // Light surfaceContainerHighest
+  ];
 
-// Fallback colors for components not covered by ColorScheme
-const Color successGreen = Color(0xff2e7d32); // Material Design green
-const Color warningOrange = Color(0xfff57c00); // Material Design orange
-const Color textPlaceholder = Color(0xff7a757f); // Light outline as placeholder
-const Color borderLight = Color(0xffcac4cf); // Light outlineVariant
-const Color borderMedium = Color(0xff7a757f); // Light outline
-const Color divider = Color(0xffcac4cf); // Light outlineVariant
-const Color hoverGrey = Color(0xfff2ecf4); // Light surfaceContainer
-const Color activeGrey = Color(0xffece6ee); // Light surfaceContainerHigh
-const Color disabledBackground = Color(
-  0xffe6e0e9,
-); // Light surfaceContainerHighest
-const Color disabledContent = Color(0xff7a757f); // Light outline
-const Color darkTextSecondary = Color(0xffcac4cf); // Dark onSurfaceVariant
-const Color darkBorder = Color(0xff948f99); // Dark outline
+  /// Primary colors with alpha transparency
+  static const Color primaryAlpha10 = Color(
+    0x1A65558f,
+  ); // 10% alpha of light primary
+  static const Color primaryAlpha20 = Color(
+    0x3365558f,
+  ); // 20% alpha of light primary
+  static const Color greyAlpha10 = Color(
+    0x1A49454e,
+  ); // 10% alpha of light onSurfaceVariant
+
+  /// Semantic colors for different states
+  static const Color successGreen = Color(0xff2e7d32); // Material Design green
+  static const Color warningOrange = Color(
+    0xfff57c00,
+  ); // Material Design orange
+  static const Color infoBlue = Color(0xff1976d2); // Material Design blue
+
+  /// Text colors
+  static const Color textPlaceholder = Color(
+    0xff7a757f,
+  ); // Light outline as placeholder
+  static const Color darkTextSecondary = Color(
+    0xffcac4cf,
+  ); // Dark onSurfaceVariant
+
+  /// Border colors
+  static const Color borderLight = Color(0xffcac4cf); // Light outlineVariant
+  static const Color borderMedium = Color(0xff7a757f); // Light outline
+  static const Color darkBorder = Color(0xff948f99); // Dark outline
+
+  /// Divider and separator colors
+  static const Color divider = Color(0xffcac4cf); // Light outlineVariant
+
+  /// Interactive state colors
+  static const Color hoverGrey = Color(0xfff2ecf4); // Light surfaceContainer
+  static const Color activeGrey = Color(
+    0xffece6ee,
+  ); // Light surfaceContainerHigh
+
+  /// Disabled state colors
+  static const Color disabledBackground = Color(
+    0xffe6e0e9,
+  ); // Light surfaceContainerHighest
+  static const Color disabledContent = Color(0xff7a757f); // Light outline
+
+  /// Get color scheme based on brightness
+  static ColorScheme getColorScheme(Brightness brightness) {
+    return brightness == Brightness.dark ? darkColorScheme : lightColorScheme;
+  }
+
+  /// Get primary color based on brightness
+  static Color getPrimaryColor(Brightness brightness) {
+    return brightness == Brightness.dark
+        ? darkColorScheme.primary
+        : lightColorScheme.primary;
+  }
+
+  /// Get surface color based on brightness
+  static Color getSurfaceColor(Brightness brightness) {
+    return brightness == Brightness.dark
+        ? darkColorScheme.surface
+        : lightColorScheme.surface;
+  }
+
+  /// Get text color based on brightness
+  static Color getTextColor(Brightness brightness) {
+    return brightness == Brightness.dark
+        ? darkColorScheme.onSurface
+        : lightColorScheme.onSurface;
+  }
+}

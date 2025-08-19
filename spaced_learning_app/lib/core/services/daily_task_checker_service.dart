@@ -10,14 +10,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spaced_learning_app/core/events/app_events.dart';
 import 'package:spaced_learning_app/core/services/reminder/reminder_service.dart';
 import 'package:spaced_learning_app/core/services/storage_service.dart';
-import 'package:spaced_learning_app/domain/repositories/progress_repository.dart';
+import 'package:spaced_learning_app/domain/repositories/remind_schedule_repository.dart';
+import 'package:spaced_learning_app/domain/models/remind_schedule.dart';
 
 import '../di/providers.dart';
 
 part 'daily_task_checker_service.g.dart';
 
 class DailyTaskChecker {
-  final ProgressRepository _progressRepository;
+  final RemindScheduleRepository _remindScheduleRepository;
   final StorageService _storageService;
   final EventBus _eventBus;
   final ReminderService _reminderService;
@@ -31,12 +32,12 @@ class DailyTaskChecker {
   static const String lastCheckErrorKey = 'last_daily_task_check_error';
 
   DailyTaskChecker({
-    required ProgressRepository progressRepository,
+    required RemindScheduleRepository remindScheduleRepository,
     required StorageService storageService,
     required EventBus eventBus,
     required ReminderService reminderService,
     required FlutterLocalNotificationsPlugin notificationsPlugin,
-  }) : _progressRepository = progressRepository,
+  }) : _remindScheduleRepository = remindScheduleRepository,
        _storageService = storageService,
        _eventBus = eventBus,
        _reminderService = reminderService,
@@ -154,13 +155,21 @@ class DailyTaskChecker {
       }
 
       // Lấy danh sách task đến hạn hôm nay
-      final progress = await _progressRepository.getDueProgress(
-        userId.toString(),
-        studyDate: now,
-      );
+      final remindSchedules = await _remindScheduleRepository
+          .getRemindSchedulesByUser(userId.toString());
 
-      final hasTasks = progress.isNotEmpty;
-      final taskCount = progress.length;
+      final todaySchedules = remindSchedules
+          .where(
+            (schedule) =>
+                schedule.remindDate.year == now.year &&
+                schedule.remindDate.month == now.month &&
+                schedule.remindDate.day == now.day &&
+                schedule.status == RemindStatus.pending,
+          )
+          .toList();
+
+      final hasTasks = todaySchedules.isNotEmpty;
+      final taskCount = todaySchedules.length;
 
       debugPrint(
         'Kiểm tra task: ${hasTasks ? "Có $taskCount task" : "Không có task"}',

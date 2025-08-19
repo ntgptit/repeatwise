@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:spaced_learning_app/core/extensions/color_extensions.dart';
-import 'package:spaced_learning_app/domain/models/progress.dart';
+import 'package:spaced_learning_app/core/theme/app_color_scheme.dart';
+
+/// Enum for cycle study states
+enum CycleStudied {
+  firstTime,
+  firstReview,
+  secondReview,
+  thirdReview,
+  moreThanThreeReviews,
+}
 
 /// Extension providing semantic color utilities for theming
 extension SemanticColorExtension on ThemeData {
@@ -43,7 +51,7 @@ extension SemanticColorExtension on ThemeData {
     return colorScheme.error;
   }
 
-  // Colors for CycleStudied
+  /// Colors for CycleStudied
   Color getCycleColor(CycleStudied cycle) {
     final colorScheme = this.colorScheme;
 
@@ -64,17 +72,17 @@ extension SemanticColorExtension on ThemeData {
 
 /// Extension for semantic colors on ColorScheme
 extension SemanticColorSchemeExtension on ColorScheme {
-  // Get semantic color for a stat type
+  /// Get semantic color for a stat type
   Color getStatColor(String statType) {
     switch (statType) {
       case 'success':
-        return success;
+        return AppColors.successGreen;
       case 'warning':
-        return warning;
+        return AppColors.warningOrange;
       case 'error':
         return error;
       case 'info':
-        return info;
+        return AppColors.infoBlue;
       case 'primary':
         return primary;
       case 'secondary':
@@ -86,7 +94,7 @@ extension SemanticColorSchemeExtension on ColorScheme {
     }
   }
 
-  // Get background color for a stat with appropriate opacity
+  /// Get background color for a stat with appropriate opacity
   Color getStatBackgroundColor(String statType, {double opacity = 0.1}) {
     return getStatColor(statType).withValues(alpha: opacity);
   }

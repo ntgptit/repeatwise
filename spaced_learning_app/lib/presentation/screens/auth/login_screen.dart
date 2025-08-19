@@ -55,17 +55,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     _validatePassword();
 
     if (_usernameOrEmailError == null && _passwordError == null) {
+      // Clear any previous errors
+      ref.read(authErrorProvider.notifier).clearError();
+
       final authNotifier = ref.read(authStateProvider.notifier);
       final success = await authNotifier.login(
-        _usernameOrEmailController.text,
+        _usernameOrEmailController.text.trim(),
         _passwordController.text,
       );
 
       if (success &&
           mounted &&
           ref.read(authStateProvider).valueOrNull == true) {
-        // Sử dụng GoRouter thay vì Navigator
-        GoRouter.of(context).go('/');
+        // Navigate to home screen
+        if (context.mounted) {
+          GoRouter.of(context).go('/');
+        }
       }
     }
   }
@@ -92,7 +97,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildHeader(theme),
-                    _buildSLErrorView(authError, theme),
+                    _buildErrorView(authError, theme),
                     _buildFormFields(theme),
                     _buildActions(authState.isLoading, theme),
                   ],
@@ -129,7 +134,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildSLErrorView(String? errorMessage, ThemeData theme) {
+  Widget _buildErrorView(String? errorMessage, ThemeData theme) {
     return errorMessage != null
         ? Column(
             children: [
@@ -153,9 +158,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           hint: 'Enter your username or email',
           controller: _usernameOrEmailController,
           keyboardType: TextInputType.text,
+          textInputAction: TextInputAction.next,
           errorText: _usernameOrEmailError,
           prefixIcon: Icons.person,
-          onChanged: (_) => _usernameOrEmailError = null,
+          onChanged: (_) {
+            setState(() => _usernameOrEmailError = null);
+            ref.read(authErrorProvider.notifier).clearError();
+          },
           onEditingComplete: _validateUsernameOrEmail,
         ),
         const SizedBox(height: 16),
@@ -163,9 +172,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           label: 'Password',
           hint: 'Enter your password',
           controller: _passwordController,
+          textInputAction: TextInputAction.done,
           errorText: _passwordError,
           prefixIcon: Icon(Icons.lock, color: theme.iconTheme.color),
-          onChanged: (_) => _passwordError = null,
+          onChanged: (_) {
+            setState(() => _passwordError = null);
+            ref.read(authErrorProvider.notifier).clearError();
+          },
           onEditingComplete: _validatePassword,
         ),
       ],
@@ -178,7 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         const SizedBox(height: 24),
         SLButton(
           text: 'Login',
-          onPressed: _login,
+          onPressed: isLoading ? null : _login,
           isLoading: isLoading,
           isFullWidth: true,
         ),
@@ -193,9 +206,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
             ),
             TextButton(
-              onPressed: () => Navigator.of(
-                context,
-              ).push(MaterialPageRoute(builder: (_) => const RegisterScreen())),
+              onPressed: isLoading
+                  ? null
+                  : () => Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const RegisterScreen()),
+                    ),
               child: const Text('Register'),
             ),
           ],
