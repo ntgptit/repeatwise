@@ -3,6 +3,7 @@ import 'package:spaced_learning_app/core/pagination/page.dart';
 import 'package:spaced_learning_app/core/pagination/page_dto.dart';
 import 'package:spaced_learning_app/features/review_history/domain/entities/review_history.dart';
 import 'package:spaced_learning_app/features/review_history/domain/entities/review_history_create.dart';
+import 'package:spaced_learning_app/features/review_history/domain/entities/review_status.dart';
 import 'package:spaced_learning_app/features/review_history/domain/entities/review_history_update.dart';
 import 'package:spaced_learning_app/features/review_history/data/models/review_history_create_request_dto.dart';
 import 'package:spaced_learning_app/features/review_history/data/models/review_history_dto.dart';
@@ -18,6 +19,9 @@ class ReviewHistoryMapper {
     if (dto.setId.isEmpty) {
       throw const ParseException('setId is empty');
     }
+    if (dto.status == ReviewStatus.skipped && dto.skipReason == null) {
+      throw const ParseException('skipReason is required when status is skipped');
+    }
     return ReviewHistory(
       id: dto.id,
       setId: dto.setId,
@@ -26,6 +30,7 @@ class ReviewHistoryMapper {
       reviewNo: dto.reviewNo,
       score: dto.score,
       status: dto.status,
+      skipReason: dto.skipReason,
       note: dto.note,
       createdAt: dto.createdAt,
       updatedAt: dto.updatedAt,
@@ -39,6 +44,7 @@ class ReviewHistoryMapper {
       reviewNo: entity.reviewNo,
       score: entity.score,
       status: entity.status,
+      skipReason: entity.skipReason,
       note: entity.note,
     );
   }
@@ -47,6 +53,7 @@ class ReviewHistoryMapper {
     return ReviewHistoryUpdateRequestDto(
       score: entity.score,
       status: entity.status,
+      skipReason: entity.skipReason,
       note: entity.note,
     );
   }

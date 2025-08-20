@@ -18,19 +18,19 @@ void main() {
   print('Valid -> ${ReviewHistoryMapper.fromDto(dto)}');
 
   final missingJson = {
-    'id': '',
+    'id': '1',
     'setId': '2',
     'setName': 'Set A',
     'cycleNo': 1,
     'reviewNo': 1,
-    'status': 'COMPLETED',
+    'status': 'SKIPPED',
     'createdAt': '2024-01-01T00:00:00Z',
     'updatedAt': '2024-01-01T00:00:00Z'
   };
   try {
     ReviewHistoryMapper.fromDto(ReviewHistoryDto.fromJson(missingJson));
   } catch (e) {
-    print('Missing -> $e');
+    print('Missing skipReason -> $e');
   }
 
   final invalidDateJson = {
