@@ -6,10 +6,10 @@ import 'package:spaced_learning_app/core/theme/app_dimens.dart';
 import 'package:spaced_learning_app/presentation/screens/home/widgets/home_content.dart';
 import 'package:spaced_learning_app/presentation/screens/home/widgets/home_error.dart';
 import 'package:spaced_learning_app/presentation/viewmodels/home_viewmodel.dart';
-import 'package:spaced_learning_app/presentation/widgets/home/home_skeleton_screen.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/home_skeleton_screen.dart';
 
-import '../../../core/theme/app_theme_data.dart';
-import '../../widgets/home/home_app_bar.dart';
+import 'package:spaced_learning_app/core/theme/app_theme_data.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/home_app_bar.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});

@@ -7,10 +7,10 @@ import 'package:spaced_learning_app/presentation/utils/snackbar_utils.dart';
 import 'package:spaced_learning_app/presentation/viewmodels/daily_task_report_viewmodel.dart';
 import 'package:spaced_learning_app/presentation/widgets/common/error_display.dart';
 import 'package:spaced_learning_app/presentation/widgets/common/loading_indicator.dart';
-import 'package:spaced_learning_app/presentation/widgets/report/bottom_bar_widget.dart';
-import 'package:spaced_learning_app/presentation/widgets/report/last_check_card_widget.dart';
-import 'package:spaced_learning_app/presentation/widgets/report/log_card_widget.dart';
-import 'package:spaced_learning_app/presentation/widgets/report/status_card_widget.dart';
+import 'package:spaced_learning_app/presentation/screens/report/widgets/bottom_bar_widget.dart';
+import 'package:spaced_learning_app/presentation/screens/report/widgets/last_check_card_widget.dart';
+import 'package:spaced_learning_app/presentation/screens/report/widgets/log_card_widget.dart';
+import 'package:spaced_learning_app/presentation/screens/report/widgets/status_card_widget.dart';
 
 class DailyTaskReportScreen extends ConsumerStatefulWidget {
   const DailyTaskReportScreen({super.key});
