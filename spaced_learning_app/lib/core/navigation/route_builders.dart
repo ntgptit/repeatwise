@@ -9,6 +9,8 @@ import 'package:spaced_learning_app/presentation/screens/home/home_screen.dart';
 import 'package:spaced_learning_app/presentation/screens/profile/profile_screen.dart';
 import 'package:spaced_learning_app/presentation/screens/report/daily_task_report_screen.dart';
 import 'package:spaced_learning_app/presentation/screens/settings/reminder_settings_screen.dart';
+import 'package:spaced_learning_app/features/learning_set/presentation/views/learning_set_list_screen.dart';
+import 'package:spaced_learning_app/features/review_history/presentation/views/review_history_list_screen.dart';
 
 /// Lớp chứa các route builders để tách biệt logic tạo routes
 class RouteBuilders {
@@ -242,6 +244,33 @@ class RouteBuilders {
       path: RouteConstants.home,
       name: RouteConstants.homeName,
       builder: (context, state) => const HomeScreen(),
+    ),
+  ];
+
+  /// Learning set routes
+  static List<RouteBase> get learningSetRoutes => [
+    GoRoute(
+      path: RouteConstants.learningSets,
+      name: RouteConstants.learningSetsName,
+      builder: (context, state) => const LearningSetListScreen(),
+      routes: [
+        GoRoute(
+          path: ':${RouteParameters.setId}/reviews',
+          name: RouteConstants.learningSetReviewsName,
+          builder: (context, state) {
+            final setId = state.pathParameters.getSetId();
+            if (!state.pathParameters.hasValidSetId()) {
+              return NavigationErrorHandler.handleInvalidParameter(
+                context: context,
+                parameterName: RouteParameters.setId,
+                errorMessage: RouteParameters.invalidSetIdMessage,
+                fallbackRoute: RouteConstants.learningSets,
+              );
+            }
+            return ReviewHistoryListScreen(setId: setId!);
+          },
+        ),
+      ],
     ),
   ];
 

@@ -80,6 +80,7 @@ List<RouteBase> _buildAllRoutes() {
         ...RouteBuilders.settingsRoutes,
         ...RouteBuilders.helpRoutes,
         ...RouteBuilders.reportRoutes,
+        ...RouteBuilders.learningSetRoutes,
       ],
     ),
   ];
@@ -100,11 +101,17 @@ Widget _buildShellBuilder(
 int _getCurrentIndex(String location) {
   if (location.startsWith(RouteConstants.books)) {
     return 1;
-  } else if (location.startsWith(RouteConstants.dueProgress)) {
+  }
+  if (location.startsWith(RouteConstants.dueProgress)) {
     return 2;
-  } else if (location.startsWith(RouteConstants.learning)) {
+  }
+  if (location.startsWith(RouteConstants.learning)) {
     return 3;
-  } else if (location.startsWith(RouteConstants.profile)) {
+  }
+  if (location.startsWith(RouteConstants.learningSets)) {
+    return 3;
+  }
+  if (location.startsWith(RouteConstants.profile)) {
     return 4;
   }
   return 0; // Home

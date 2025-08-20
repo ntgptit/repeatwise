@@ -21,6 +21,8 @@ class RouteConstants {
   static const String learning = '/learning';
   static const String learningProgress = '/learning/progress/:id';
   static const String learningModule = '/learning/modules/:id';
+  static const String learningSets = '/learning-sets';
+  static const String learningSetReviews = '/learning-sets/:setId/reviews';
 
   static const String profile = '/profile';
   static const String dueProgress = '/due-progress';
@@ -42,6 +44,8 @@ class RouteConstants {
   static const String learningName = 'learning';
   static const String learningProgressName = 'learningProgress';
   static const String learningModuleName = 'learningModule';
+  static const String learningSetsName = 'learningSets';
+  static const String learningSetReviewsName = 'learningSetReviews';
   static const String profileName = 'profile';
   static const String dueProgressName = 'dueProgress';
   static const String reminderSettingsName = 'reminderSettings';
@@ -76,6 +80,8 @@ class RouteConstants {
 
   static String learningModuleRoute(String moduleId) =>
       '/learning/modules/$moduleId';
+  static String learningSetReviewsRoute(String setId) =>
+      '/learning-sets/$setId/reviews';
 
   /// Kiểm tra xem route có phải là public route không
   static bool isPublicRoute(String route) {
@@ -95,6 +101,8 @@ class RouteConstants {
         return booksName;
       case learning:
         return learningName;
+      case learningSets:
+        return learningSetsName;
       case profile:
         return profileName;
       case dueProgress:
