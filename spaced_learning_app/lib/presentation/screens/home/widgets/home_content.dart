@@ -5,10 +5,10 @@ import 'package:spaced_learning_app/core/theme/app_dimens.dart';
 import 'package:spaced_learning_app/presentation/screens/home/widgets/home_header.dart';
 import 'package:spaced_learning_app/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:spaced_learning_app/presentation/viewmodels/progress_viewmodel.dart';
-import 'package:spaced_learning_app/presentation/widgets/home/dashboard/dashboard_section.dart';
-import 'package:spaced_learning_app/presentation/widgets/home/due_tasks_section.dart';
-import 'package:spaced_learning_app/presentation/widgets/home/insights/learning_insights_section.dart';
-import 'package:spaced_learning_app/presentation/widgets/home/quick_actions_section.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/dashboard/dashboard_section.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/due_tasks_section.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/insights/learning_insights_section.dart';
+import 'package:spaced_learning_app/presentation/screens/home/widgets/quick_actions_section.dart';
 
 class HomeContent extends ConsumerWidget {
   final Future<void> Function() onRefresh;

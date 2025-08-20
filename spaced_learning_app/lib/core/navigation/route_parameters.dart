@@ -7,18 +7,21 @@ class RouteParameters {
   static const String moduleId = 'moduleId';
   static const String grammarId = 'grammarId';
   static const String progressId = 'id';
+  static const String setId = 'setId';
 
   /// Validation methods
   static bool isValidBookId(String? id) => id != null && id.isNotEmpty;
   static bool isValidModuleId(String? id) => id != null && id.isNotEmpty;
   static bool isValidGrammarId(String? id) => id != null && id.isNotEmpty;
   static bool isValidProgressId(String? id) => id != null && id.isNotEmpty;
+  static bool isValidSetId(String? id) => id != null && id.isNotEmpty;
 
   /// Error messages
   static const String invalidBookIdMessage = 'Invalid book ID';
   static const String invalidModuleIdMessage = 'Invalid module ID';
   static const String invalidGrammarIdMessage = 'Invalid grammar ID';
   static const String invalidProgressIdMessage = 'Invalid progress ID';
+  static const String invalidSetIdMessage = 'Invalid set ID';
 }
 
 /// Extension để validate route parameters
@@ -27,9 +30,11 @@ extension RouteParameterValidation on Map<String, String> {
   String? getModuleId() => this[RouteParameters.moduleId];
   String? getGrammarId() => this[RouteParameters.grammarId];
   String? getProgressId() => this[RouteParameters.progressId];
+  String? getSetId() => this[RouteParameters.setId];
 
   bool hasValidBookId() => RouteParameters.isValidBookId(getBookId());
   bool hasValidModuleId() => RouteParameters.isValidModuleId(getModuleId());
   bool hasValidGrammarId() => RouteParameters.isValidGrammarId(getGrammarId());
   bool hasValidProgressId() => RouteParameters.isValidProgressId(getProgressId());
+  bool hasValidSetId() => RouteParameters.isValidSetId(getSetId());
 }
