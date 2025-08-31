@@ -1,0 +1,1001 @@
+openapi: 3.1.0
+info:
+  title: RepeatWise API
+  description: |
+    API cho hệ thống học tập lặp lại thông minh RepeatWise.
+    
+    ## Tính năng chính
+    - Quản lý set học tập
+    - Chu kỳ học tập 5 lần ôn tập
+    - Hệ thống nhắc nhở thông minh
+    - Thống kê và phân tích tiến trình
+    
+    ## Authentication
+    API sử dụng JWT Bearer token cho authentication.
+    
+    ## Versioning
+    - Current Version: v1
+    - Base URL: `/api/v1`
+    
+    ## Rate Limiting
+    - 100 requests/minute cho authenticated users
+    - 10 requests/minute cho unauthenticated users
+    
+  version: 1.0.0
+  contact:
+    name: RepeatWise Team
+    email: support@repeatwise.com
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://api.repeatwise.com/api/v1
+    description: Production server
+  - url: https://staging-api.repeatwise.com/api/v1
+    description: Staging server
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+security:
+  - BearerAuth: []
+
+paths:
+  # Authentication endpoints
+  /auth/register:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng ký tài khoản mới
+      description: Tạo tài khoản user mới
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Đăng ký thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserDTO'
+        '400':
+          description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Email đã tồn tại
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Đăng nhập
+      description: Xác thực user và trả về JWT token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Đăng nhập thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Thông tin đăng nhập không đúng
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/refresh:
+    post:
+      tags:
+        - Authentication
+      summary: Làm mới token
+      description: Làm mới JWT token sử dụng refresh token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshTokenRequest'
+      responses:
+        '200':
+          description: Làm mới token thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Refresh token không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # User management endpoints
+  /users/profile:
+    get:
+      tags:
+        - Users
+      summary: Lấy thông tin profile
+      description: Lấy thông tin profile của user hiện tại
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserDTO'
+        '401':
+          description: Chưa xác thực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Users
+      summary: Cập nhật profile
+      description: Cập nhật thông tin profile của user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProfileRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/UserDTO'
+        '400':
+          description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Learning sets endpoints
+  /learning-sets:
+    get:
+      tags:
+        - Learning Sets
+      summary: Lấy danh sách set học tập
+      description: Lấy danh sách set học tập của user với pagination
+      parameters:
+        - name: page
+          in: query
+          description: Số trang (bắt đầu từ 0)
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Số lượng items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: sort
+          in: query
+          description: Sắp xếp theo field
+          required: false
+          schema:
+            type: string
+            example: "createdAt,desc"
+        - name: status
+          in: query
+          description: Lọc theo trạng thái
+          required: false
+          schema:
+            type: string
+            enum: [active, paused, completed]
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginationResponse'
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/LearningSetDTO'
+        '401':
+          description: Chưa xác thực
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    post:
+      tags:
+        - Learning Sets
+      summary: Tạo set học tập mới
+      description: Tạo một set học tập mới cho user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateLearningSetRequest'
+      responses:
+        '201':
+          description: Tạo thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LearningSetDTO'
+        '400':
+          description: Dữ liệu không hợp lệ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Vượt quá giới hạn set/ngày
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /learning-sets/{setId}:
+    get:
+      tags:
+        - Learning Sets
+      summary: Lấy chi tiết set học tập
+      description: Lấy thông tin chi tiết của một set học tập
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LearningSetDetailDTO'
+        '404':
+          description: Không tìm thấy set học tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    put:
+      tags:
+        - Learning Sets
+      summary: Cập nhật set học tập
+      description: Cập nhật thông tin của set học tập
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateLearningSetRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/LearningSetDTO'
+        '404':
+          description: Không tìm thấy set học tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    delete:
+      tags:
+        - Learning Sets
+      summary: Xóa set học tập
+      description: Xóa một set học tập
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Xóa thành công
+        '404':
+          description: Không tìm thấy set học tập
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /learning-sets/{setId}/cycles:
+    get:
+      tags:
+        - Learning Cycles
+      summary: Lấy danh sách chu kỳ học tập
+      description: Lấy danh sách chu kỳ học tập của một set
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+        - name: page
+          in: query
+          description: Số trang
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Số lượng items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginationResponse'
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/CycleDTO'
+
+  /learning-sets/{setId}/cycles/{cycleId}:
+    get:
+      tags:
+        - Learning Cycles
+      summary: Lấy chi tiết chu kỳ học tập
+      description: Lấy thông tin chi tiết của một chu kỳ học tập
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+        - name: cycleId
+          in: path
+          required: true
+          description: ID của chu kỳ học tập
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CycleDetailDTO'
+
+    put:
+      tags:
+        - Learning Cycles
+      summary: Cập nhật chu kỳ học tập
+      description: Cập nhật thông tin của chu kỳ học tập (nhập điểm, hoàn thành)
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+        - name: cycleId
+          in: path
+          required: true
+          description: ID của chu kỳ học tập
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCycleRequest'
+      responses:
+        '200':
+          description: Cập nhật thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/CycleDTO'
+
+  # Statistics endpoints
+  /statistics:
+    get:
+      tags:
+        - Statistics
+      summary: Lấy thống kê tổng quan
+      description: Lấy thống kê tổng quan về tiến trình học tập
+      parameters:
+        - name: period
+          in: query
+          description: Khoảng thời gian thống kê
+          required: false
+          schema:
+            type: string
+            enum: [week, month, year, all]
+            default: month
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/StatisticsDTO'
+
+  /statistics/learning-sets/{setId}:
+    get:
+      tags:
+        - Statistics
+      summary: Lấy thống kê set học tập
+      description: Lấy thống kê chi tiết của một set học tập
+      parameters:
+        - name: setId
+          in: path
+          required: true
+          description: ID của set học tập
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/SetStatisticsDTO'
+
+  # Reminders endpoints
+  /reminders:
+    get:
+      tags:
+        - Reminders
+      summary: Lấy danh sách nhắc nhở
+      description: Lấy danh sách nhắc nhở của user
+      parameters:
+        - name: status
+          in: query
+          description: Lọc theo trạng thái
+          required: false
+          schema:
+            type: string
+            enum: [pending, completed, skipped]
+        - name: page
+          in: query
+          description: Số trang
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          description: Số lượng items per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/PaginationResponse'
+                    properties:
+                      content:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/ReminderDTO'
+
+  /reminders/{reminderId}/reschedule:
+    post:
+      tags:
+        - Reminders
+      summary: Lên lịch lại nhắc nhở
+      description: Lên lịch lại thời gian nhắc nhở
+      parameters:
+        - name: reminderId
+          in: path
+          required: true
+          description: ID của nhắc nhở
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleReminderRequest'
+      responses:
+        '200':
+          description: Lên lịch lại thành công
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ReminderDTO'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    # Common schemas
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        data:
+          description: Response data
+        message:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+        timestamp:
+          type: string
+          format: date-time
+        path:
+          type: string
+
+    PaginationResponse:
+      type: object
+      properties:
+        content:
+          type: array
+        pageable:
+          type: object
+          properties:
+            pageNumber:
+              type: integer
+            pageSize:
+              type: integer
+            sort:
+              type: object
+        totalElements:
+          type: integer
+        totalPages:
+          type: integer
+        last:
+          type: boolean
+        first:
+          type: boolean
+        numberOfElements:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        sort:
+          type: object
+        empty:
+          type: boolean
+
+    # Authentication schemas
+    RegisterRequest:
+      type: object
+      required:
+        - email
+        - password
+        - fullName
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          minLength: 8
+          example: "password123"
+        fullName:
+          type: string
+          maxLength: 100
+          example: "Nguyễn Văn A"
+        preferredLanguage:
+          type: string
+          enum: [VI, EN]
+          default: VI
+          example: "VI"
+
+    LoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "user@example.com"
+        password:
+          type: string
+          example: "password123"
+
+    LoginResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          description: Token expiration time in seconds
+        user:
+          $ref: '#/components/schemas/UserDTO'
+
+    RefreshTokenRequest:
+      type: object
+      required:
+        - refreshToken
+      properties:
+        refreshToken:
+          type: string
+
+    # User schemas
+    UserDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        fullName:
+          type: string
+        preferredLanguage:
+          type: string
+          enum: [VI, EN]
+        timezone:
+          type: string
+        defaultReminderTime:
+          type: string
+          format: time
+        status:
+          type: string
+          enum: [active, inactive, suspended]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    UpdateProfileRequest:
+      type: object
+      properties:
+        fullName:
+          type: string
+          maxLength: 100
+        preferredLanguage:
+          type: string
+          enum: [VI, EN]
+        timezone:
+          type: string
+        defaultReminderTime:
+          type: string
+          format: time
+
+    # Learning Set schemas
+    LearningSetDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, completed]
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    LearningSetDetailDTO:
+      allOf:
+        - $ref: '#/components/schemas/LearningSetDTO'
+        - type: object
+          properties:
+            cycles:
+              type: array
+              items:
+                $ref: '#/components/schemas/CycleDTO'
+            statistics:
+              $ref: '#/components/schemas/SetStatisticsDTO'
+
+    CreateLearningSetRequest:
+      type: object
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          maxLength: 100
+          example: "Set học từ vựng"
+        description:
+          type: string
+          maxLength: 500
+          example: "Set học từ vựng tiếng Anh"
+
+    UpdateLearningSetRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 100
+        description:
+          type: string
+          maxLength: 500
+        status:
+          type: string
+          enum: [active, paused, completed]
+
+    # Cycle schemas
+    CycleDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        orderNumber:
+          type: integer
+        status:
+          type: string
+          enum: [pending, in_progress, completed, skipped]
+        scheduledAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+
+    CycleDetailDTO:
+      allOf:
+        - $ref: '#/components/schemas/CycleDTO'
+        - type: object
+          properties:
+            set:
+              $ref: '#/components/schemas/LearningSetDTO'
+
+    UpdateCycleRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [completed, skipped]
+        score:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Điểm số từ 0-100%
+
+    # Statistics schemas
+    StatisticsDTO:
+      type: object
+      properties:
+        totalSets:
+          type: integer
+        activeSets:
+          type: integer
+        completedSets:
+          type: integer
+        totalCycles:
+          type: integer
+        completedCycles:
+          type: integer
+        averageScore:
+          type: number
+        studyStreak:
+          type: integer
+        period:
+          type: string
+          enum: [week, month, year, all]
+
+    SetStatisticsDTO:
+      type: object
+      properties:
+        setId:
+          type: string
+          format: uuid
+        totalCycles:
+          type: integer
+        completedCycles:
+          type: integer
+        averageScore:
+          type: number
+        bestScore:
+          type: number
+        worstScore:
+          type: number
+        studyTime:
+          type: integer
+          description: Tổng thời gian học tính bằng phút
+
+    # Reminder schemas
+    ReminderDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        set:
+          $ref: '#/components/schemas/LearningSetDTO'
+        cycle:
+          $ref: '#/components/schemas/CycleDTO'
+        scheduledAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [pending, completed, skipped]
+        type:
+          type: string
+          enum: [push, email, sms]
+
+    RescheduleReminderRequest:
+      type: object
+      required:
+        - scheduledAt
+      properties:
+        scheduledAt:
+          type: string
+          format: date-time
+          description: Thời gian nhắc nhở mới
+
+tags:
+  - name: Authentication
+    description: Các endpoint xác thực và quản lý tài khoản
+  - name: Users
+    description: Quản lý thông tin user
+  - name: Learning Sets
+    description: Quản lý set học tập
+  - name: Learning Cycles
+    description: Quản lý chu kỳ học tập
+  - name: Statistics
+    description: Thống kê và phân tích
+  - name: Reminders
+    description: Quản lý nhắc nhở học tập 

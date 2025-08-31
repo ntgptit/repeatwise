@@ -1,0 +1,1344 @@
+# Import/Export/Backup/Restore API Endpoints
+# Bổ sung cho openapi.yaml chính
+
+paths:
+  # Import Management
+  /data/import:
+    post:
+      tags:
+        - Data Management
+      summary: Import learning data
+      description: |
+        Import learning data from file. Supports multiple formats and conflict resolution.
+        
+        ## Supported Formats
+        - JSON (RepeatWise format)
+        - CSV (basic data)
+        - Excel (.xlsx)
+        
+        ## Import Modes
+        - **merge**: Combine with existing data
+        - **replace**: Replace existing data
+        
+        ## Conflict Resolution
+        - **skip**: Skip conflicting items
+        - **overwrite**: Overwrite existing items
+        - **rename**: Rename imported items
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Import file (max 100MB)
+                importOptions:
+                  $ref: '#/components/schemas/ImportOptions'
+                conflictResolution:
+                  $ref: '#/components/schemas/ConflictResolution'
+      responses:
+        '200':
+          description: Import completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportResult'
+        '202':
+          description: Import scheduled for large dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportScheduledResult'
+        '400':
+          description: Invalid import file or options
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflicts detected in import data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ConflictReport'
+
+  /data/import/{importId}:
+    get:
+      tags:
+        - Data Management
+      summary: Get import status
+      description: Check the status of an import operation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Import status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportStatus'
+        '404':
+          description: Import not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      tags:
+        - Data Management
+      summary: Cancel import
+      description: Cancel a pending or running import operation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Import cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Import not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Import cannot be cancelled (already completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /data/import/{importId}/preview:
+    get:
+      tags:
+        - Data Management
+      summary: Preview import data
+      description: Get a preview of data to be imported
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Import preview retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportPreview'
+        '404':
+          description: Import not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /data/import/{importId}/resolve:
+    post:
+      tags:
+        - Data Management
+      summary: Resolve import conflicts
+      description: Resolve conflicts detected during import
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: importId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConflictResolutions'
+      responses:
+        '200':
+          description: Conflicts resolved and import completed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ImportResult'
+        '400':
+          description: Invalid conflict resolutions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Import not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Export Management
+  /data/export:
+    post:
+      tags:
+        - Data Management
+      summary: Export learning data
+      description: |
+        Export learning data in various formats.
+        
+        ## Export Types
+        - **all**: All user data
+        - **sets**: Only learning sets
+        - **cycles**: Only learning cycles
+        - **reviews**: Only review history
+        
+        ## Formats
+        - **json**: RepeatWise format
+        - **csv**: Comma-separated values
+        - **excel**: Excel spreadsheet
+        - **pdf**: PDF report
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExportRequest'
+      responses:
+        '200':
+          description: Export completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ExportResult'
+        '202':
+          description: Export scheduled for large dataset
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ExportScheduledResult'
+        '400':
+          description: Invalid export request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /data/export/{exportId}:
+    get:
+      tags:
+        - Data Management
+      summary: Get export status
+      description: Check the status of an export operation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Export status retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/ExportStatus'
+        '404':
+          description: Export not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      tags:
+        - Data Management
+      summary: Cancel export
+      description: Cancel a pending or running export operation
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Export cancelled successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Export not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Export cannot be cancelled (already completed)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /data/export/{exportId}/download:
+    get:
+      tags:
+        - Data Management
+      summary: Download export file
+      description: Download the exported file
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: exportId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Export file downloaded
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Export not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '410':
+          description: Export file expired
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  # Backup Management
+  /backup:
+    post:
+      tags:
+        - Backup Management
+      summary: Create backup
+      description: |
+        Create a backup of user's learning data.
+        
+        ## Backup Types
+        - **manual**: Immediate backup
+        - **scheduled**: Scheduled backup
+        - **incremental**: Only changed data
+        - **full**: Complete data backup
+        
+        ## Backup Locations
+        - **cloud**: Cloud storage (Google Drive, Dropbox)
+        - **local**: Local device storage
+        - **email**: Email backup
+        - **external**: External storage
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupRequest'
+      responses:
+        '201':
+          description: Backup created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BackupResult'
+        '202':
+          description: Backup scheduled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BackupScheduledResult'
+        '400':
+          description: Invalid backup request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '401':
+          description: Cloud storage authentication required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    get:
+      tags:
+        - Backup Management
+      summary: List backups
+      description: Get list of user's backups
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [completed, failed, in_progress, scheduled]
+      responses:
+        '200':
+          description: Backups retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/BackupSummary'
+
+  /backup/{backupId}:
+    get:
+      tags:
+        - Backup Management
+      summary: Get backup details
+      description: Get detailed information about a specific backup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Backup details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BackupDetails'
+        '404':
+          description: Backup not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+    
+    delete:
+      tags:
+        - Backup Management
+      summary: Delete backup
+      description: Delete a backup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Backup deleted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '404':
+          description: Backup not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Backup cannot be deleted (in use)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /backup/{backupId}/schedule:
+    put:
+      tags:
+        - Backup Management
+      summary: Update backup schedule
+      description: Update the schedule for a scheduled backup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackupSchedule'
+      responses:
+        '200':
+          description: Backup schedule updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+        '400':
+          description: Invalid schedule
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Backup not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /backup/{backupId}/restore:
+    post:
+      tags:
+        - Backup Management
+      summary: Restore from backup
+      description: |
+        Restore data from a backup.
+        
+        ## Restore Modes
+        - **full**: Restore all data
+        - **selective**: Restore selected components
+        
+        ## Conflict Resolution
+        - **overwrite**: Overwrite existing data
+        - **skip**: Skip conflicting data
+        - **merge**: Merge data
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestoreRequest'
+      responses:
+        '200':
+          description: Restore completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RestoreResult'
+        '400':
+          description: Invalid restore request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Backup not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Restore conflicts detected
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RestoreConflictReport'
+
+  /backup/{backupId}/preview:
+    post:
+      tags:
+        - Backup Management
+      summary: Preview restore
+      description: Preview what will be restored from backup
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: backupId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestorePreviewRequest'
+      responses:
+        '200':
+          description: Restore preview generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+                properties:
+                  data:
+                    $ref: '#/components/schemas/RestorePreview'
+        '400':
+          description: Invalid preview request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Backup not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    # Import schemas
+    ImportOptions:
+      type: object
+      properties:
+        importMode:
+          type: string
+          enum: [merge, replace]
+          default: merge
+          description: How to handle existing data
+        conflictResolution:
+          type: string
+          enum: [skip, overwrite, rename]
+          default: skip
+          description: How to handle conflicts
+        dataValidationLevel:
+          type: string
+          enum: [basic, strict, custom]
+          default: strict
+          description: Level of data validation
+        backupExisting:
+          type: boolean
+          default: true
+          description: Backup existing data before import
+        selectedComponents:
+          type: array
+          items:
+            type: string
+            enum: [sets, cycles, reviews, preferences]
+          description: Components to import (for selective import)
+
+    ConflictResolution:
+      type: object
+      properties:
+        strategy:
+          type: string
+          enum: [skip, overwrite, rename]
+          default: skip
+        customRules:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConflictRule'
+
+    ConflictRule:
+      type: object
+      properties:
+        field:
+          type: string
+          description: Field to check for conflicts
+        condition:
+          type: string
+          enum: [equals, contains, regex]
+        action:
+          type: string
+          enum: [skip, overwrite, rename]
+
+    ImportResult:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed, failed, in_progress]
+        importedItems:
+          type: object
+          properties:
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+        conflicts:
+          type: integer
+        errors:
+          type: integer
+        duration:
+          type: integer
+          description: Duration in seconds
+        createdAt:
+          type: string
+          format: date-time
+
+    ImportScheduledResult:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [scheduled]
+        estimatedStartTime:
+          type: string
+          format: date-time
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+
+    ImportStatus:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed, cancelled]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStep:
+          type: string
+        estimatedTimeRemaining:
+          type: integer
+          description: Seconds remaining
+        errors:
+          type: array
+          items:
+            type: string
+
+    ImportPreview:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+        summary:
+          type: object
+          properties:
+            totalItems:
+              type: integer
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConflictItem'
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+
+    ConflictItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [set, cycle, review]
+        field:
+          type: string
+        existingValue:
+          type: string
+        importedValue:
+          type: string
+        conflictType:
+          type: string
+          enum: [duplicate, modified, deleted]
+
+    ConflictReport:
+      type: object
+      properties:
+        importId:
+          type: string
+          format: uuid
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/ConflictItem'
+        totalConflicts:
+          type: integer
+        resolutionRequired:
+          type: boolean
+
+    ConflictResolutions:
+      type: object
+      properties:
+        globalStrategy:
+          type: string
+          enum: [skip, overwrite, rename]
+        specificResolutions:
+          type: array
+          items:
+            $ref: '#/components/schemas/SpecificResolution'
+
+    SpecificResolution:
+      type: object
+      properties:
+        conflictId:
+          type: string
+        action:
+          type: string
+          enum: [skip, overwrite, rename]
+        newName:
+          type: string
+          description: Required when action is rename
+
+    # Export schemas
+    ExportRequest:
+      type: object
+      required:
+        - exportType
+        - format
+      properties:
+        exportType:
+          type: string
+          enum: [all, sets, cycles, reviews]
+          description: What data to export
+        format:
+          type: string
+          enum: [json, csv, excel, pdf]
+          description: Export format
+        dateRange:
+          $ref: '#/components/schemas/DateRange'
+        options:
+          $ref: '#/components/schemas/ExportOptions'
+        selectedSets:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Specific sets to export (for selective export)
+
+    DateRange:
+      type: object
+      properties:
+        startDate:
+          type: string
+          format: date
+        endDate:
+          type: string
+          format: date
+
+    ExportOptions:
+      type: object
+      properties:
+        includeMetadata:
+          type: boolean
+          default: true
+        includeStatistics:
+          type: boolean
+          default: true
+        compression:
+          type: boolean
+          default: false
+        password:
+          type: string
+          description: Password for encrypted export
+
+    ExportResult:
+      type: object
+      properties:
+        exportId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed]
+        downloadUrl:
+          type: string
+          format: uri
+        fileSize:
+          type: integer
+          description: File size in bytes
+        expiresAt:
+          type: string
+          format: date-time
+        exportedItems:
+          type: object
+          properties:
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+
+    ExportScheduledResult:
+      type: object
+      properties:
+        exportId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [scheduled]
+        estimatedStartTime:
+          type: string
+          format: date-time
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+
+    ExportStatus:
+      type: object
+      properties:
+        exportId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, in_progress, completed, failed, cancelled]
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        currentStep:
+          type: string
+        estimatedTimeRemaining:
+          type: integer
+          description: Seconds remaining
+        downloadUrl:
+          type: string
+          format: uri
+        expiresAt:
+          type: string
+          format: date-time
+
+    # Backup schemas
+    BackupRequest:
+      type: object
+      required:
+        - backupType
+      properties:
+        backupType:
+          type: string
+          enum: [manual, scheduled, incremental, full]
+        backupScope:
+          $ref: '#/components/schemas/BackupScope'
+        backupLocation:
+          type: string
+          enum: [cloud, local, email, external]
+          default: cloud
+        encryption:
+          type: boolean
+          default: true
+        compression:
+          type: boolean
+          default: true
+        retentionPeriod:
+          type: integer
+          description: Days to keep backup
+          default: 365
+        schedule:
+          $ref: '#/components/schemas/BackupSchedule'
+        description:
+          type: string
+          description: Optional description for the backup
+
+    BackupScope:
+      type: object
+      properties:
+        includeSets:
+          type: boolean
+          default: true
+        includeCycles:
+          type: boolean
+          default: true
+        includeReviews:
+          type: boolean
+          default: true
+        includePreferences:
+          type: boolean
+          default: true
+        includeStatistics:
+          type: boolean
+          default: true
+
+    BackupSchedule:
+      type: object
+      properties:
+        frequency:
+          type: string
+          enum: [daily, weekly, monthly]
+        time:
+          type: string
+          format: time
+          description: Time of day (HH:MM)
+        timezone:
+          type: string
+          description: IANA timezone identifier
+        dayOfWeek:
+          type: integer
+          minimum: 1
+          maximum: 7
+          description: Day of week (1=Monday, 7=Sunday) for weekly schedule
+        dayOfMonth:
+          type: integer
+          minimum: 1
+          maximum: 31
+          description: Day of month for monthly schedule
+        enabled:
+          type: boolean
+          default: true
+
+    BackupResult:
+      type: object
+      properties:
+        backupId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed]
+        fileUrl:
+          type: string
+          format: uri
+        fileSize:
+          type: integer
+          description: File size in bytes
+        backupScope:
+          $ref: '#/components/schemas/BackupScope'
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    BackupScheduledResult:
+      type: object
+      properties:
+        backupId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [scheduled]
+        nextBackupTime:
+          type: string
+          format: date-time
+        schedule:
+          $ref: '#/components/schemas/BackupSchedule'
+
+    BackupSummary:
+      type: object
+      properties:
+        backupId:
+          type: string
+          format: uuid
+        backupType:
+          type: string
+          enum: [manual, scheduled, incremental, full]
+        status:
+          type: string
+          enum: [completed, failed, in_progress, scheduled]
+        fileSize:
+          type: integer
+          description: File size in bytes
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+
+    BackupDetails:
+      type: object
+      properties:
+        backupId:
+          type: string
+          format: uuid
+        backupType:
+          type: string
+          enum: [manual, scheduled, incremental, full]
+        status:
+          type: string
+          enum: [completed, failed, in_progress, scheduled]
+        backupScope:
+          $ref: '#/components/schemas/BackupScope'
+        backupLocation:
+          type: string
+          enum: [cloud, local, email, external]
+        fileUrl:
+          type: string
+          format: uri
+        fileSize:
+          type: integer
+          description: File size in bytes
+        encryption:
+          type: boolean
+        compression:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        description:
+          type: string
+        schedule:
+          $ref: '#/components/schemas/BackupSchedule'
+        backupStats:
+          type: object
+          properties:
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+
+    # Restore schemas
+    RestoreRequest:
+      type: object
+      required:
+        - restoreMode
+      properties:
+        restoreMode:
+          type: string
+          enum: [full, selective]
+        conflictResolution:
+          type: string
+          enum: [overwrite, skip, merge]
+          default: skip
+        backupCurrent:
+          type: boolean
+          default: true
+          description: Backup current data before restore
+        selectedComponents:
+          type: array
+          items:
+            type: string
+            enum: [sets, cycles, reviews, preferences]
+          description: Components to restore (for selective restore)
+        selectedSets:
+          type: array
+          items:
+            type: string
+            format: uuid
+          description: Specific sets to restore
+
+    RestorePreviewRequest:
+      type: object
+      properties:
+        restoreMode:
+          type: string
+          enum: [full, selective]
+        selectedComponents:
+          type: array
+          items:
+            type: string
+            enum: [sets, cycles, reviews, preferences]
+        selectedSets:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    RestoreResult:
+      type: object
+      properties:
+        restoreId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [completed]
+        restoredItems:
+          type: object
+          properties:
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+        conflicts:
+          type: integer
+        errors:
+          type: integer
+        duration:
+          type: integer
+          description: Duration in seconds
+        currentBackupId:
+          type: string
+          format: uuid
+          description: ID of backup created before restore
+        createdAt:
+          type: string
+          format: date-time
+
+    RestorePreview:
+      type: object
+      properties:
+        restoreId:
+          type: string
+          format: uuid
+        summary:
+          type: object
+          properties:
+            totalItems:
+              type: integer
+            sets:
+              type: integer
+            cycles:
+              type: integer
+            reviews:
+              type: integer
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestoreConflictItem'
+        estimatedDuration:
+          type: integer
+          description: Estimated duration in seconds
+        currentBackupRequired:
+          type: boolean
+
+    RestoreConflictItem:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [set, cycle, review]
+        field:
+          type: string
+        currentValue:
+          type: string
+        backupValue:
+          type: string
+        conflictType:
+          type: string
+          enum: [modified, deleted, new]
+
+    RestoreConflictReport:
+      type: object
+      properties:
+        restoreId:
+          type: string
+          format: uuid
+        conflicts:
+          type: array
+          items:
+            $ref: '#/components/schemas/RestoreConflictItem'
+        totalConflicts:
+          type: integer
+        resolutionRequired:
+          type: boolean
