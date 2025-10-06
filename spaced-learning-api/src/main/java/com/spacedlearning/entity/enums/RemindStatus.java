@@ -7,16 +7,21 @@ import lombok.Getter;
  */
 @Getter
 public enum RemindStatus {
-    PENDING("PENDING"),
-    SENT("SENT"),
-    DONE("DONE"),
-    SKIPPED("SKIPPED"),
-    RESCHEDULED("RESCHEDULED"),
-    CANCELLED("CANCELLED");
+    PENDING("pending"),
+    SENT("sent"),
+    DONE("done"),
+    SKIPPED("skipped"),
+    RESCHEDULED("rescheduled"),
+    CANCELLED("cancelled");
 
     private final String value;
 
     RemindStatus(String value) {
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
     }
 }

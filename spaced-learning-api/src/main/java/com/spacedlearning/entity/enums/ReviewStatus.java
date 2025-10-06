@@ -7,12 +7,17 @@ import lombok.Getter;
  */
 @Getter
 public enum ReviewStatus {
-    COMPLETED("COMPLETED"),
-    SKIPPED("SKIPPED");
+    COMPLETED("completed"),
+    SKIPPED("skipped");
 
     private final String value;
 
     ReviewStatus(String value) {
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
     }
 }

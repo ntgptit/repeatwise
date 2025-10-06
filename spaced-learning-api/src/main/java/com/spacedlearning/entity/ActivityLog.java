@@ -1,7 +1,11 @@
 package com.spacedlearning.entity;
 
-import com.spacedlearning.entity.enums.ActivityType;
+import java.util.UUID;
 
+import com.spacedlearning.entity.enums.ActionType;
+import com.spacedlearning.entity.enums.EntityType;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -11,6 +15,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -19,8 +25,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * ActivityLog entity representing audit trail of user activities
+ * Maps to the 'activity_logs' table in the database
+ */
 @Entity
-@Table(name = "activity_logs", schema = "spaced_learning")
+@Table(name = "activity_logs")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -30,54 +40,100 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class ActivityLog extends BaseEntity {
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
-    @ToString.Include
     private User user;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "set_id")
-    private LearningSet set;
-
-    @NotNull
     @Enumerated(EnumType.STRING)
-    @Column(name = "activity_type", length = 50, nullable = false)
-    private ActivityType activityType;
+    @Column(name = "action_type", length = 50, nullable = false)
+    @NotNull
+    private ActionType actionType;
 
-    @Column(name = "entity_type", length = 50)
-    private String entityType;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "entity_type", length = 50, nullable = false)
+    @NotNull
+    private EntityType entityType;
 
-    @Column(name = "entity_id")
-    private String entityId;
+    @Column(name = "entity_id", nullable = false)
+    @NotNull
+    private UUID entityId;
 
-    @Column(name = "old_value", length = 1000)
-    private String oldValue;
+    @Column(name = "old_values", columnDefinition = "JSONB")
+    private String oldValues;
 
-    @Column(name = "new_value", length = 1000)
-    private String newValue;
+    @Column(name = "new_values", columnDefinition = "JSONB")
+    private String newValues;
 
-    @Column(name = "description", length = 500)
-    private String description;
-
+    @Pattern(regexp = "^[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$", 
+             message = "IP address must be in valid IPv4 format")
+    @Size(max = 45)
     @Column(name = "ip_address", length = 45)
     private String ipAddress;
 
-    @Column(name = "user_agent", length = 500)
+    @Column(name = "user_agent", columnDefinition = "TEXT")
     private String userAgent;
 
-    // Business methods
-    public void setEntityInfo(String entityType, String entityId) {
-        this.entityType = entityType;
-        this.entityId = entityId;
+    // Helper methods
+    public void setUser(User user) {
+        this.user = user;
+        if (user != null && !user.getActivityLogs().contains(this)) {
+            user.addActivityLog(this);
+        }
     }
 
-    public void setChangeValues(String oldValue, String newValue) {
-        this.oldValue = oldValue;
-        this.newValue = newValue;
+    /**
+     * Check if this is a create action
+     */
+    public boolean isCreateAction() {
+        return actionType == ActionType.CREATE;
     }
 
-    public void setSet(LearningSet set) {
-        this.set = set;
+    /**
+     * Check if this is an update action
+     */
+    public boolean isUpdateAction() {
+        return actionType == ActionType.UPDATE;
+    }
+
+    /**
+     * Check if this is a delete action
+     */
+    public boolean isDeleteAction() {
+        return actionType == ActionType.DELETE;
+    }
+
+    /**
+     * Check if this is a login action
+     */
+    public boolean isLoginAction() {
+        return actionType == ActionType.LOGIN;
+    }
+
+    /**
+     * Check if this is a logout action
+     */
+    public boolean isLogoutAction() {
+        return actionType == ActionType.LOGOUT;
+    }
+
+    /**
+     * Check if this is a review completion action
+     */
+    public boolean isReviewCompletionAction() {
+        return actionType == ActionType.COMPLETE_REVIEW;
+    }
+
+    /**
+     * Check if this is a review skip action
+     */
+    public boolean isReviewSkipAction() {
+        return actionType == ActionType.SKIP_REVIEW;
+    }
+
+    /**
+     * Check if this is a reschedule action
+     */
+    public boolean isRescheduleAction() {
+        return actionType == ActionType.RESCHEDULE;
     }
 }

@@ -1,80 +1,55 @@
 package com.spacedlearning.mapper;
 
-import com.spacedlearning.dto.set.LearningSetCreateRequest;
-import com.spacedlearning.dto.set.LearningSetDetailResponse;
-import com.spacedlearning.dto.set.LearningSetResponse;
-import com.spacedlearning.dto.set.LearningSetUpdateRequest;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.spacedlearning.dto.set.SetCreationRequest;
+import com.spacedlearning.dto.set.SetCreationResponse;
 import com.spacedlearning.entity.LearningSet;
-import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
+/**
+ * MapStruct mapper for LearningSet entity and DTOs
+ * Handles mapping between LearningSet entity and various LearningSet DTOs
+ */
+@Mapper(componentModel = "spring")
+public interface LearningSetMapper {
 
-@Component
-@RequiredArgsConstructor
-public class LearningSetMapper {
+    LearningSetMapper INSTANCE = Mappers.getMapper(LearningSetMapper.class);
 
-    private final ModelMapper modelMapper;
-    private final ReviewHistoryMapper reviewHistoryMapper;
-    private final RemindScheduleMapper remindScheduleMapper;
+    /**
+     * Maps SetCreationRequest to LearningSet entity
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "wordCount", constant = "0")
+    @Mapping(target = "status", constant = "NOT_STARTED")
+    @Mapping(target = "currentCycle", constant = "1")
+    @Mapping(target = "totalReviews", constant = "0")
+    @Mapping(target = "averageScore", ignore = true)
+    @Mapping(target = "lastReviewedAt", ignore = true)
+    @Mapping(target = "learningCycles", ignore = true)
+    @Mapping(target = "reviewHistories", ignore = true)
+    @Mapping(target = "remindSchedules", ignore = true)
+    LearningSet toEntity(SetCreationRequest request);
 
-    public LearningSet toEntity(LearningSetCreateRequest request) {
-        return modelMapper.map(request, LearningSet.class);
-    }
-
-    public void updateEntityFromRequest(LearningSetUpdateRequest request, LearningSet entity) {
-        if (request.getName() != null) {
-            entity.setName(request.getName());
-        }
-        if (request.getDescription() != null) {
-            entity.setDescription(request.getDescription());
-        }
-        if (request.getCategory() != null) {
-            entity.setCategory(request.getCategory());
-        }
-        if (request.getWordCount() != null) {
-            entity.setWordCount(request.getWordCount());
-        }
-    }
-
-    public LearningSetResponse toResponse(LearningSet entity) {
-        return modelMapper.map(entity, LearningSetResponse.class);
-    }
-
-    public LearningSetDetailResponse toDetailResponse(LearningSet entity) {
-        LearningSetDetailResponse response = modelMapper.map(entity, LearningSetDetailResponse.class);
-        
-        // Map review histories
-        if (entity.getReviewHistories() != null) {
-            response.setReviewHistories(
-                entity.getReviewHistories().stream()
-                    .map(reviewHistoryMapper::toResponse)
-                    .toList()
-            );
-        }
-        
-        // Map remind schedules
-        if (entity.getRemindSchedules() != null) {
-            response.setRemindSchedules(
-                entity.getRemindSchedules().stream()
-                    .map(remindScheduleMapper::toResponse)
-                    .toList()
-            );
-        }
-        
-        return response;
-    }
-
-    public List<LearningSetResponse> toResponseList(List<LearningSet> entities) {
-        return entities.stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    public List<LearningSetDetailResponse> toDetailResponseList(List<LearningSet> entities) {
-        return entities.stream()
-                .map(this::toDetailResponse)
-                .toList();
-    }
+    /**
+     * Maps LearningSet entity to SetCreationResponse
+     */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "name", source = "name")
+    @Mapping(target = "description", source = "description")
+    @Mapping(target = "category", source = "category")
+    @Mapping(target = "wordCount", source = "wordCount")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "currentCycle", source = "currentCycle")
+    @Mapping(target = "totalReviews", source = "totalReviews")
+    @Mapping(target = "averageScore", source = "averageScore")
+    @Mapping(target = "lastReviewedAt", source = "lastReviewedAt")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
+    SetCreationResponse toCreationResponse(LearningSet learningSet);
 }

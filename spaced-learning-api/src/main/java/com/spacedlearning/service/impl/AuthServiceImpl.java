@@ -30,6 +30,7 @@ import com.spacedlearning.security.CustomUserDetails;
 import com.spacedlearning.security.CustomUserDetailsService;
 import com.spacedlearning.security.JwtTokenProvider;
 import com.spacedlearning.service.AuthService;
+import com.spacedlearning.service.EmailVerificationService;
 
 import io.jsonwebtoken.JwtException;
 import lombok.RequiredArgsConstructor;
@@ -44,10 +45,14 @@ import lombok.extern.slf4j.Slf4j;
 public class AuthServiceImpl implements AuthService {
 
 	private static final String DEFAULT_ROLE = "ROLE_USER";
+	private static final String ERROR_AUTH_INVALID_TOKEN = "error.auth.invalidToken";
+	private static final String RESOURCE_USER = "resource.user";
+	private static final String EMAIL_FIELD = "email";
 
 	private final UserRepository userRepository;
 	private final RoleRepository roleRepository;
 	private final UserMapper userMapper;
+	private final EmailVerificationService emailVerificationService;
 	private final AuthenticationManager authenticationManager;
 	private final JwtTokenProvider tokenProvider;
 	private final MessageSource messageSource;
@@ -114,7 +119,7 @@ public class AuthServiceImpl implements AuthService {
             // Validate refresh token
             if (!tokenProvider.validateToken(request.getRefreshToken())
                     || !tokenProvider.isRefreshToken(request.getRefreshToken())) {
-                throw SpacedLearningException.forbidden(messageSource, "error.auth.invalidToken");
+                throw SpacedLearningException.forbidden(messageSource, ERROR_AUTH_INVALID_TOKEN);
             }
 
             // Extract username and load user
@@ -159,7 +164,7 @@ public class AuthServiceImpl implements AuthService {
 
         } catch (final JwtException e) {
             log.error("Failed to refresh token: {}", e.getMessage());
-            throw SpacedLearningException.forbidden(messageSource, "error.auth.invalidToken");
+            throw SpacedLearningException.forbidden(messageSource, ERROR_AUTH_INVALID_TOKEN);
         }
     }
 
@@ -167,23 +172,15 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     public UserResponse register(final RegisterRequest request) {
         Objects.requireNonNull(request, "Register request must not be null");
-        Objects.requireNonNull(request.getUsername(), "Username must not be null");
         Objects.requireNonNull(request.getEmail(), "Email must not be null");
         Objects.requireNonNull(request.getPassword(), "Password must not be null");
 
-        log.debug("Registering new user with username: {} and email: {}",
-            request.getUsername(), request.getEmail());
+        log.debug("Registering new user with email: {}", request.getEmail());
 
         // Check email exists first to provide specific error
         if (userRepository.existsByEmail(request.getEmail())) {
             throw SpacedLearningException.resourceAlreadyExists(
-                messageSource, "resource.user", "email", request.getEmail());
-        }
-
-        // Check username exists to provide specific error
-        if (userRepository.existsByUsername(request.getUsername())) {
-            throw SpacedLearningException.resourceAlreadyExists(
-                messageSource, "resource.user", "username", request.getUsername());
+                messageSource, RESOURCE_USER, EMAIL_FIELD, request.getEmail());
         }
 
         try {
@@ -196,25 +193,31 @@ public class AuthServiceImpl implements AuthService {
 
             final User savedUser = userRepository.save(user);
 
+            // Create and send email verification
+            try {
+                emailVerificationService.createEmailVerification(savedUser);
+                log.info("Email verification created for user: {}", savedUser.getEmail());
+            } catch (Exception e) {
+                log.error("Failed to create email verification for user: {}, error: {}", 
+                    savedUser.getEmail(), e.getMessage());
+                // Continue with registration even if email verification fails
+            }
+
             log.info("User registered successfully with ID: {}", savedUser.getId());
             return userMapper.toDto(savedUser);
         } catch (final DataIntegrityViolationException e) {
-            // Handle race condition where another user registered with same email/username
+            // Handle race condition where another user registered with same email
             // between our check and save
             log.error("Data integrity violation during user registration: {}", e.getMessage());
 
-            if (e.getMessage().contains("username")) {
-                throw SpacedLearningException.resourceAlreadyExists(
-                    messageSource, "resource.user", "username", request.getUsername());
+            if (e.getMessage().contains("email")) {
+                throw SpacedLearningException.resourceAlreadyExists(messageSource, RESOURCE_USER, EMAIL_FIELD,
+                        request.getEmail());
             }
-			if (e.getMessage().contains("email")) {
-				throw SpacedLearningException.resourceAlreadyExists(messageSource, "resource.user", "email",
-						request.getEmail());
-			}
 
-			throw e;
-		}
-	}
+            throw e;
+        }
+    }
 
 	@Override
 	@Transactional(readOnly = true)
@@ -229,6 +232,13 @@ public class AuthServiceImpl implements AuthService {
 			log.debug("Token validation failed: {}", e.getMessage());
 			return false;
 		}
+	}
+
+	@Override
+	@Transactional
+	public boolean verifyEmail(String token) {
+		log.debug("Verifying email with token: {}", token);
+		return emailVerificationService.verifyEmail(token);
 	}
 
 	/**

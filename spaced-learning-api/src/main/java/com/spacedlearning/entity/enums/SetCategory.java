@@ -7,14 +7,19 @@ import lombok.Getter;
  */
 @Getter
 public enum SetCategory {
-    VOCABULARY("VOCABULARY"),
-    GRAMMAR("GRAMMAR"),
-    MIXED("MIXED"),
-    OTHER("OTHER");
+    VOCABULARY("vocabulary"),
+    GRAMMAR("grammar"),
+    MIXED("mixed"),
+    OTHER("other");
 
     private final String value;
 
     SetCategory(String value) {
         this.value = value;
+    }
+
+    @Override
+    public String toString() {
+        return value;
     }
 }

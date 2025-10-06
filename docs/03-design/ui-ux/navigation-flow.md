@@ -76,6 +76,25 @@ App Entry
 6. Edit Set → Set Details
 ```
 
+### 2.4 Notification Management Journey
+```
+1. Settings → Notification Preferences
+2. Notification Preferences → Configure Settings
+3. Configure Settings → Save Settings
+4. Dashboard → Long Press Card → Reschedule Modal
+5. Reschedule Modal → Update Schedule
+```
+
+### 2.5 Data Management Journey
+```
+1. Settings → Data Management
+2. Data Management → Export/Import/Backup/Restore
+3. Export → Configure Options → Email Confirmation
+4. Import → Select File → Import Progress
+5. Backup → Configure Options → Cloud Storage
+6. Restore → Select Backup → Restore Progress
+```
+
 ## 3. Screen-by-Screen Navigation
 
 ### 3.1 Authentication Flow
@@ -246,6 +265,7 @@ App Entry
   - Learning preferences
   - System settings
   - Privacy & security
+  - Data management
 - **Navigation Options**:
   - Setting item → Setting detail
   - Back → Previous screen
@@ -261,6 +281,84 @@ App Entry
   - Edit Profile → Edit form
   - View History → Learning history
   - Back → Previous screen
+
+### 3.7 Notification Management
+
+#### Notification Preferences Screen
+- **Entry Point**: Settings → Notification preferences
+- **Content Sections**:
+  - Push notification settings
+  - Email notification settings
+  - Time and frequency settings
+  - Quiet hours configuration
+- **Navigation Options**:
+  - Save Settings → Settings screen
+  - Back → Settings screen
+
+#### Reschedule Reminder Modal
+- **Entry Point**: Dashboard card long press, set details
+- **Content Sections**:
+  - Set information display
+  - New time/date selection
+  - Reason for rescheduling
+- **Navigation Options**:
+  - Save Changes → Close modal
+  - Cancel → Close modal
+
+### 3.8 Data Management
+
+#### Export Data Screen
+- **Entry Point**: Settings → Data management → Export
+- **Content Sections**:
+  - Data type selection
+  - Format selection
+  - Date range selection
+  - Export options
+- **Navigation Options**:
+  - Export Data → Email confirmation
+  - Back → Data management
+
+#### Import Data Screen
+- **Entry Point**: Settings → Data management → Import
+- **Content Sections**:
+  - File upload area
+  - Import options
+  - Validation settings
+- **Navigation Options**:
+  - Import Data → Import progress
+  - Back → Data management
+
+#### Backup Configuration Screen
+- **Entry Point**: Settings → Data management → Backup
+- **Content Sections**:
+  - Backup type selection
+  - Scope selection
+  - Storage location
+  - Backup options
+- **Navigation Options**:
+  - Create Backup → Backup progress
+  - Back → Data management
+
+#### Restore Data Screen
+- **Entry Point**: Settings → Data management → Restore
+- **Content Sections**:
+  - Backup file selection
+  - Restore options
+  - Validation settings
+- **Navigation Options**:
+  - Restore Data → Restore progress
+  - Back → Data management
+
+#### Backup History Screen
+- **Entry Point**: Settings → Data management → Backup history
+- **Content Sections**:
+  - Backup file list
+  - Status indicators
+  - Action buttons
+- **Navigation Options**:
+  - Backup item → Restore/Delete/Download
+  - Create New Backup → Backup configuration
+  - Back → Data management
 
 ## 4. Navigation Patterns
 
@@ -302,7 +400,8 @@ App Entry
 - **Initial Load**: Splash screen → Loading indicator
 - **Data Loading**: Skeleton screens, loading spinners
 - **Action Loading**: Button loading states, progress indicators
-- **Error States**: Error messages with retry options
+- **File Operations**: Upload/download progress bars
+- **Background Processing**: Progress indicators for long operations
 
 ### 5.2 Offline States
 - **Offline Detection**: Network status indicator
@@ -318,11 +417,26 @@ App Entry
   - Validation errors
   - Server errors
   - Permission errors
+  - File operation errors
+  - Import/export errors
 - **Error Recovery**:
   - Retry mechanisms
   - Fallback content
   - User guidance
   - Support contact
+  - Error reporting
+
+### 5.4 Success States
+- **Operation Success**: Success messages with confirmation
+- **Data Changes**: Visual feedback for saved changes
+- **File Operations**: Completion indicators for upload/download
+- **Settings Updates**: Confirmation for preference changes
+
+### 5.5 Empty States
+- **No Data**: Empty state screens with call-to-action
+- **No Results**: Search results with suggestions
+- **No Connectivity**: Offline state with cached content
+- **No Permissions**: Permission request screens
 
 ## 6. Accessibility Navigation
 

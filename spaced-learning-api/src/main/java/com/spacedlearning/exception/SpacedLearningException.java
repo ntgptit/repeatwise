@@ -97,6 +97,10 @@ public class SpacedLearningException extends RuntimeException {
         return new SpacedLearningException(validateMsg(message), HttpStatus.BAD_REQUEST);
     }
 
+    public static SpacedLearningException tooManyRequests(String message) {
+        return new SpacedLearningException(validateMsg(message), HttpStatus.TOO_MANY_REQUESTS);
+    }
+
     private final HttpStatus status;
 
     // ========== VALIDATION HELPERS ==========

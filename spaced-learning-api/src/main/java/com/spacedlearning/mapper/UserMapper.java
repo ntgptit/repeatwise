@@ -1,114 +1,87 @@
 package com.spacedlearning.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
 import com.spacedlearning.dto.auth.RegisterRequest;
-import com.spacedlearning.dto.user.UserDetailedResponse;
+import com.spacedlearning.dto.user.UserRegistrationRequest;
+import com.spacedlearning.dto.user.UserRegistrationResponse;
 import com.spacedlearning.dto.user.UserResponse;
-import com.spacedlearning.dto.user.UserUpdateRequest;
-import com.spacedlearning.entity.Role;
 import com.spacedlearning.entity.User;
-import com.spacedlearning.entity.enums.UserStatus;
-import com.spacedlearning.security.CustomUserDetailsService;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.stereotype.Component;
 
 /**
- * Mapper for User entity and DTOs
+ * MapStruct mapper for User entity and DTOs
+ * Handles mapping between User entity and various User DTOs
  */
-@Component
-@Slf4j
-public class UserMapper {
+@Mapper(componentModel = "spring")
+public interface UserMapper {
 
-    private final PasswordEncoder passwordEncoder;
-    private final CustomUserDetailsService userDetailsService;
+    UserMapper INSTANCE = Mappers.getMapper(UserMapper.class);
 
-    public UserMapper(PasswordEncoder passwordEncoder, @Lazy CustomUserDetailsService userDetailsService) {
-        this.passwordEncoder = passwordEncoder;
-        this.userDetailsService = userDetailsService;
-    }
+    /**
+     * Maps UserRegistrationRequest to User entity
+     * Note: password will be hashed by the service layer
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "passwordHash", source = "password")
+    @Mapping(target = "status", constant = "ACTIVE")
+    @Mapping(target = "learningSets", ignore = true)
+    @Mapping(target = "remindSchedules", ignore = true)
+    @Mapping(target = "reviewHistories", ignore = true)
+    @Mapping(target = "activityLogs", ignore = true)
+    User toEntity(UserRegistrationRequest request);
 
-    public UserDetails loadUserByUsername(String username) {
-        try {
-            return this.userDetailsService.loadUserByUsername(username);
-        } catch (final Exception e) {
-            log.error("Error loading user details for username: {}, Error: {}", username, e.getMessage(), e);
-            throw e;
-        }
-    }
+    /**
+     * Maps User entity to UserRegistrationResponse
+     * Applies data masking for sensitive fields
+     */
+    @Mapping(target = "email", source = "email")
+    UserRegistrationResponse toRegistrationResponse(User user);
 
-    public User registerRequestToEntity(RegisterRequest request) {
-        if (request == null) {
-            return null;
-        }
+    /**
+     * Maps RegisterRequest to User entity
+     * Note: password will be hashed by the service layer
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "passwordHash", source = "password")
+    @Mapping(target = "status", constant = "ACTIVE")
+    @Mapping(target = "learningSets", ignore = true)
+    @Mapping(target = "remindSchedules", ignore = true)
+    @Mapping(target = "reviewHistories", ignore = true)
+    @Mapping(target = "activityLogs", ignore = true)
+    @Mapping(target = "roles", ignore = true)
+    User registerRequestToEntity(RegisterRequest request);
 
-        final var user = new User();
-        user.setUsername(request.getUsername());
-        user.setEmail(request.getEmail());
-        user.setPassword(this.passwordEncoder.encode(request.getPassword()));
+    /**
+     * Maps User entity to UserResponse
+     */
+    @Mapping(target = "email", source = "email")
+    @Mapping(target = "fullName", source = "fullName")
+    @Mapping(target = "preferredLanguage", source = "preferredLanguage")
+    @Mapping(target = "timezone", source = "timezone")
+    @Mapping(target = "defaultReminderTime", source = "defaultReminderTime")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
+    UserResponse toDto(User user);
 
-        var displayName = new StringBuilder().append(StringUtils.defaultString(request.getFirstName()));
-        if (StringUtils.isNotBlank(request.getLastName())) {
-            displayName.append(" ").append(request.getLastName());
-        }
-        user.setName(displayName.toString().trim());
-
-        user.setStatus(UserStatus.ACTIVE);
-        return user;
-    }
-
-    public UserDetailedResponse toDetailedDto(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        return UserDetailedResponse.builder()
-                .id(user.getId())
-                .email(user.getEmail())
-                .displayName(user.getName())
-                .createdAt(user.getCreatedAt())
-                .updatedAt(user.getUpdatedAt())
-                .deletedAt(user.getDeletedAt())
-                .build();
-    }
-
-    public UserResponse toDto(User user) {
-        if (user == null) {
-            return null;
-        }
-
-        final var fullName = StringUtils.defaultString(user.getName()).trim();
-        final var nameParts = StringUtils.split(fullName, " ", 2);
-        final var firstName = (nameParts != null) && (nameParts.length > 0) ? nameParts[0] : "";
-        final var lastName = (nameParts != null) && (nameParts.length > 1) ? nameParts[1] : "";
-
-        return UserResponse.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .firstName(firstName)
-                .lastName(lastName)
-                .displayName(user.getName())
-                .createdAt(user.getCreatedAt())
-                .roles(user.getRoles() != null
-                        ? user.getRoles().stream().map(Role::getName).toList()
-                        : null)
-                .build();
-    }
-
-    public void updateFromDto(UserUpdateRequest request, User user) {
-        if ((request == null) || (user == null)) {
-            return;
-        }
-
-        if (StringUtils.isNotBlank(request.getDisplayName())) {
-            user.setName(request.getDisplayName().trim());
-        }
-
-        if (StringUtils.isNotBlank(request.getPassword())) {
-            user.setPassword(this.passwordEncoder.encode(request.getPassword()));
-        }
-    }
+    /**
+     * Maps User entity to UserRegistrationResponse with custom field mapping
+     */
+    @Mapping(target = "email", source = "email")
+    @Mapping(target = "fullName", source = "fullName")
+    @Mapping(target = "preferredLanguage", source = "preferredLanguage")
+    @Mapping(target = "timezone", source = "timezone")
+    @Mapping(target = "defaultReminderTime", source = "defaultReminderTime")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
+    UserRegistrationResponse toResponse(User user);
 }

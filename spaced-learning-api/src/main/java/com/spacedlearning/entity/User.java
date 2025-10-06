@@ -1,25 +1,22 @@
 package com.spacedlearning.entity;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 import com.spacedlearning.entity.enums.UserStatus;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -30,8 +27,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * User entity representing user accounts and authentication information
+ * Maps to the 'users' table in the database
+ */
 @Entity
-@Table(name = "users", schema = "spaced_learning")
+@Table(name = "users")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -41,94 +42,153 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class User extends BaseEntity {
 
-    @NotBlank
-    @Size(max = 100)
-    @Column(name = "name", length = 100)
-    @ToString.Include
-    private String name;
-
-    @NotBlank
-    @Size(min = 3, max = 50)
-    @Pattern(regexp = "^[a-zA-Z0-9._-]+$", message = "Username can only contain letters, numbers, dots, underscores and hyphens")
-    @Column(name = "username", length = 50, unique = true, nullable = false)
-    @ToString.Include
-    private String username;
-
     @Email
     @NotBlank
-    @Size(max = 100)
-    @Column(name = "email", length = 100, unique = true)
+    @Size(max = 255)
+    @Column(name = "email", unique = true, nullable = false)
     @ToString.Include
     private String email;
 
     @NotBlank
-    @Size(min = 8, max = 120)
-    @Column(name = "password", length = 120, nullable = false)
-    private String password;
+    @Size(min = 60, max = 255)
+    @Column(name = "password_hash", nullable = false)
+    private String passwordHash;
+
+    @NotBlank
+    @Size(max = 100)
+    @Column(name = "full_name", nullable = false)
+    @ToString.Include
+    private String fullName;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "preferred_language", length = 2, nullable = false)
+    @Builder.Default
+    private PreferredLanguage preferredLanguage = PreferredLanguage.VI;
+
+    @NotBlank
+    @Size(max = 50)
+    @Pattern(regexp = "^(Asia/Ho_Chi_Minh|UTC|America/New_York|Europe/London)$", 
+             message = "Timezone must be one of: Asia/Ho_Chi_Minh, UTC, America/New_York, Europe/London")
+    @Column(name = "timezone", nullable = false)
+    @Builder.Default
+    private String timezone = "Asia/Ho_Chi_Minh";
+
+    @NotNull
+    @Column(name = "default_reminder_time", nullable = false)
+    @Builder.Default
+    private LocalTime defaultReminderTime = LocalTime.of(9, 0);
 
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     @Builder.Default
     private UserStatus status = UserStatus.ACTIVE;
 
+    // Relationships
     @Builder.Default
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "user_roles", schema = "spaced_learning", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
-    private Set<Role> roles = new HashSet<>();
-
-
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserProfile> profiles = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
-    private List<LearningSet> sets = new ArrayList<>();
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<UserSettings> settings = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<LearningSet> learningSets = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<ReminderSchedule> reminderSchedules = new ArrayList<>();
+
+    @Builder.Default
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ActivityLog> activityLogs = new ArrayList<>();
 
     @Builder.Default
-    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = jakarta.persistence.CascadeType.ALL)
-    private List<NotificationLog> notificationLogs = new ArrayList<>();
+    @OneToMany(mappedBy = "user", fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Statistics> statistics = new ArrayList<>();
 
-    @Column(name = "last_active_date")
-    private LocalDateTime lastActiveDate;
-
-    // Role methods
-    public void addRole(Role role) {
-        this.roles.add(role);
+    // Helper methods
+    public void addProfile(UserProfile profile) {
+        this.profiles.add(profile);
+        profile.setUser(this);
     }
 
-    public boolean hasRole(String roleName) {
-        return this.roles.stream().anyMatch(role -> role.getName().equals(roleName));
+    public void removeProfile(UserProfile profile) {
+        this.profiles.remove(profile);
+        profile.setUser(null);
     }
 
-    public boolean removeRole(Role role) {
-        return this.roles.remove(role);
+    public void addSettings(UserSettings userSettings) {
+        this.settings.add(userSettings);
+        userSettings.setUser(this);
     }
 
-    // Set methods
-    public void addSet(LearningSet set) {
-        this.sets.add(set);
-        set.setUser(this);
+    public void removeSettings(UserSettings userSettings) {
+        this.settings.remove(userSettings);
+        userSettings.setUser(null);
     }
 
-    public boolean removeSet(LearningSet set) {
-        if (this.sets.remove(set)) {
-            set.setUser(null);
-            return true;
-        }
-        return false;
+    public void addLearningSet(LearningSet learningSet) {
+        this.learningSets.add(learningSet);
+        learningSet.setUser(this);
     }
 
-    // Activity log methods
+    public void removeLearningSet(LearningSet learningSet) {
+        this.learningSets.remove(learningSet);
+        learningSet.setUser(null);
+    }
+
+    public void addReminderSchedule(ReminderSchedule reminderSchedule) {
+        this.reminderSchedules.add(reminderSchedule);
+        reminderSchedule.setUser(this);
+    }
+
+    public void removeReminderSchedule(ReminderSchedule reminderSchedule) {
+        this.reminderSchedules.remove(reminderSchedule);
+        reminderSchedule.setUser(null);
+    }
+
     public void addActivityLog(ActivityLog activityLog) {
         this.activityLogs.add(activityLog);
         activityLog.setUser(this);
     }
 
-    // Notification log methods
-    public void addNotificationLog(NotificationLog notificationLog) {
-        this.notificationLogs.add(notificationLog);
-        notificationLog.setUser(this);
+    public void addStatistics(Statistics stat) {
+        this.statistics.add(stat);
+        stat.setUser(this);
+    }
+
+    public void removeStatistics(Statistics stat) {
+        this.statistics.remove(stat);
+        stat.setUser(null);
+    }
+
+    /**
+     * Check if user is active
+     */
+    public boolean isActive() {
+        return status == UserStatus.ACTIVE;
+    }
+
+    /**
+     * Check if user is suspended
+     */
+    public boolean isSuspended() {
+        return status == UserStatus.SUSPENDED;
+    }
+
+    /**
+     * Check if user is inactive
+     */
+    public boolean isInactive() {
+        return status == UserStatus.INACTIVE;
+    }
+
+    /**
+     * Enum for preferred language
+     */
+    public enum PreferredLanguage {
+        VI, EN
     }
 }

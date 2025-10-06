@@ -1,10 +1,6 @@
-# RepeatWise – Business Specification
-
----
-
 ## 1. Tầm nhìn & Giá trị cốt lõi
 
-- **RepeatWise** là ứng dụng quản lý học tập thông minh, giúp người học ghi nhớ lâu dài bằng cách nhắc ôn tập đúng thời điểm qua thuật toán **Spaced Repetition (SRS)**.
+- Là ứng dụng quản lý học tập thông minh, giúp người học ghi nhớ lâu dài bằng cách nhắc ôn tập đúng thời điểm qua thuật toán **Spaced Repetition (SRS)**.
 - Quản lý học theo **set** (học phần/chủ đề), không đi sâu flashcard, tối ưu thao tác và kiểm soát tiến trình.
 - Trải nghiệm tối giản, phát triển tính năng thực sự hữu dụng, lấy cá nhân hóa làm trung tâm trước khi mở rộng cộng đồng/thương mại hóa.
 
@@ -80,9 +76,9 @@ next_cycle_delay_days = base_delay - penalty * (100 - avg_score) + scaling * wor
 
 ## 9. Công nghệ & Kiến trúc
 
-- **repeatwise-mobile:** React Native app (UI, notification, quản lý set).
-- **repeatwise-server:** Spring Boot 3 (REST API, business logic, scheduling, notification).
-- **repeatwise-db:** PostgreSQL (schema, migration, backup).
+- Flutter app (UI, notification, quản lý set).
+- Spring Boot 3 (REST API, business logic, scheduling, notification).
+- PostgreSQL (schema, migration, backup).
 - Mọi bảng sử dụng UUID cho id, chuẩn hóa các trường `created_at`, `updated_at`, `deleted_at`.
 
 ---

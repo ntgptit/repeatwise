@@ -50,4 +50,12 @@ public interface AuthService {
 	 * @return true if valid, false otherwise
 	 */
 	boolean validateToken(String token);
+
+	/**
+	 * Verify email using verification token
+	 * 
+	 * @param token Email verification token
+	 * @return true if verification was successful
+	 */
+	boolean verifyEmail(String token);
 }

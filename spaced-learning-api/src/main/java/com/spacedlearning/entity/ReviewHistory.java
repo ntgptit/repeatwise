@@ -1,7 +1,11 @@
 package com.spacedlearning.entity;
 
-import com.spacedlearning.entity.enums.ReviewStatus;
+import java.time.LocalDate;
 
+import com.spacedlearning.entity.enums.ReviewStatus;
+import com.spacedlearning.entity.enums.SkipReason;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -13,6 +17,7 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -21,8 +26,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+/**
+ * ReviewHistory entity representing history of review sessions and scores
+ * Maps to the 'review_histories' table in the database
+ */
 @Entity
-@Table(name = "review_histories", schema = "spaced_learning")
+@Table(name = "review_histories")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -32,54 +41,92 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class ReviewHistory extends BaseEntity {
 
-    @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "set_id", nullable = false)
+    private LearningSet learningSet;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "cycle_id", nullable = false)
+    private LearningCycle learningCycle;
+
+    @Min(value = 1, message = "Review number must be at least 1")
+    @Max(value = 5, message = "Review number must be at most 5")
+    @Column(name = "review_number", nullable = false)
     @ToString.Include
-    private LearningSet set;
+    private Integer reviewNumber;
 
-    @NotNull
-    @Column(name = "cycle_no", nullable = false)
-    private Integer cycleNo;
-
-    @NotNull
-    @Column(name = "review_no", nullable = false)
-    private Integer reviewNo;
-
-    @Min(value = 0)
-    @Max(value = 100)
+    @Min(value = 0, message = "Score must be at least 0")
+    @Max(value = 100, message = "Score must be at most 100")
     @Column(name = "score")
     private Integer score;
 
-    @NotNull
     @Enumerated(EnumType.STRING)
     @Column(name = "status", length = 20, nullable = false)
     @Builder.Default
     private ReviewStatus status = ReviewStatus.COMPLETED;
 
-    @Column(name = "note", length = 500)
-    private String note;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "skip_reason", length = 20)
+    private SkipReason skipReason;
 
-    // Business methods
+    @NotNull
+    @Column(name = "review_date", nullable = false)
+    private LocalDate reviewDate;
+
+    @Size(max = 500, message = "Notes must not exceed 500 characters")
+    @Column(name = "notes", columnDefinition = "TEXT")
+    private String notes;
+
+    // Helper methods
+    public void setLearningSet(LearningSet learningSet) {
+        this.learningSet = learningSet;
+        if (learningSet != null && !learningSet.getReviewHistories().contains(this)) {
+            learningSet.addReviewHistory(this);
+        }
+    }
+
+    public void setLearningCycle(LearningCycle learningCycle) {
+        this.learningCycle = learningCycle;
+        if (learningCycle != null && !learningCycle.getReviewHistories().contains(this)) {
+            learningCycle.addReviewHistory(this);
+        }
+    }
+
+    /**
+     * Check if review is completed
+     */
     public boolean isCompleted() {
-        return ReviewStatus.COMPLETED.equals(this.status);
+        return status == ReviewStatus.COMPLETED;
     }
 
+    /**
+     * Check if review is skipped
+     */
     public boolean isSkipped() {
-        return ReviewStatus.SKIPPED.equals(this.status);
+        return status == ReviewStatus.SKIPPED;
     }
 
-    public void markAsSkipped(String reason) {
-        this.status = ReviewStatus.SKIPPED;
-        this.note = reason;
+    /**
+     * Check if review has a score
+     */
+    public boolean hasScore() {
+        return score != null;
     }
 
-    public void updateScore(Integer newScore) {
-        this.score = newScore;
-        this.status = ReviewStatus.COMPLETED;
+    /**
+     * Get score or 0 if null
+     */
+    public int getScoreOrDefault() {
+        return score != null ? score : 0;
     }
 
-    public void setSet(LearningSet set) {
-        this.set = set;
+    /**
+     * Validate that skip reason is provided when status is skipped
+     */
+    public boolean isValidSkipReason() {
+        if (status == ReviewStatus.SKIPPED) {
+            return skipReason != null;
+        }
+        return skipReason == null;
     }
 }

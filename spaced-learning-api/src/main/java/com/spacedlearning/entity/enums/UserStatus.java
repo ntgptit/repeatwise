@@ -7,7 +7,9 @@ import lombok.Getter;
  */
 @Getter
 public enum UserStatus {
-    ACTIVE("ACTIVE"), INACTIVE("INACTIVE"), SUSPENDED("SUSPENDED");
+    ACTIVE("active"), 
+    INACTIVE("inactive"), 
+    SUSPENDED("suspended");
 
     private final String value;
 
@@ -15,4 +17,8 @@ public enum UserStatus {
         this.value = value;
     }
 
+    @Override
+    public String toString() {
+        return value;
+    }
 }

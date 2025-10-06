@@ -2,10 +2,14 @@ package com.spacedlearning.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -15,7 +19,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 @Entity
-@Table(name = "srs_configurations", schema = "spaced_learning")
+@Table(name = "srs_configurations")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -25,42 +29,23 @@ import lombok.ToString;
 @ToString(onlyExplicitlyIncluded = true)
 public class SRSConfiguration extends BaseEntity {
 
-    @Min(value = 1)
-    @Column(name = "base_delay_days", nullable = false)
-    @Builder.Default
-    private Integer baseDelayDays = 30;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
-    @DecimalMin(value = "0.0")
-    @DecimalMax(value = "1.0")
-    @Column(name = "penalty_factor", nullable = false)
-    @Builder.Default
-    private Double penaltyFactor = 0.2;
+    @Column(name = "review_intervals", columnDefinition = "TEXT")
+    private String reviewIntervals; // JSON array of intervals
 
-    @DecimalMin(value = "0.0")
-    @DecimalMax(value = "1.0")
-    @Column(name = "scaling_factor", nullable = false)
-    @Builder.Default
-    private Double scalingFactor = 0.02;
+    @Column(name = "score_thresholds", columnDefinition = "TEXT")
+    private String scoreThresholds; // JSON array of thresholds
+
+    @Column(name = "cycle_delays", columnDefinition = "TEXT")
+    private String cycleDelays; // JSON array of delays
 
     @Min(value = 1)
-    @Column(name = "min_delay_days", nullable = false)
+    @Column(name = "max_cycle_delay", nullable = false)
     @Builder.Default
-    private Integer minDelayDays = 7;
-
-    @Min(value = 1)
-    @Column(name = "max_delay_days", nullable = false)
-    @Builder.Default
-    private Integer maxDelayDays = 90;
-
-    @Min(value = 0)
-    @Column(name = "low_score_threshold", nullable = false)
-    @Builder.Default
-    private Integer lowScoreThreshold = 40;
-
-    @Min(value = 1)
-    @Column(name = "max_sets_per_day", nullable = false)
-    @Builder.Default
-    private Integer maxSetsPerDay = 3;
+    private Integer maxCycleDelay = 90;
 
     @Column(name = "is_active", nullable = false)
     @Builder.Default
@@ -69,16 +54,9 @@ public class SRSConfiguration extends BaseEntity {
     @Column(name = "description", length = 500)
     private String description;
 
-    // Business methods
-    public int calculateNextCycleDelay(double avgScore, int wordCount) {
-        if (avgScore < lowScoreThreshold) {
-            return minDelayDays;
-        }
-
-        double delay = baseDelayDays - penaltyFactor * (100 - avgScore) + scalingFactor * wordCount;
-        int roundedDelay = (int) Math.round(delay);
-        
-        return Math.max(minDelayDays, Math.min(maxDelayDays, roundedDelay));
+    // Helper methods
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public boolean isActive() {

@@ -1,49 +1,46 @@
 package com.spacedlearning.mapper;
 
-import com.spacedlearning.dto.reminder.RemindScheduleCreateRequest;
-import com.spacedlearning.dto.reminder.RemindScheduleResponse;
-import com.spacedlearning.dto.reminder.RemindScheduleUpdateRequest;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
+
+import com.spacedlearning.dto.reminder.ReminderRequest;
+import com.spacedlearning.dto.reminder.ReminderResponse;
 import com.spacedlearning.entity.RemindSchedule;
-import lombok.RequiredArgsConstructor;
-import org.modelmapper.ModelMapper;
-import org.springframework.stereotype.Component;
 
-import java.util.List;
+/**
+ * MapStruct mapper for RemindSchedule entity and DTOs
+ * Handles mapping between RemindSchedule entity and various RemindSchedule DTOs
+ */
+@Mapper(componentModel = "spring")
+public interface RemindScheduleMapper {
 
-@Component
-@RequiredArgsConstructor
-public class RemindScheduleMapper {
+    RemindScheduleMapper INSTANCE = Mappers.getMapper(RemindScheduleMapper.class);
 
-    private final ModelMapper modelMapper;
+    /**
+     * Maps ReminderRequest to RemindSchedule entity
+     */
+    @Mapping(target = "id", ignore = true)
+    @Mapping(target = "createdAt", ignore = true)
+    @Mapping(target = "updatedAt", ignore = true)
+    @Mapping(target = "deletedAt", ignore = true)
+    @Mapping(target = "set", ignore = true)
+    @Mapping(target = "user", ignore = true)
+    @Mapping(target = "remindDate", source = "remindDate")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "rescheduleCount", constant = "0")
+    RemindSchedule toEntity(ReminderRequest request);
 
-    public RemindSchedule toEntity(RemindScheduleCreateRequest request) {
-        return modelMapper.map(request, RemindSchedule.class);
-    }
-
-    public void updateEntityFromRequest(RemindScheduleUpdateRequest request, RemindSchedule entity) {
-        if (request.getRemindDate() != null) {
-            entity.setRemindDate(request.getRemindDate());
-        }
-    }
-
-    public RemindScheduleResponse toResponse(RemindSchedule entity) {
-        RemindScheduleResponse response = modelMapper.map(entity, RemindScheduleResponse.class);
-        
-        // Set additional fields
-        if (entity.getSet() != null) {
-            response.setSetId(entity.getSet().getId());
-            response.setSetName(entity.getSet().getName());
-        }
-        if (entity.getUser() != null) {
-            response.setUserId(entity.getUser().getId());
-        }
-        
-        return response;
-    }
-
-    public List<RemindScheduleResponse> toResponseList(List<RemindSchedule> entities) {
-        return entities.stream()
-                .map(this::toResponse)
-                .toList();
-    }
+    /**
+     * Maps RemindSchedule entity to ReminderResponse
+     */
+    @Mapping(target = "id", source = "id")
+    @Mapping(target = "setId", source = "set.id")
+    @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "remindDate", source = "remindDate")
+    @Mapping(target = "status", source = "status")
+    @Mapping(target = "rescheduleCount", source = "rescheduleCount")
+    @Mapping(target = "createdAt", source = "createdAt")
+    @Mapping(target = "updatedAt", source = "updatedAt")
+    ReminderResponse toResponse(RemindSchedule remindSchedule);
 }

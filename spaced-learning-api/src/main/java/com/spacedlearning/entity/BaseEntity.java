@@ -17,6 +17,10 @@ import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
 
+/**
+ * Base entity class with common fields for all entities
+ * Includes UUID primary key, audit fields, and soft delete functionality
+ */
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 @SQLRestriction("deleted_at IS NULL")
@@ -24,47 +28,47 @@ import lombok.Setter;
 @Setter
 public abstract class BaseEntity {
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.UUID)
-	@Column(name = "id", updatable = false)
-	private UUID id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(updatable = false)
+    private UUID id;
 
-	@CreatedDate
-	@Column(name = "created_at", updatable = false)
-	private LocalDateTime createdAt;
+    @CreatedDate
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
 
-	@LastModifiedDate
-	@Column(name = "updated_at")
-	private LocalDateTime updatedAt;
+    @LastModifiedDate
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 
-	/**
-	 * When this field is set, the entity is considered deleted (soft delete).
-	 * The @SQLRestriction annotation on the class ensures that entities with
-	 * non-null deletedAt will not be returned in normal queries.
-	 */
-	@Column(name = "deleted_at")
-	private LocalDateTime deletedAt;
+    /**
+     * When this field is set, the entity is considered deleted (soft delete).
+     * The @SQLRestriction annotation on the class ensures that entities with
+     * non-null deletedAt will not be returned in normal queries.
+     */
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 
-	/**
-	 * Check if the entity has been soft deleted
-	 *
-	 * @return true if the entity is deleted (deleted_at is not null)
-	 */
-	public boolean isDeleted() {
-		return deletedAt != null;
-	}
+    /**
+     * Check if the entity has been soft deleted
+     *
+     * @return true if the entity is deleted (deleted_at is not null)
+     */
+    public boolean isDeleted() {
+        return deletedAt != null;
+    }
 
-	/**
-	 * Restore a soft-deleted entity
-	 */
-	public void restore() {
-		deletedAt = null;
-	}
+    /**
+     * Restore a soft-deleted entity
+     */
+    public void restore() {
+        deletedAt = null;
+    }
 
-	/**
-	 * Mark this entity as soft deleted
-	 */
-	public void softDelete() {
-		deletedAt = LocalDateTime.now();
-	}
+    /**
+     * Mark this entity as soft deleted
+     */
+    public void softDelete() {
+        deletedAt = LocalDateTime.now();
+    }
 }

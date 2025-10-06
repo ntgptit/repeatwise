@@ -15,4 +15,5 @@ import lombok.NoArgsConstructor;
 public class FieldError {
 	private String field;
 	private String message;
+	private Object rejectedValue;
 }

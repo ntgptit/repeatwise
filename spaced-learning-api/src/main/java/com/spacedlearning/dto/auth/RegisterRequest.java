@@ -1,46 +1,60 @@
 package com.spacedlearning.dto.auth;
 
+import com.spacedlearning.entity.User.PreferredLanguage;
+import com.spacedlearning.validation.ValidPassword;
+import com.spacedlearning.validation.ValidPasswordMatch;
+import com.spacedlearning.validation.ValidTimezone;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalTime;
+
 /**
- * DTO for user registration
+ * DTO for user registration based on UC-001: User Registration
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@ValidPasswordMatch
 public class RegisterRequest {
 
-	@NotBlank(message = "Username is required")
-	@Size(min = 3, max = 50, message = "Username must be between 3 and 50 characters")
-	@Pattern(regexp = "^[a-zA-Z0-9._-]+$",
-			message = "Username can only contain letters, numbers, dots, underscores and hyphens")
-	private String username;
+    @NotBlank(message = "Email is required")
+    @Email(message = "Invalid email format")
+    @Size(max = 255, message = "Email must not exceed 255 characters")
+    private String email;
 
-	@NotBlank(message = "Email is required")
-	@Email(message = "Invalid email format")
-	private String email;
+    @NotBlank(message = "Password is required")
+    @ValidPassword
+    private String password;
 
-	@NotBlank(message = "Password is required")
-	@Size(min = 8, message = "Password must be at least 8 characters long")
-	private String password;
+    @NotBlank(message = "Confirm password is required")
+    private String confirmPassword;
 
-	@NotBlank(message = "First name is required")
-	private String firstName;
+    @NotBlank(message = "Full name is required")
+    @Size(max = 100, message = "Full name must not exceed 100 characters")
+    private String fullName;
 
-	@NotBlank(message = "Last name is required")
-	private String lastName;
+    @NotNull(message = "Preferred language is required")
+    private PreferredLanguage preferredLanguage;
 
-	public RegisterRequest(String username, String email, String password) {
-		this.username = username;
-		this.email = email;
-		this.password = password;
-	}
+    @NotBlank(message = "Timezone is required")
+    @ValidTimezone
+    private String timezone;
+
+    @NotNull(message = "Default reminder time is required")
+    private LocalTime defaultReminderTime;
+
+    /**
+     * Validate that password and confirm password match
+     */
+    public boolean isPasswordMatch() {
+        return password != null && password.equals(confirmPassword);
+    }
 }

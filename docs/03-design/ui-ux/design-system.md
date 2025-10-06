@@ -241,6 +241,132 @@ overflow-y: auto
 box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1)
 ```
 
+### 2.7 File Upload Components
+
+#### File Upload Area
+```css
+border: 2px dashed #D1D5DB
+border-radius: 8px
+padding: 24px
+text-align: center
+cursor: pointer
+transition: border-color 0.2s ease
+background: #F9FAFB
+```
+
+#### File Upload States
+- **Default**: `border-color: #D1D5DB, background: #F9FAFB`
+- **Hover**: `border-color: #2563EB, background: #EFF6FF`
+- **Active**: `border-color: #1D4ED8, background: #DBEAFE`
+- **Error**: `border-color: #EF4444, background: #FEF2F2`
+
+### 2.8 Progress Indicators
+
+#### Upload/Download Progress
+```css
+background: #E5E7EB
+border-radius: 9999px
+height: 8px
+overflow: hidden
+margin: 16px 0
+```
+
+#### Progress Fill
+```css
+background: linear-gradient(90deg, #2563EB, #1D4ED8)
+height: 100%
+transition: width 0.3s ease
+```
+
+### 2.9 Loading States
+
+#### Loading Spinner
+```css
+width: 40px
+height: 40px
+border-radius: 50%
+border: 4px solid #E5E7EB
+border-top: 4px solid #2563EB
+animation: spin 1s linear infinite
+```
+
+#### Skeleton Loading
+```css
+background: linear-gradient(90deg, #F3F4F6 25%, #E5E7EB 50%, #F3F4F6 75%)
+background-size: 200% 100%
+animation: shimmer 1.5s infinite
+```
+
+### 2.10 Error States
+
+#### Error Container
+```css
+background: #FEF2F2
+border: 1px solid #FECACA
+border-radius: 8px
+padding: 16px
+margin: 16px 0
+```
+
+#### Error Icon
+```css
+color: #EF4444
+font-size: 20px
+margin-right: 8px
+```
+
+### 2.11 Empty States
+
+#### Empty State Container
+```css
+text-align: center
+padding: 48px 24px
+color: #6B7280
+```
+
+#### Empty State Icon
+```css
+font-size: 48px
+margin-bottom: 16px
+opacity: 0.5
+```
+
+### 2.12 Toggle Switches
+
+#### Toggle Switch
+```css
+width: 44px
+height: 24px
+background: #D1D5DB
+border-radius: 12px
+position: relative
+cursor: pointer
+transition: background-color 0.2s ease
+```
+
+#### Toggle Switch Active
+```css
+background: #2563EB
+```
+
+#### Toggle Switch Handle
+```css
+width: 20px
+height: 20px
+background: white
+border-radius: 50%
+position: absolute
+top: 2px
+left: 2px
+transition: transform 0.2s ease
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1)
+```
+
+#### Toggle Switch Handle Active
+```css
+transform: translateX(20px)
+```
+
 ## 3. Data Visualization
 
 ### 3.1 Chart Colors
