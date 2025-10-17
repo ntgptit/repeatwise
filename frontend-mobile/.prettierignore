@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Native builds
+android/
+ios/
+.bundle/
+
+# Build outputs
+build/
+dist/
+
+# Cache
+.cache/
+.metro/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Tests
+coverage/
+__tests__/
+
+# Package manager
+package-lock.json
+yarn.lock

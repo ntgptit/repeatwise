@@ -1,0 +1,64 @@
+# EditorConfig is awesome: https://EditorConfig.org
+
+# top-most EditorConfig file
+root = true
+
+# Unix-style newlines with a newline ending every file
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+# TypeScript/JavaScript/JSON
+[*.{ts,tsx,js,jsx,json,json5}]
+indent_style = space
+indent_size = 2
+max_line_length = 100
+
+# Java
+[*.{java,kt}]
+indent_style = space
+indent_size = 4
+max_line_length = 120
+
+# XML (Android, Maven)
+[*.{xml,pom}]
+indent_style = space
+indent_size = 2
+
+# Gradle
+[*.gradle]
+indent_style = space
+indent_size = 4
+
+# YAML
+[*.{yml,yaml}]
+indent_style = space
+indent_size = 2
+
+# Markdown
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Shell scripts
+[*.sh]
+end_of_line = lf
+
+# Batch scripts
+[*.bat]
+end_of_line = crlf
+
+# Makefiles
+[Makefile]
+indent_style = tab
+
+# Docker
+[Dockerfile]
+indent_style = space
+indent_size = 2
+
+[docker-compose.yml]
+indent_style = space
+indent_size = 2

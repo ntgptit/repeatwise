@@ -1,0 +1,136 @@
+# RepeatWise Backend API - Application Configuration
+# Spring Boot 3.2.1 + Java 17 + PostgreSQL 15
+
+spring:
+  application:
+    name: RepeatWise Backend API
+
+  # Database Configuration (PostgreSQL 15)
+  datasource:
+    url: jdbc:postgresql://localhost:5432/repeatwise
+    username: repeatwise
+    password: repeatwise
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  # JPA/Hibernate Configuration
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        use_sql_comments: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+        default_schema: public
+
+  # Flyway Migration
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    baseline-version: 0
+    validate-on-migrate: true
+
+  # Jackson Configuration
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    time-zone: UTC
+    default-property-inclusion: non_null
+
+  # File Upload Configuration
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+      enabled: true
+
+  # Messages i18n Configuration (MessageSource)
+  messages:
+    basename: messages
+    encoding: UTF-8
+    cache-duration: 3600
+
+# Server Configuration
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+  error:
+    include-message: always
+    include-binding-errors: always
+    include-stacktrace: never
+    include-exception: false
+
+# JWT Configuration
+jwt:
+  secret: your-256-bit-secret-key-change-this-in-production-please-use-strong-random-key
+  access-token-expiration-minutes: 15
+  refresh-token-expiration-days: 7
+  issuer: repeatwise-api
+  audience: repeatwise-app
+
+# Logging Configuration
+logging:
+  level:
+    root: INFO
+    com.repeatwise: DEBUG
+    org.springframework.web: INFO
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: always
+
+# Application Custom Properties
+app:
+  name: RepeatWise
+  version: 1.0.0
+  description: Spaced Repetition Learning Platform
+
+  # SRS Default Settings
+  srs:
+    default-total-boxes: 7
+    default-review-order: RANDOM
+    default-notification-enabled: true
+    default-notification-time: "09:00"
+    default-forgotten-card-action: MOVE_TO_BOX_1
+    default-move-down-boxes: 1
+    default-new-cards-per-day: 20
+    default-max-reviews-per-day: 200
+
+  # Security Settings
+  security:
+    bcrypt-strength: 12
+    max-login-attempts: 5
+    lockout-duration-minutes: 30
+
+  # Business Rules
+  limits:
+    max-folder-depth: 10
+    max-folders-per-user: 1000
+    max-cards-per-deck: 10000
+    max-import-rows: 10000
+    max-file-size-mb: 5
