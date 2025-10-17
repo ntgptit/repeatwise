@@ -14,7 +14,7 @@
 
 ## 2. Brief Description
 
-New user creates an account by providing email and password. System validates the information, creates the account with default settings, and logs the user in automatically.
+New user creates an account by providing username, email, and password. System validates the information, creates the account with default settings, and logs the user in automatically.
 
 ## 3. Preconditions
 
@@ -42,6 +42,7 @@ New user creates an account by providing email and password. System validates th
 
 **System**:
 - Displays registration form with fields:
+  - Username (required)
   - Email (required)
   - Password (required)
   - Confirm Password (required)
@@ -50,6 +51,7 @@ New user creates an account by providing email and password. System validates th
 
 ### Step 2: Enter Registration Information
 **Actor**: User enters:
+- Username: `minhnguyendev`
 - Email: `minh@example.com`
 - Password: `SecurePass123`
 - Confirm Password: `SecurePass123`
@@ -57,6 +59,7 @@ New user creates an account by providing email and password. System validates th
 
 **System**:
 - Validates input in real-time:
+  - Username format validation (3-30 chars, alphanumeric + underscore, client-side)
   - Email format validation (client-side)
   - Password strength indicator (client-side)
   - Confirm password match check (client-side)
@@ -66,6 +69,8 @@ New user creates an account by providing email and password. System validates th
 
 **System**:
 1. Validates all inputs (server-side):
+   - Username format is valid (3-30 chars, alphanumeric + underscore)
+   - Username not already taken
    - Email format is valid
    - Email not already registered
    - Password meets minimum requirements (≥8 characters)
@@ -83,7 +88,7 @@ New user creates an account by providing email and password. System validates th
    - max_reviews_per_day = 200
 6. Creates user_stats record (all zeros)
 7. Generates JWT token (24h expiry)
-8. Logs event: "User registered: {email}"
+8. Logs event: "User registered: {username} ({email})"
 
 ### Step 4: Auto Login and Redirect
 **System**:
@@ -96,7 +101,20 @@ New user creates an account by providing email and password. System validates th
 
 ## 6. Alternative Flows
 
-### A1: Email Already Registered
+### A1: Username Already Taken
+**Trigger**: User enters username that already exists (Step 2)
+
+**Flow**:
+1. System detects duplicate username during validation
+2. System returns error: "This username is already taken"
+3. System suggests alternative usernames (e.g., "minhnguyendev2", "minhnguyendev_")
+4. User tries different username
+
+**Return to**: Step 2
+
+---
+
+### A2: Email Already Registered
 **Trigger**: User enters email that already exists (Step 2)
 
 **Flow**:
@@ -111,7 +129,20 @@ New user creates an account by providing email and password. System validates th
 
 ---
 
-### A2: Password Too Weak
+### A3: Invalid Username Format
+**Trigger**: User enters invalid username (Step 2)
+
+**Flow**:
+1. System validates username format
+2. System returns error: "Username must be 3-30 characters, letters, numbers, and underscores only"
+3. System highlights username field in red
+4. User corrects username format
+
+**Return to**: Step 2
+
+---
+
+### A4: Password Too Weak
 **Trigger**: User enters password < 8 characters (Step 2)
 
 **Flow**:
@@ -124,7 +155,7 @@ New user creates an account by providing email and password. System validates th
 
 ---
 
-### A3: Passwords Don't Match
+### A5: Passwords Don't Match
 **Trigger**: Password and Confirm Password fields don't match (Step 2)
 
 **Flow**:
@@ -137,7 +168,7 @@ New user creates an account by providing email and password. System validates th
 
 ---
 
-### A4: Invalid Email Format
+### A6: Invalid Email Format
 **Trigger**: User enters invalid email (Step 2)
 
 **Flow**:
@@ -150,7 +181,7 @@ New user creates an account by providing email and password. System validates th
 
 ---
 
-### A5: Network Connection Lost
+### A7: Network Connection Lost
 **Trigger**: Network error during registration submission (Step 3)
 
 **Flow**:
@@ -165,7 +196,7 @@ New user creates an account by providing email and password. System validates th
 
 ---
 
-### A6: Server Error
+### A8: Server Error
 **Trigger**: Internal server error during account creation (Step 3)
 
 **Flow**:
@@ -232,23 +263,30 @@ New user creates an account by providing email and password. System validates th
 
 ## 9. Business Rules
 
-### BR-001: Email Uniqueness
+### BR-001: Username Uniqueness
+- Each username can only be used once
+- Case-insensitive comparison (minhdev == MINHDEV)
+- Valid characters: letters (a-z, A-Z), numbers (0-9), underscore (_)
+- Length: 3-30 characters
+- Cannot start or end with underscore
+
+### BR-002: Email Uniqueness
 - Each email can only register once
 - Case-insensitive comparison (minh@example.com == MINH@EXAMPLE.COM)
 
-### BR-002: Password Requirements
+### BR-003: Password Requirements
 - Minimum 8 characters
 - Maximum 128 characters
 - No special character requirements for MVP
 - Future: Require mix of uppercase, lowercase, numbers
 
-### BR-003: Default Settings
+### BR-004: Default Settings
 - New users get default SRS settings
 - Default language: Vietnamese (VI)
 - Default theme: System
 - Default timezone: Asia/Ho_Chi_Minh (detected from browser if possible)
 
-### BR-004: Auto Login
+### BR-005: Auto Login
 - After successful registration, user is automatically logged in
 - JWT token valid for 24 hours
 - No email verification required for MVP
@@ -256,13 +294,14 @@ New user creates an account by providing email and password. System validates th
 ## 10. Data Requirements
 
 ### Input Data
+- Username: VARCHAR(30), required, unique
 - Email: VARCHAR(255), required, unique
 - Password: String (8-128 chars), required
 - Name: VARCHAR(100), optional
 
 ### Output Data
 - JWT token: String
-- User object: { id, email, name, language, theme, timezone }
+- User object: { id, username, email, name, language, theme, timezone }
 
 ### Database Changes
 - INSERT into `users` table
@@ -277,6 +316,9 @@ New user creates an account by providing email and password. System validates th
 │          Welcome to RepeatWise          │
 │   Simple flashcards. Smart reviews.    │
 ├─────────────────────────────────────────┤
+│                                         │
+│  Username                               │
+│  [_________________________________]    │
 │                                         │
 │  Email Address                          │
 │  [_________________________________]    │
@@ -303,25 +345,28 @@ New user creates an account by providing email and password. System validates th
 ## 12. Testing Scenarios
 
 ### Happy Path
-1. Enter valid email, strong password, matching confirm, name
+1. Enter valid username, email, strong password, matching confirm, name
 2. Submit form
 3. Account created successfully
 4. User logged in and redirected to dashboard
 
 ### Edge Cases
-1. Email with special characters (test+user@example.com) ✅
-2. Very long password (128 characters) ✅
-3. Unicode characters in name (Nguyễn Văn Minh) ✅
-4. Whitespace in email (should be trimmed) ✅
-5. Concurrent registrations with same email (one should fail) ✅
+1. Username with underscores (minh_nguyen_dev) ✅
+2. Email with special characters (test+user@example.com) ✅
+3. Very long password (128 characters) ✅
+4. Unicode characters in name (Nguyễn Văn Minh) ✅
+5. Whitespace in username/email (should be trimmed) ✅
+6. Concurrent registrations with same username or email (one should fail) ✅
 
 ### Error Cases
-1. Duplicate email → Show error, suggest login
-2. Weak password → Show error, suggest stronger
-3. Mismatched passwords → Show error, highlight field
-4. Invalid email format → Show error inline
-5. Network timeout → Show error, keep form data
-6. Server error → Show generic error, log details
+1. Duplicate username → Show error, suggest alternatives
+2. Duplicate email → Show error, suggest login
+3. Invalid username format → Show error inline
+4. Weak password → Show error, suggest stronger
+5. Mismatched passwords → Show error, highlight field
+6. Invalid email format → Show error inline
+7. Network timeout → Show error, keep form data
+8. Server error → Show generic error, log details
 
 ## 13. Related Use Cases
 
@@ -342,11 +387,11 @@ New user creates an account by providing email and password. System validates th
 - OAuth (Google, Facebook)
 - CAPTCHA for bot prevention
 - Password strength requirements (uppercase, numbers, symbols)
-- Username option (in addition to email)
 
 ## 15. Acceptance Criteria
 
-- [ ] User can register with valid email and password
+- [ ] User can register with valid username, email and password
+- [ ] Duplicate username registration is prevented
 - [ ] Duplicate email registration is prevented
 - [ ] Password is hashed with bcrypt (cost 12)
 - [ ] Default SRS settings are created

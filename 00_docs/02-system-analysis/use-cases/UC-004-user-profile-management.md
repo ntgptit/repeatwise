@@ -46,6 +46,7 @@ Authenticated user views and updates their profile information including name, t
   - SRS Settings
   - Notifications
 - Displays profile form pre-filled with current data:
+  - Username: "minhnguyendev" (read-only)
   - Name: "Nguyễn Văn Minh"
   - Email: "minh@example.com" (read-only)
   - Timezone: "Asia/Ho_Chi_Minh"
@@ -254,6 +255,7 @@ Authenticated user views and updates their profile information including name, t
 ## 9. Business Rules
 
 ### BR-009: Profile Fields
+- **Username**: Read-only, cannot be changed in MVP
 - **Name**: Required, 1-100 characters, any Unicode characters
 - **Email**: Read-only, cannot be changed in MVP
 - **Timezone**: Must be valid IANA timezone (e.g., "Asia/Ho_Chi_Minh")
@@ -281,12 +283,14 @@ Authenticated user views and updates their profile information including name, t
   - Streak calculation (midnight in user's timezone)
   - Statistics date ranges
 
-### BR-013: Email Immutability (MVP)
+### BR-013: Username and Email Immutability (MVP)
+- Username cannot be changed in MVP (would affect login and references)
 - Email cannot be changed in MVP (security risk)
-- Future: Implement email change flow with verification
-  - Send verification email to new address
+- Future: Implement username/email change flow with verification
+  - Username change: Require password confirmation
+  - Email change: Send verification email to new address
   - Confirm via link
-  - Update email after confirmation
+  - Update after confirmation
 
 ## 10. Data Requirements
 
@@ -297,7 +301,7 @@ Authenticated user views and updates their profile information including name, t
 - theme: ENUM('LIGHT', 'DARK', 'SYSTEM'), required
 
 ### Output Data
-- Updated user object: { id, email, name, timezone, language, theme, updated_at }
+- Updated user object: { id, username, email, name, timezone, language, theme, updated_at }
 
 ### Database Changes
 - UPDATE users table:
@@ -323,6 +327,9 @@ Authenticated user views and updates their profile information including name, t
 │                                                   │
 │  Personal Information                             │
 │  ─────────────────────────────────────────────   │
+│                                                   │
+│  Username                                         │
+│  [minhnguyendev___________________] 🔒 Read-only │
 │                                                   │
 │  Name *                                           │
 │  [Nguyễn Văn Minh_________________]              │
@@ -414,6 +421,7 @@ Authenticated user views and updates their profile information including name, t
 ## 14. Notes & Assumptions
 
 ### Assumptions
+- **Username immutable**: Cannot change username in MVP
 - **Email immutable**: Cannot change email in MVP (security)
 - **No avatar upload**: Plain text name only
 - **Simple validation**: No complex password policy for name
@@ -422,6 +430,7 @@ Authenticated user views and updates their profile information including name, t
 
 ### Future Enhancements
 - **Avatar upload**: Profile picture with cropping
+- **Username change**: Allow with password confirmation
 - **Email change**: Verification flow with confirmation email
 - **Two-factor authentication**: Enable 2FA in profile
 - **Delete account**: Self-service account deletion
@@ -440,6 +449,7 @@ Authenticated user views and updates their profile information including name, t
 
 - [ ] User can view current profile information
 - [ ] User can edit name, timezone, language, theme
+- [ ] Username field is read-only (no edit)
 - [ ] Email field is read-only (no edit)
 - [ ] Name validation works (required, max 100 chars)
 - [ ] Timezone dropdown shows valid IANA timezones

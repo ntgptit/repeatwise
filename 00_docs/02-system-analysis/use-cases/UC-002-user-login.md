@@ -14,7 +14,7 @@
 
 ## 2. Brief Description
 
-Registered user logs into the system using email and password. System authenticates the user and issues a JWT token for accessing protected resources.
+Registered user logs into the system using username or email and password. System authenticates the user and issues a JWT token for accessing protected resources.
 
 ## 3. Preconditions
 
@@ -41,16 +41,16 @@ Registered user logs into the system using email and password. System authentica
 **Actor**: User opens app and navigates to login
 
 **System**: Displays login form with:
-- Email field
+- Username or Email field
 - Password field
 - "Remember me" checkbox (optional)
 - "Forgot password?" link
 - "Create account" link
 
 ### Step 2: Enter Credentials
-**Actor**: User enters:
-- Email: `minh@example.com`
-- Password: `SecurePass123`
+**Actor**: User enters one of:
+- Option A: Username: `minhnguyendev` + Password: `SecurePass123`
+- Option B: Email: `minh@example.com` + Password: `SecurePass123`
 
 **System**: Validates input format (client-side)
 
@@ -59,12 +59,13 @@ Registered user logs into the system using email and password. System authentica
 
 **System**:
 1. Validates inputs (server-side)
-2. Looks up user by email (case-insensitive)
-3. Compares password hash using bcrypt
-4. If match:
+2. Detects if input is email or username
+3. Looks up user by email or username (case-insensitive)
+4. Compares password hash using bcrypt
+5. If match:
    - Generates JWT token (24h expiry)
    - Updates user.updated_at timestamp
-   - Logs event: "User logged in: {email}"
+   - Logs event: "User logged in: {username} ({email})"
    - Returns token + user profile
 
 ### Step 4: Token Storage and Redirect
@@ -78,16 +79,16 @@ Registered user logs into the system using email and password. System authentica
 
 ## 6. Alternative Flows
 
-### A1: Invalid Email
-**Trigger**: Email not found in database (Step 3)
+### A1: Invalid Username/Email
+**Trigger**: Username or email not found in database (Step 3)
 
 **Flow**:
-1. System searches for email
+1. System searches for username or email
 2. No user found
-3. System returns generic error: "Invalid email or password"
+3. System returns generic error: "Invalid username/email or password"
 4. System does NOT reveal which field is wrong (security)
 5. User can:
-   - Retry with correct email
+   - Retry with correct username or email
    - Click "Create account" to register
 
 **Return to**: Step 2
@@ -98,10 +99,10 @@ Registered user logs into the system using email and password. System authentica
 **Trigger**: Password doesn't match hash (Step 3)
 
 **Flow**:
-1. System finds user by email
+1. System finds user by username or email
 2. bcrypt comparison fails
 3. System increments failed_login_attempts counter
-4. System returns generic error: "Invalid email or password"
+4. System returns generic error: "Invalid username/email or password"
 5. If failed_attempts >= 5:
    - System temporarily locks account (15 minutes)
    - System shows: "Too many failed attempts. Try again in 15 minutes."
@@ -175,13 +176,14 @@ Registered user logs into the system using email and password. System authentica
 ## 9. Business Rules
 
 ### BR-005: Authentication
-- Email comparison is case-insensitive
+- Username/Email comparison is case-insensitive
+- System auto-detects if input is email (contains @) or username
 - Password comparison uses bcrypt.compare()
 - Failed attempts counter resets on successful login
 
 ### BR-006: JWT Token
 - Expires in 24 hours for MVP
-- Contains: user_id, email, issued_at, expires_at
+- Contains: user_id, username, email, issued_at, expires_at
 - Signed with HS256 algorithm
 - No refresh token in MVP
 
@@ -193,12 +195,12 @@ Registered user logs into the system using email and password. System authentica
 ## 10. Data Requirements
 
 ### Input
-- Email: VARCHAR(255)
+- Username or Email: VARCHAR(255)
 - Password: String (raw, never stored)
 
 ### Output
 - JWT token: String
-- User: { id, email, name, language, theme, timezone }
+- User: { id, username, email, name, language, theme, timezone }
 
 ### Database Changes
 - UPDATE users SET updated_at = NOW() WHERE id = ?
@@ -207,17 +209,18 @@ Registered user logs into the system using email and password. System authentica
 ## 11. Testing Scenarios
 
 ### Happy Path
-1. Enter valid email and password
+1. Enter valid username or email and password
 2. Submit
 3. Token received
 4. Redirected to dashboard
 
 ### Error Cases
-1. Wrong email → Generic error
-2. Wrong password → Generic error
-3. Empty fields → Validation error
-4. 5 failed attempts → Account locked
-5. Network timeout → Retry option
+1. Wrong username → Generic error
+2. Wrong email → Generic error
+3. Wrong password → Generic error
+4. Empty fields → Validation error
+5. 5 failed attempts → Account locked
+6. Network timeout → Retry option
 
 ## 12. Related Use Cases
 
@@ -227,7 +230,9 @@ Registered user logs into the system using email and password. System authentica
 
 ## 13. Acceptance Criteria
 
-- [ ] User can login with valid credentials
+- [ ] User can login with valid username and password
+- [ ] User can login with valid email and password
+- [ ] System auto-detects if input is username or email
 - [ ] JWT token issued on successful login
 - [ ] Generic error for invalid credentials
 - [ ] Rate limiting prevents brute force

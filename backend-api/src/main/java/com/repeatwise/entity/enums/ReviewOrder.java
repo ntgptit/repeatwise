@@ -4,13 +4,18 @@ import lombok.Getter;
 
 /**
  * Card review order enum for SRS settings
- * Design: Entity Specifications - SrsSettings entity
+ *
+ * Requirements:
+ * - Database Schema: review_order constraint (ASCENDING, DESCENDING, RANDOM)
+ * - UC-022: Configure SRS Settings
+ *
+ * @author RepeatWise Team
  */
 @Getter
 public enum ReviewOrder {
-    RANDOM("Random order"),
-    OLDEST_FIRST("Oldest cards first"),
-    NEWEST_FIRST("Newest cards first");
+    ASCENDING("Box 1 to Box 7 (easiest first)"),
+    DESCENDING("Box 7 to Box 1 (hardest first)"),
+    RANDOM("Random order");
 
     private final String description;
 

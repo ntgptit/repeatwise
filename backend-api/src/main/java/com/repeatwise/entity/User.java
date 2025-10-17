@@ -1,5 +1,6 @@
 package com.repeatwise.entity;
 
+import com.repeatwise.entity.base.SoftDeletableEntity;
 import com.repeatwise.entity.enums.Language;
 import com.repeatwise.entity.enums.Theme;
 import jakarta.persistence.*;
@@ -7,6 +8,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import lombok.experimental.SuperBuilder;
 import org.hibernate.annotations.Where;
 
 import java.time.LocalDate;
@@ -16,16 +18,19 @@ import java.time.LocalDate;
  *
  * Requirements:
  * - UC-001: User Registration
+ * - UC-002: User Login
  * - Entity Specifications: users table
  *
  * Security:
  * - password_hash: bcrypt hashed (60 chars, cost 12)
+ * - username: unique, indexed for fast lookup
  * - email: unique, indexed for fast lookup
  *
  * @author RepeatWise Team
  */
 @Entity
 @Table(name = "users", indexes = {
+    @Index(name = "idx_users_username", columnList = "username"),
     @Index(name = "idx_users_email", columnList = "email")
 })
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
@@ -34,8 +39,13 @@ import java.time.LocalDate;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@SuperBuilder
 public class User extends SoftDeletableEntity {
+
+    @NotBlank(message = "Username is required")
+    @Size(min = 3, max = 30, message = "Username must be between 3 and 30 characters")
+    @Column(name = "username", nullable = false, unique = true, length = 30)
+    private String username;
 
     @NotBlank(message = "Name is required")
     @Size(max = 100, message = "Name must not exceed 100 characters")
@@ -56,7 +66,7 @@ public class User extends SoftDeletableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "language", nullable = false, length = 2)
     @Builder.Default
-    private Language language = Language.VI;
+    private Language language = Language.EN;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "theme", nullable = false, length = 10)
@@ -115,6 +125,7 @@ public class User extends SoftDeletableEntity {
     public String toString() {
         return "User{" +
                 "id=" + getId() +
+                ", username='" + username + '\'' +
                 ", email='" + email + '\'' +
                 ", name='" + name + '\'' +
                 ", language=" + language +
