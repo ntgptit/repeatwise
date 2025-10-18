@@ -2,17 +2,19 @@ package com.repeatwise.service.impl;
 
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
+import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.UserResponse;
+import com.repeatwise.entity.RefreshToken;
 import com.repeatwise.entity.SrsSettings;
 import com.repeatwise.entity.User;
 import com.repeatwise.entity.UserStats;
-import com.repeatwise.exception.DuplicateEmailException;
-import com.repeatwise.exception.DuplicateUsernameException;
-import com.repeatwise.exception.InvalidCredentialsException;
+import com.repeatwise.exception.*;
 import com.repeatwise.mapper.UserMapper;
+import com.repeatwise.repository.RefreshTokenRepository;
 import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.repository.UserStatsRepository;
+import com.repeatwise.security.JwtTokenProvider;
 import com.repeatwise.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +25,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 /**
  * Authentication Service Implementation
@@ -44,9 +48,11 @@ public class AuthServiceImpl implements IAuthService {
     private final UserRepository userRepository;
     private final SrsSettingsRepository srsSettingsRepository;
     private final UserStatsRepository userStatsRepository;
+    private final RefreshTokenRepository refreshTokenRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final MessageSource messageSource;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Transactional
     @Override
@@ -152,7 +158,7 @@ public class AuthServiceImpl implements IAuthService {
 
     @Transactional(readOnly = true)
     @Override
-    public UserResponse login(final LoginRequest request) {
+    public LoginResponse login(final LoginRequest request) {
         log.info("Login attempt: usernameOrEmail={}", request.getUsernameOrEmail());
 
         validateLoginRequest(request);
@@ -160,10 +166,28 @@ public class AuthServiceImpl implements IAuthService {
         final User user = findUserByUsernameOrEmail(request.getUsernameOrEmail());
         verifyPassword(request.getPassword(), user.getPasswordHash());
 
-        log.info("User logged in successfully: userId={}, username={}",
-            user.getId(), user.getUsername());
+        final String accessToken = generateAccessToken(user);
+        final long expiresIn = jwtTokenProvider.getAccessTokenExpirationSeconds();
 
-        return userMapper.toResponse(user);
+        log.info("User logged in successfully: userId={}, username={}, email={}",
+            user.getId(), user.getUsername(), user.getEmail());
+
+        return LoginResponse.builder()
+            .accessToken(accessToken)
+            .expiresIn(expiresIn)
+            .build();
+    }
+
+    private String generateAccessToken(final User user) {
+        final String accessToken = jwtTokenProvider.generateAccessToken(
+            user.getId(),
+            user.getEmail()
+        );
+
+        log.debug("Generated access token for user: userId={}, email={}",
+            user.getId(), user.getEmail());
+
+        return accessToken;
     }
 
     private void validateLoginRequest(final LoginRequest request) {
@@ -236,6 +260,100 @@ public class AuthServiceImpl implements IAuthService {
             return email.substring(0, atIndex);
         }
         return "User";
+    }
+
+    @Transactional
+    @Override
+    public void logout(final String refreshToken, final UUID userId) {
+        log.info("Logout attempt: userId={}", userId);
+
+        validateLogoutRequest(refreshToken);
+
+        final RefreshToken token = findRefreshToken(refreshToken);
+        verifyTokenOwnership(token, userId);
+
+        revokeToken(token);
+
+        log.info("User logged out successfully: userId={}, tokenId={}",
+            userId, token.getId());
+    }
+
+    private void validateLogoutRequest(final String refreshToken) {
+        if (StringUtils.isBlank(refreshToken)) {
+            log.error("Logout validation failed: refresh token is blank");
+            throw new InvalidTokenException(
+                "AUTH_002",
+                getMessage("error.auth.token.required")
+            );
+        }
+    }
+
+    private RefreshToken findRefreshToken(final String tokenString) {
+        return refreshTokenRepository.findByToken(tokenString)
+            .orElseThrow(() -> {
+                log.warn("Logout failed: refresh token not found");
+                return new InvalidTokenException(
+                    "AUTH_003",
+                    getMessage("error.auth.token.invalid")
+                );
+            });
+    }
+
+    private void verifyTokenOwnership(final RefreshToken token, final UUID userId) {
+        if (!token.getUser().getId().equals(userId)) {
+            log.warn("Logout failed: token does not belong to user: userId={}, tokenUserId={}",
+                userId, token.getUser().getId());
+            throw new ForbiddenException(
+                "AUTH_004",
+                getMessage("error.auth.token.not.owned")
+            );
+        }
+
+        if (Boolean.TRUE.equals(token.getIsRevoked())) {
+            log.warn("Logout failed: token already revoked: tokenId={}", token.getId());
+            throw new InvalidTokenException(
+                "AUTH_005",
+                getMessage("error.auth.token.already.revoked")
+            );
+        }
+
+        if (token.isExpired()) {
+            log.warn("Logout failed: token expired: tokenId={}, expiresAt={}",
+                token.getId(), token.getExpiresAt());
+            throw new InvalidTokenException(
+                "AUTH_006",
+                getMessage("error.auth.token.expired")
+            );
+        }
+    }
+
+    private void revokeToken(final RefreshToken token) {
+        token.revoke();
+        refreshTokenRepository.save(token);
+        log.debug("Refresh token revoked: tokenId={}", token.getId());
+    }
+
+    @Transactional
+    @Override
+    public void logoutAll(final UUID userId) {
+        log.info("Logout-all attempt: userId={}", userId);
+
+        final User user = userRepository.findById(userId)
+            .orElseThrow(() -> {
+                log.error("Logout-all failed: user not found: userId={}", userId);
+                return new ResourceNotFoundException(
+                    "USER_003",
+                    getMessage("error.user.not.found", userId)
+                );
+            });
+
+        final int revokedCount = refreshTokenRepository.revokeAllByUserId(
+            userId,
+            Instant.now()
+        );
+
+        log.info("User logged out from all devices: userId={}, tokensRevoked={}",
+            userId, revokedCount);
     }
 
     private String getMessage(final String code, final Object... args) {

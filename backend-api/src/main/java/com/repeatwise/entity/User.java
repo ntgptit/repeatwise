@@ -1,17 +1,29 @@
 package com.repeatwise.entity;
 
+import java.time.LocalDate;
+
+import org.hibernate.annotations.SQLRestriction;
+
 import com.repeatwise.entity.base.SoftDeletableEntity;
 import com.repeatwise.entity.enums.Language;
 import com.repeatwise.entity.enums.Theme;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import org.hibernate.annotations.Where;
-
-import java.time.LocalDate;
 
 /**
  * User entity - Core entity for authentication and user management
@@ -30,11 +42,11 @@ import java.time.LocalDate;
  */
 @Entity
 @Table(name = "users", indexes = {
-    @Index(name = "idx_users_username", columnList = "username"),
-    @Index(name = "idx_users_email", columnList = "email")
+        @Index(name = "idx_users_username", columnList = "username"),
+        @Index(name = "idx_users_email", columnList = "email")
 })
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
-@Where(clause = "deleted_at IS NULL")
+@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -73,6 +85,12 @@ public class User extends SoftDeletableEntity {
     @Builder.Default
     private Theme theme = Theme.LIGHT;
 
+    @NotBlank(message = "Timezone is required")
+    @Size(max = 50, message = "Timezone must not exceed 50 characters")
+    @Column(name = "timezone", nullable = false, length = 50)
+    @Builder.Default
+    private String timezone = "Asia/Ho_Chi_Minh";
+
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
@@ -86,6 +104,32 @@ public class User extends SoftDeletableEntity {
 
     // Relationships will be added when needed (folders, decks, etc.)
 
+    @Override
+    public boolean equals(final Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (!(o instanceof final User user)) {
+            return false;
+        }
+        return (getId() != null) && getId().equals(user.getId());
+    }
+
+    /**
+     * Business method: Get display name (email prefix if name is empty)
+     */
+    public String getDisplayName() {
+        if ((this.name != null) && !this.name.isBlank()) {
+            return this.name;
+        }
+        return this.email.substring(0, this.email.indexOf('@'));
+    }
+
+    @Override
+    public int hashCode() {
+        return getClass().hashCode();
+    }
+
     /**
      * Business method: Check if email is verified
      * Note: Email verification not in MVP, always returns true
@@ -94,41 +138,14 @@ public class User extends SoftDeletableEntity {
         return true; // MVP: No email verification
     }
 
-    /**
-     * Business method: Get display name (email prefix if name is empty)
-     */
-    public String getDisplayName() {
-        if (name != null && !name.isBlank()) {
-            return name;
-        }
-        return email.substring(0, email.indexOf('@'));
-    }
-
-    @Override
-    public boolean equals(final Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (!(o instanceof User)) {
-            return false;
-        }
-        final User user = (User) o;
-        return getId() != null && getId().equals(user.getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
-
     @Override
     public String toString() {
         return "User{" +
                 "id=" + getId() +
-                ", username='" + username + '\'' +
-                ", email='" + email + '\'' +
-                ", name='" + name + '\'' +
-                ", language=" + language +
+                ", username='" + this.username + '\'' +
+                ", email='" + this.email + '\'' +
+                ", name='" + this.name + '\'' +
+                ", language=" + this.language +
                 '}';
     }
 }

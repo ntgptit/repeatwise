@@ -2,7 +2,10 @@ package com.repeatwise.service;
 
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
+import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.UserResponse;
+
+import java.util.UUID;
 
 /**
  * Authentication Service Interface
@@ -42,11 +45,46 @@ public interface IAuthService {
      * 1. Detect if input is email (contains @) or username
      * 2. Find user by username or email (case-insensitive)
      * 3. Verify password with bcrypt
-     * 4. Return user response
+     * 4. Generate JWT access token (15-minute expiry)
+     * 5. Generate refresh token (7-day expiry)
+     * 6. Return login response with access token
      *
      * @param request LoginRequest containing usernameOrEmail and password
-     * @return UserResponse with user details
+     * @return LoginResponse with accessToken and expiresIn
      * @throws InvalidCredentialsException if username/email or password is invalid
      */
-    UserResponse login(LoginRequest request);
+    LoginResponse login(LoginRequest request);
+
+    /**
+     * Logout user from current device (revoke single refresh token)
+     *
+     * Business Logic:
+     * 1. Validate refresh token is not blank
+     * 2. Find refresh token in database
+     * 3. Verify token belongs to current user (authorization)
+     * 4. Revoke refresh token (soft delete - set isRevoked=true)
+     * 5. Log logout event
+     *
+     * Note: Access token remains valid until expiry (client-side cleanup)
+     *
+     * @param refreshToken Refresh token string from HttpOnly cookie
+     * @param userId Current authenticated user ID
+     * @throws InvalidTokenException if token not found or invalid
+     * @throws ForbiddenException if token doesn't belong to user
+     */
+    void logout(String refreshToken, UUID userId);
+
+    /**
+     * Logout user from all devices (revoke all refresh tokens)
+     *
+     * Business Logic:
+     * 1. Find all valid refresh tokens for user
+     * 2. Revoke all tokens (bulk update)
+     * 3. Log logout-all event
+     *
+     * Use Case: User suspects account compromise, wants to logout everywhere
+     *
+     * @param userId Current authenticated user ID
+     */
+    void logoutAll(UUID userId);
 }

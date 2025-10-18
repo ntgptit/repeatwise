@@ -2,6 +2,7 @@ package com.repeatwise.mapper;
 
 import com.repeatwise.dto.request.auth.RegisterRequest;
 import com.repeatwise.dto.response.auth.UserResponse;
+import com.repeatwise.dto.response.user.UserProfileResponse;
 import com.repeatwise.entity.User;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -12,6 +13,7 @@ import org.mapstruct.Mapping;
  * Requirements:
  * - Coding Convention: Use MapStruct for DTO mapping
  * - Clean separation between entity and DTO
+ * - UC-004: User Profile Management
  *
  * @author RepeatWise Team
  */
@@ -25,6 +27,15 @@ public interface UserMapper {
      * @return UserResponse DTO
      */
     UserResponse toResponse(User user);
+
+    /**
+     * Convert User entity to UserProfileResponse DTO
+     * Used for profile endpoints (GET /api/users/me, PUT /api/users/me)
+     *
+     * @param user User entity
+     * @return UserProfileResponse DTO
+     */
+    UserProfileResponse toProfileResponse(User user);
 
     /**
      * Convert RegisterRequest to User entity

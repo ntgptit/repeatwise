@@ -58,7 +58,12 @@
       "Bash(findstr:*)",
       "Bash(git init:*)",
       "Bash(git remote add:*)",
-      "Bash(git fetch:*)"
+      "Bash(git fetch:*)",
+      "Bash(for f in d:/workspace/repeatwise/backend-api/src/main/resources/db/migration/*.sql)",
+      "Bash(head:*)",
+      "Bash(done)",
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\controller\\advice\\GlobalExceptionHandler.java\" -Force)",
+      "Bash(javac:*)"
     ],
     "deny": [],
     "ask": []
