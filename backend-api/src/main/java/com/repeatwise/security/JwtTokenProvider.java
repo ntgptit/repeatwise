@@ -4,6 +4,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -52,8 +53,8 @@ public class JwtTokenProvider {
         this.issuer = issuer;
         this.audience = audience;
 
-        log.info("JwtTokenProvider initialized: issuer={}, audience={}, expirationMinutes={}",
-            issuer, audience, accessTokenExpirationMinutes);
+        log.info("event={} JwtTokenProvider initialized: issuer={}, audience={}, expirationMinutes={}",
+            LogEvent.START, issuer, audience, accessTokenExpirationMinutes);
     }
 
     /**
@@ -85,8 +86,8 @@ public class JwtTokenProvider {
             .signWith(secretKey, SignatureAlgorithm.HS256)
             .compact();
 
-        log.debug("Generated access token: userId={}, email={}, expiresAt={}",
-            userId, email, expiration);
+        log.debug("event={} Generated access token: userId={}, email={}, expiresAt={}",
+            LogEvent.AUTH_LOGIN_SUCCESS, userId, email, expiration);
 
         return token;
     }
@@ -110,19 +111,19 @@ public class JwtTokenProvider {
                 .build()
                 .parseSignedClaims(token);
 
-            log.debug("Token validation successful");
+            log.debug("event={} Token validation successful", LogEvent.START);
             return true;
 
         } catch (SignatureException ex) {
-            log.error("Invalid JWT signature: {}", ex.getMessage());
+            log.error("event={} Invalid JWT signature: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         } catch (MalformedJwtException ex) {
-            log.error("Invalid JWT token: {}", ex.getMessage());
+            log.error("event={} Invalid JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         } catch (ExpiredJwtException ex) {
-            log.error("Expired JWT token: {}", ex.getMessage());
+            log.error("event={} Expired JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         } catch (UnsupportedJwtException ex) {
-            log.error("Unsupported JWT token: {}", ex.getMessage());
+            log.error("event={} Unsupported JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         } catch (IllegalArgumentException ex) {
-            log.error("JWT claims string is empty: {}", ex.getMessage());
+            log.error("event={} JWT claims string is empty: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         }
 
         return false;

@@ -63,7 +63,10 @@
       "Bash(head:*)",
       "Bash(done)",
       "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\controller\\advice\\GlobalExceptionHandler.java\" -Force)",
-      "Bash(javac:*)"
+      "Bash(javac:*)",
+      "Bash(git checkout:*)",
+      "Bash(git rebase:*)",
+      "Bash(git diff:*)"
     ],
     "deny": [],
     "ask": []

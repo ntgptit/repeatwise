@@ -7,6 +7,7 @@ import com.repeatwise.service.IUserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,7 +53,7 @@ public class UserController {
     public ResponseEntity<UserProfileResponse> getCurrentUserProfile() {
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/users/me - userId: {}", userId);
+        log.info("event={} GET /api/users/me - userId: {}", LogEvent.USER_GET_PROFILE, userId);
 
         final UserProfileResponse profile = userService.getCurrentUserProfile(userId);
 
@@ -90,7 +91,7 @@ public class UserController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("PUT /api/users/me - userId: {}, request: {}", userId, request);
+        log.info("event={} PUT /api/users/me - userId: {}, request: {}", LogEvent.USER_UPDATE_PROFILE, userId, request);
 
         final UserProfileResponse updatedProfile = userService.updateProfile(userId, request);
 

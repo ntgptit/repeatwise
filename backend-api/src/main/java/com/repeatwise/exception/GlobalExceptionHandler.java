@@ -4,6 +4,7 @@ import com.repeatwise.dto.response.ErrorResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -47,8 +48,8 @@ public class GlobalExceptionHandler {
             final ResourceNotFoundException ex,
             final HttpServletRequest request) {
 
-        log.warn("Resource not found: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Resource not found: errorCode={}, message={}, path={}",
+            LogEvent.EX_RESOURCE_NOT_FOUND, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -74,8 +75,8 @@ public class GlobalExceptionHandler {
             final ValidationException ex,
             final HttpServletRequest request) {
 
-        log.warn("Validation error: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Validation error: errorCode={}, message={}, path={}",
+            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -103,8 +104,8 @@ public class GlobalExceptionHandler {
             final BusinessException ex,
             final HttpServletRequest request) {
 
-        log.warn("Duplicate resource: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Duplicate resource: errorCode={}, message={}, path={}",
+            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -130,8 +131,8 @@ public class GlobalExceptionHandler {
             final InvalidCredentialsException ex,
             final HttpServletRequest request) {
 
-        log.warn("Invalid credentials: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Invalid credentials: errorCode={}, message={}, path={}",
+            LogEvent.EX_INVALID_CREDENTIALS, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -157,8 +158,8 @@ public class GlobalExceptionHandler {
             final InvalidTokenException ex,
             final HttpServletRequest request) {
 
-        log.warn("Invalid token: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Invalid token: errorCode={}, message={}, path={}",
+            LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -184,8 +185,8 @@ public class GlobalExceptionHandler {
             final ForbiddenException ex,
             final HttpServletRequest request) {
 
-        log.warn("Forbidden: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Forbidden: errorCode={}, message={}, path={}",
+            LogEvent.EX_FORBIDDEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -211,8 +212,8 @@ public class GlobalExceptionHandler {
             final MaxDepthExceededException ex,
             final HttpServletRequest request) {
 
-        log.warn("Max depth exceeded: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Max depth exceeded: errorCode={}, message={}, path={}",
+            LogEvent.FOLDER_MAX_DEPTH_EXCEEDED, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -238,8 +239,8 @@ public class GlobalExceptionHandler {
             final CircularReferenceException ex,
             final HttpServletRequest request) {
 
-        log.warn("Circular reference: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Circular reference: errorCode={}, message={}, path={}",
+            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -265,8 +266,8 @@ public class GlobalExceptionHandler {
             final FolderTooLargeException ex,
             final HttpServletRequest request) {
 
-        log.warn("Folder too large: errorCode={}, message={}, path={}",
-            ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Folder too large: errorCode={}, message={}, path={}",
+            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -292,7 +293,7 @@ public class GlobalExceptionHandler {
             final MethodArgumentNotValidException ex,
             final HttpServletRequest request) {
 
-        log.warn("Bean validation error: path={}", request.getRequestURI());
+        log.warn("event={} Bean validation error: path={}", LogEvent.EX_VALIDATION, request.getRequestURI());
 
         final List<String> errors = ex.getBindingResult()
             .getFieldErrors()
@@ -325,8 +326,8 @@ public class GlobalExceptionHandler {
             final IllegalArgumentException ex,
             final HttpServletRequest request) {
 
-        log.warn("Illegal argument: message={}, path={}",
-            ex.getMessage(), request.getRequestURI());
+        log.warn("event={} Illegal argument: message={}, path={}",
+            LogEvent.EX_ILLEGAL_ARGUMENT, ex.getMessage(), request.getRequestURI());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
@@ -352,7 +353,7 @@ public class GlobalExceptionHandler {
             final Exception ex,
             final HttpServletRequest request) {
 
-        log.error("Unexpected error: path={}", request.getRequestURI(), ex);
+        log.error("event={} Unexpected error: path={}", LogEvent.EX_INTERNAL_SERVER, request.getRequestURI(), ex);
 
         final String message = getMessage("error.internal.server");
 

@@ -18,6 +18,7 @@ import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IDeckService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -95,8 +96,8 @@ public class DeckServiceImpl implements IDeckService {
         Objects.requireNonNull(request, "CreateDeckRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Creating deck: name={}, folderId={}, userId={}",
-            request.getName(), request.getFolderId(), userId);
+        log.info("event={} Creating deck: name={}, folderId={}, userId={}",
+            LogEvent.DECK_CREATE_START, request.getName(), request.getFolderId(), userId);
 
         // Validate name
         validateDeckName(request.getName());
@@ -116,8 +117,8 @@ public class DeckServiceImpl implements IDeckService {
         // Save deck
         final Deck savedDeck = deckRepository.save(deck);
 
-        log.info("Deck created successfully: deckId={}, name={}, userId={}",
-            savedDeck.getId(), savedDeck.getName(), userId);
+        log.info("event={} Deck created successfully: deckId={}, name={}, userId={}",
+            LogEvent.DECK_CREATE_SUCCESS, savedDeck.getId(), savedDeck.getName(), userId);
 
         return deckMapper.toResponse(savedDeck);
     }
@@ -190,7 +191,7 @@ public class DeckServiceImpl implements IDeckService {
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Moving deck: deckId={}, newFolderId={}, userId={}", deckId, newFolderId, userId);
+        log.info("event={} Moving deck: deckId={}, newFolderId={}, userId={}", LogEvent.DECK_MOVE_START, deckId, newFolderId, userId);
 
         // Step 1: Get deck and validate ownership
         final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
@@ -214,8 +215,8 @@ public class DeckServiceImpl implements IDeckService {
         // Step 7: Save deck
         final Deck savedDeck = deckRepository.save(deck);
 
-        log.info("Deck moved successfully: deckId={}, from folderId={}, to folderId={}, userId={}",
-            deckId, oldFolderId, newFolderId, userId);
+        log.info("event={} Deck moved successfully: deckId={}, from folderId={}, to folderId={}, userId={}",
+            LogEvent.DECK_MOVE_SUCCESS, deckId, oldFolderId, newFolderId, userId);
 
         // Step 8: Return response
         return deckMapper.toResponse(savedDeck);
@@ -256,8 +257,8 @@ public class DeckServiceImpl implements IDeckService {
         Objects.requireNonNull(request, "CopyDeckRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Copying deck: deckId={}, newName={}, destinationFolderId={}, userId={}",
-            deckId, request.getNewName(), request.getDestinationFolderId(), userId);
+        log.info("event={} Copying deck: deckId={}, newName={}, destinationFolderId={}, userId={}",
+            LogEvent.DECK_COPY_START, deckId, request.getNewName(), request.getDestinationFolderId(), userId);
 
         // Step 2: Get source deck with ownership check
         final Deck sourceDeck = getDeckWithOwnershipCheck(deckId, userId);
@@ -282,8 +283,8 @@ public class DeckServiceImpl implements IDeckService {
         // Step 8: Save new deck
         final Deck savedDeck = deckRepository.save(newDeck);
 
-        log.info("Deck copied successfully: sourceDeckId={}, newDeckId={}, cardCount={}, userId={}",
-            deckId, savedDeck.getId(), savedDeck.getCardCount(), userId);
+        log.info("event={} Deck copied successfully: sourceDeckId={}, newDeckId={}, cardCount={}, userId={}",
+            LogEvent.DECK_COPY_SUCCESS, deckId, savedDeck.getId(), savedDeck.getCardCount(), userId);
 
         return deckMapper.toResponse(savedDeck);
     }
@@ -295,7 +296,7 @@ public class DeckServiceImpl implements IDeckService {
      */
     private void validateDeckName(final String name) {
         if (StringUtils.isBlank(name)) {
-            log.error("Deck creation failed: name is blank");
+            log.error("event={} Deck creation failed: name is blank", LogEvent.EX_VALIDATION);
             throw new ValidationException(
                 "DECK_001",
                 getMessage("error.deck.name.required")
@@ -309,7 +310,7 @@ public class DeckServiceImpl implements IDeckService {
     private User getUser(final UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> {
-                log.error("User not found: userId={}", userId);
+                log.error("event={} User not found: userId={}", LogEvent.USER_NOT_FOUND, userId);
                 return new ResourceNotFoundException(
                     "USER_001",
                     getMessage("error.user.not.found", userId)
@@ -328,7 +329,7 @@ public class DeckServiceImpl implements IDeckService {
 
         return folderRepository.findByIdAndUserId(folderId, userId)
             .orElseThrow(() -> {
-                log.error("Folder not found: folderId={}, userId={}", folderId, userId);
+                log.error("event={} Folder not found: folderId={}, userId={}", LogEvent.FOLDER_GET_NOT_FOUND_OR_UNAUTHORIZED, folderId, userId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.not.found", folderId)
@@ -345,8 +346,7 @@ public class DeckServiceImpl implements IDeckService {
         final boolean nameExists = isNameExistsInFolder(trimmedName, folder, userId);
 
         if (nameExists) {
-            log.warn("Deck name already exists: name={}, folderId={}, userId={}",
-                trimmedName,
+            log.warn("event={} Deck name already exists: name={}, folderId={}, userId={}", LogEvent.EX_DUPLICATE_RESOURCE, trimmedName,
                 folder != null ? folder.getId() : null,
                 userId);
 
@@ -392,7 +392,7 @@ public class DeckServiceImpl implements IDeckService {
     private Deck getDeckWithOwnershipCheck(final UUID deckId, final UUID userId) {
         return deckRepository.findByIdAndUserId(deckId, userId)
             .orElseThrow(() -> {
-                log.error("Deck not found or access denied: deckId={}, userId={}", deckId, userId);
+                log.error("event={} Deck not found or access denied: deckId={}, userId={}", LogEvent.EX_FORBIDDEN, deckId, userId);
                 return new ResourceNotFoundException(
                     "DECK_003",
                     getMessage("error.deck.not.found", deckId)
@@ -407,7 +407,7 @@ public class DeckServiceImpl implements IDeckService {
     private void validateNotMovingToSameFolder(final UUID oldFolderId, final UUID newFolderId, final String deckName) {
         // Both null = root level
         if (oldFolderId == null && newFolderId == null) {
-            log.warn("Deck move failed: already at root level - deckName={}", deckName);
+            log.warn("event={} Deck move failed: already at root level - deckName={}", LogEvent.EX_VALIDATION, deckName);
             throw new ValidationException(
                 "DECK_004",
                 getMessage("error.deck.move.same.folder", deckName)
@@ -416,7 +416,7 @@ public class DeckServiceImpl implements IDeckService {
 
         // Both same folder ID
         if (oldFolderId != null && oldFolderId.equals(newFolderId)) {
-            log.warn("Deck move failed: already in folder - deckName={}, folderId={}", deckName, oldFolderId);
+            log.warn("event={} Deck move failed: already in folder - deckName={}, folderId={}", LogEvent.EX_VALIDATION, deckName, oldFolderId);
             throw new ValidationException(
                 "DECK_005",
                 getMessage("error.deck.move.same.folder", deckName)
@@ -433,8 +433,7 @@ public class DeckServiceImpl implements IDeckService {
 
         if (nameExists) {
             final String locationName = newFolder != null ? newFolder.getName() : "Root";
-            log.warn("Deck move failed: name conflict - deckName={}, destination={}",
-                deckName, locationName);
+            log.warn("event={} Deck move failed: name conflict - deckName={}, destination={}", LogEvent.EX_DUPLICATE_RESOURCE, deckName, locationName);
 
             throw new DuplicateResourceException(
                 "DECK_006",
@@ -460,7 +459,7 @@ public class DeckServiceImpl implements IDeckService {
         final long cardCount = deck.getCardCount();
 
         if (cardCount >= 100) {
-            log.warn("Deck too large for synchronous copy: deckId={}, cardCount={}, maximum=99",
+            log.warn("event={} Deck too large for synchronous copy: deckId={}, cardCount={}, maximum=99", LogEvent.EX_VALIDATION,
                 deck.getId(), cardCount);
 
             throw new ValidationException(
@@ -506,7 +505,7 @@ public class DeckServiceImpl implements IDeckService {
             newDeck.addCard(newCard);
         });
 
-        log.debug("Copied {} cards to new deck", sourceDeck.getCards().size());
+        log.debug("event={} Copied {} cards to new deck", LogEvent.DECK_COPY_SUCCESS, sourceDeck.getCards().size());
     }
 
     /**
@@ -516,3 +515,6 @@ public class DeckServiceImpl implements IDeckService {
         return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
     }
 }
+
+
+

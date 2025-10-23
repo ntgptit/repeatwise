@@ -9,6 +9,7 @@ import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IUserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -48,11 +49,11 @@ public class UserServiceImpl implements IUserService {
     public UserProfileResponse getCurrentUserProfile(final UUID userId) {
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Getting profile for user: {}", userId);
+        log.info("event={} Getting profile for user: {}", LogEvent.USER_GET_PROFILE, userId);
 
         final User user = getUserById(userId);
 
-        log.info("Profile retrieved successfully for user: {}", userId);
+        log.info("event={} Profile retrieved successfully for user: {}", LogEvent.SUCCESS, userId);
         return userMapper.toProfileResponse(user);
     }
 
@@ -64,8 +65,8 @@ public class UserServiceImpl implements IUserService {
 
         validateRequest(request);
 
-        log.info("Updating profile for user: {}, name={}, timezone={}, language={}, theme={}",
-                userId, request.getName(), request.getTimezone(), request.getLanguage(), request.getTheme());
+        log.info("event={} Updating profile for user: {}, name={}, timezone={}, language={}, theme={}",
+                LogEvent.USER_UPDATE_PROFILE, userId, request.getName(), request.getTimezone(), request.getLanguage(), request.getTheme());
 
         final User user = getUserById(userId);
 
@@ -73,7 +74,7 @@ public class UserServiceImpl implements IUserService {
 
         final User savedUser = userRepository.save(user);
 
-        log.info("Profile updated successfully for user: {}", userId);
+        log.info("event={} Profile updated successfully for user: {}", LogEvent.SUCCESS, userId);
         return userMapper.toProfileResponse(savedUser);
     }
 
@@ -98,7 +99,7 @@ public class UserServiceImpl implements IUserService {
     private User getUserById(final UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("User not found: {}", userId);
+                    log.error("event={} User not found: {}", LogEvent.USER_NOT_FOUND, userId);
                     return new ResourceNotFoundException(
                             "USER_001",
                             getMessage("error.user.not.found", userId)

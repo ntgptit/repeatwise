@@ -9,6 +9,7 @@ import com.repeatwise.service.IAuthService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -59,13 +60,13 @@ public class AuthController {
     public ResponseEntity<UserResponse> register(
             @Valid @RequestBody final RegisterRequest request) {
 
-        log.info("Received registration request: username={}, email={}",
-            request.getUsername(), request.getEmail());
+        log.info("event={} Received registration request: username={}, email={}",
+            LogEvent.AUTH_REGISTER_START, request.getUsername(), request.getEmail());
 
         final UserResponse response = authService.register(request);
 
-        log.info("User registered successfully: userId={}, username={}, email={}",
-            response.getId(), response.getUsername(), response.getEmail());
+        log.info("event={} User registered successfully: userId={}, username={}, email={}",
+            LogEvent.AUTH_REGISTER_SUCCESS, response.getId(), response.getUsername(), response.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -96,13 +97,13 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(
             @Valid @RequestBody final LoginRequest request) {
 
-        log.info("Received login request: usernameOrEmail={}",
-            request.getUsernameOrEmail());
+        log.info("event={} Received login request: usernameOrEmail={}",
+            LogEvent.AUTH_LOGIN_START, request.getUsernameOrEmail());
 
         final LoginResponse response = authService.login(request);
 
-        log.info("Login successful: accessToken generated, expiresIn={} seconds",
-            response.getExpiresIn());
+        log.info("event={} Login successful: accessToken generated, expiresIn={} seconds",
+            LogEvent.AUTH_LOGIN_SUCCESS, response.getExpiresIn());
 
         return ResponseEntity.ok(response);
     }
@@ -132,12 +133,12 @@ public class AuthController {
     public ResponseEntity<Void> logout(
             @CookieValue(name = "refresh_token", required = false) final String refreshToken) {
 
-        log.info("Received logout request");
+        log.info("event={} Received logout request", LogEvent.AUTH_TOKEN_REVOKE);
 
         final UUID userId = SecurityUtils.getCurrentUserId();
         authService.logout(refreshToken, userId);
 
-        log.info("Logout successful: userId={}", userId);
+        log.info("event={} Logout successful: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
 
         return ResponseEntity.noContent().build();
     }
@@ -167,12 +168,12 @@ public class AuthController {
     @PostMapping("/logout-all")
     public ResponseEntity<Void> logoutAll() {
 
-        log.info("Received logout-all request");
+        log.info("event={} Received logout-all request", LogEvent.AUTH_TOKEN_REVOKE);
 
         final UUID userId = SecurityUtils.getCurrentUserId();
         authService.logoutAll(userId);
 
-        log.info("Logout-all successful: userId={}", userId);
+        log.info("event={} Logout-all successful: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
 
         return ResponseEntity.noContent().build();
     }

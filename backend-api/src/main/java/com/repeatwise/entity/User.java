@@ -54,24 +54,24 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class User extends SoftDeletableEntity {
 
-    @NotBlank(message = "Username is required")
-    @Size(min = 3, max = 30, message = "Username must be between 3 and 30 characters")
+    @NotBlank(message = "{error.user.username.required}")
+    @Size(min = 3, max = 30, message = "{error.user.username.length}")
     @Column(name = "username", nullable = false, unique = true, length = 30)
     private String username;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "{error.user.name.required}")
+    @Size(max = 100, message = "{error.user.name.too.long}")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email must be valid")
-    @Size(max = 255, message = "Email must not exceed 255 characters")
+    @NotBlank(message = "{error.user.email.required}")
+    @Email(message = "{error.user.email.invalid}")
+    @Size(max = 255, message = "{error.user.email.too.long}")
     @Column(name = "email", nullable = false, unique = true, length = 255)
     private String email;
 
-    @NotBlank(message = "Password hash is required")
-    @Size(min = 60, max = 60, message = "Password hash must be exactly 60 characters (bcrypt)")
+    @NotBlank(message = "{error.user.password.hash.required}")
+    @Size(min = 60, max = 60, message = "{error.user.password.hash.length}")
     @Column(name = "password_hash", nullable = false, length = 60)
     private String passwordHash;
 
@@ -85,8 +85,8 @@ public class User extends SoftDeletableEntity {
     @Builder.Default
     private Theme theme = Theme.LIGHT;
 
-    @NotBlank(message = "Timezone is required")
-    @Size(max = 50, message = "Timezone must not exceed 50 characters")
+    @NotBlank(message = "{error.user.timezone.required}")
+    @Size(max = 50, message = "{error.user.timezone.length}")
     @Column(name = "timezone", nullable = false, length = 50)
     @Builder.Default
     private String timezone = "Asia/Ho_Chi_Minh";
@@ -94,11 +94,11 @@ public class User extends SoftDeletableEntity {
     @Column(name = "date_of_birth")
     private LocalDate dateOfBirth;
 
-    @Size(max = 500, message = "Bio must not exceed 500 characters")
+    @Size(max = 500, message = "{error.user.bio.length}")
     @Column(name = "bio", length = 500)
     private String bio;
 
-    @Size(max = 500, message = "Avatar URL must not exceed 500 characters")
+    @Size(max = 500, message = "{error.user.avatar.length}")
     @Column(name = "avatar_url", length = 500)
     private String avatarUrl;
 

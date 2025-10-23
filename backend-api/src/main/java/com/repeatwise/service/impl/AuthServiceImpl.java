@@ -18,6 +18,7 @@ import com.repeatwise.security.JwtTokenProvider;
 import com.repeatwise.service.IAuthService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -57,8 +58,8 @@ public class AuthServiceImpl implements IAuthService {
     @Transactional
     @Override
     public UserResponse register(final RegisterRequest request) {
-        log.info("Starting user registration: username={}, email={}",
-            request.getUsername(), request.getEmail());
+        log.info("event={} Starting user registration: username={}, email={}",
+            LogEvent.AUTH_REGISTER_START, request.getUsername(), request.getEmail());
 
         validateRegistrationRequest(request);
         checkUsernameAvailability(request.getUsername());
@@ -69,8 +70,8 @@ public class AuthServiceImpl implements IAuthService {
 
         createDefaultSettings(savedUser);
 
-        log.info("User registered successfully: userId={}, username={}, email={}",
-            savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
+        log.info("event={} User registered successfully: userId={}, username={}, email={}",
+            LogEvent.AUTH_REGISTER_SUCCESS, savedUser.getId(), savedUser.getUsername(), savedUser.getEmail());
 
         return userMapper.toResponse(savedUser);
     }
@@ -79,19 +80,19 @@ public class AuthServiceImpl implements IAuthService {
         Objects.requireNonNull(request, "RegisterRequest cannot be null");
 
         if (StringUtils.isBlank(request.getUsername())) {
-            log.error("Registration validation failed: username is blank");
+            log.error("event={} Registration validation failed: username is blank", LogEvent.EX_VALIDATION);
             throw new IllegalArgumentException(
                 getMessage("error.user.username.required"));
         }
 
         if (StringUtils.isBlank(request.getEmail())) {
-            log.error("Registration validation failed: email is blank");
+            log.error("event={} Registration validation failed: email is blank", LogEvent.EX_VALIDATION);
             throw new IllegalArgumentException(
                 getMessage("error.user.email.required"));
         }
 
         if (StringUtils.isBlank(request.getPassword())) {
-            log.error("Registration validation failed: password is blank");
+            log.error("event={} Registration validation failed: password is blank", LogEvent.EX_VALIDATION);
             throw new IllegalArgumentException(
                 getMessage("error.user.password.required"));
         }
@@ -101,7 +102,7 @@ public class AuthServiceImpl implements IAuthService {
         final String normalizedUsername = normalizeUsername(username);
 
         if (userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
-            log.warn("Registration failed: username already exists: {}", normalizedUsername);
+            log.warn("event={} Registration failed: username already exists: {}", LogEvent.EX_DUPLICATE_RESOURCE, normalizedUsername);
             throw new DuplicateUsernameException(
                 "USER_002",
                 getMessage("error.user.username.already.exists", normalizedUsername)
@@ -113,7 +114,7 @@ public class AuthServiceImpl implements IAuthService {
         final String normalizedEmail = normalizeEmail(email);
 
         if (userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            log.warn("Registration failed: email already exists: {}", normalizedEmail);
+            log.warn("event={} Registration failed: email already exists: {}", LogEvent.EX_DUPLICATE_RESOURCE, normalizedEmail);
             throw new DuplicateEmailException(
                 "USER_001",
                 getMessage("error.user.email.already.exists", normalizedEmail)
@@ -147,19 +148,19 @@ public class AuthServiceImpl implements IAuthService {
         final SrsSettings srsSettings = SrsSettings.createDefault(user);
         srsSettingsRepository.save(srsSettings);
 
-        log.debug("Created default SRS settings for user: userId={}", user.getId());
+        log.debug("event={} Created default SRS settings for user: userId={}", LogEvent.START, user.getId());
 
         // Create default user stats
         final UserStats userStats = UserStats.createDefault(user);
         userStatsRepository.save(userStats);
 
-        log.debug("Created default user stats for user: userId={}", user.getId());
+        log.debug("event={} Created default user stats for user: userId={}", LogEvent.START, user.getId());
     }
 
     @Transactional(readOnly = true)
     @Override
     public LoginResponse login(final LoginRequest request) {
-        log.info("Login attempt: usernameOrEmail={}", request.getUsernameOrEmail());
+        log.info("event={} Login attempt: usernameOrEmail={}", LogEvent.AUTH_LOGIN_START, request.getUsernameOrEmail());
 
         validateLoginRequest(request);
 
@@ -169,8 +170,8 @@ public class AuthServiceImpl implements IAuthService {
         final String accessToken = generateAccessToken(user);
         final long expiresIn = jwtTokenProvider.getAccessTokenExpirationSeconds();
 
-        log.info("User logged in successfully: userId={}, username={}, email={}",
-            user.getId(), user.getUsername(), user.getEmail());
+        log.info("event={} User logged in successfully: userId={}, username={}, email={}",
+            LogEvent.AUTH_LOGIN_SUCCESS, user.getId(), user.getUsername(), user.getEmail());
 
         return LoginResponse.builder()
             .accessToken(accessToken)
@@ -184,8 +185,8 @@ public class AuthServiceImpl implements IAuthService {
             user.getEmail()
         );
 
-        log.debug("Generated access token for user: userId={}, email={}",
-            user.getId(), user.getEmail());
+        log.debug("event={} Generated access token for user: userId={}, email={}",
+            LogEvent.AUTH_LOGIN_SUCCESS, user.getId(), user.getEmail());
 
         return accessToken;
     }
@@ -194,13 +195,13 @@ public class AuthServiceImpl implements IAuthService {
         Objects.requireNonNull(request, "LoginRequest cannot be null");
 
         if (StringUtils.isBlank(request.getUsernameOrEmail())) {
-            log.error("Login validation failed: usernameOrEmail is blank");
+            log.error("event={} Login validation failed: usernameOrEmail is blank", LogEvent.EX_VALIDATION);
             throw new IllegalArgumentException(
                 getMessage("error.user.username.or.email.required"));
         }
 
         if (StringUtils.isBlank(request.getPassword())) {
-            log.error("Login validation failed: password is blank");
+            log.error("event={} Login validation failed: password is blank", LogEvent.EX_VALIDATION);
             throw new IllegalArgumentException(
                 getMessage("error.user.password.required"));
         }
@@ -215,7 +216,7 @@ public class AuthServiceImpl implements IAuthService {
             : userRepository.findByUsernameIgnoreCase(normalized);
 
         return userOptional.orElseThrow(() -> {
-            log.warn("Login failed: user not found: {}", normalized);
+            log.warn("event={} Login failed: user not found: {}", LogEvent.EX_INVALID_CREDENTIALS, normalized);
             return new InvalidCredentialsException(
                 "AUTH_001",
                 getMessage("error.user.invalid.credentials")
@@ -225,7 +226,7 @@ public class AuthServiceImpl implements IAuthService {
 
     private void verifyPassword(final String rawPassword, final String passwordHash) {
         if (!passwordEncoder.matches(rawPassword, passwordHash)) {
-            log.warn("Login failed: incorrect password");
+            log.warn("event={} Login failed: incorrect password", LogEvent.EX_INVALID_CREDENTIALS);
             throw new InvalidCredentialsException(
                 "AUTH_001",
                 getMessage("error.user.invalid.credentials")
@@ -265,7 +266,7 @@ public class AuthServiceImpl implements IAuthService {
     @Transactional
     @Override
     public void logout(final String refreshToken, final UUID userId) {
-        log.info("Logout attempt: userId={}", userId);
+        log.info("event={} Logout attempt: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
 
         validateLogoutRequest(refreshToken);
 
@@ -274,13 +275,13 @@ public class AuthServiceImpl implements IAuthService {
 
         revokeToken(token);
 
-        log.info("User logged out successfully: userId={}, tokenId={}",
-            userId, token.getId());
+        log.info("event={} User logged out successfully: userId={}, tokenId={}",
+            LogEvent.AUTH_TOKEN_REVOKE, userId, token.getId());
     }
 
     private void validateLogoutRequest(final String refreshToken) {
         if (StringUtils.isBlank(refreshToken)) {
-            log.error("Logout validation failed: refresh token is blank");
+            log.error("event={} Logout validation failed: refresh token is blank", LogEvent.EX_VALIDATION);
             throw new InvalidTokenException(
                 "AUTH_002",
                 getMessage("error.auth.token.required")
@@ -291,7 +292,7 @@ public class AuthServiceImpl implements IAuthService {
     private RefreshToken findRefreshToken(final String tokenString) {
         return refreshTokenRepository.findByToken(tokenString)
             .orElseThrow(() -> {
-                log.warn("Logout failed: refresh token not found");
+                log.warn("event={} Logout failed: refresh token not found", LogEvent.EX_INVALID_TOKEN);
                 return new InvalidTokenException(
                     "AUTH_003",
                     getMessage("error.auth.token.invalid")
@@ -301,8 +302,8 @@ public class AuthServiceImpl implements IAuthService {
 
     private void verifyTokenOwnership(final RefreshToken token, final UUID userId) {
         if (!token.getUser().getId().equals(userId)) {
-            log.warn("Logout failed: token does not belong to user: userId={}, tokenUserId={}",
-                userId, token.getUser().getId());
+            log.warn("event={} Logout failed: token does not belong to user: userId={}, tokenUserId={}",
+                LogEvent.EX_FORBIDDEN, userId, token.getUser().getId());
             throw new ForbiddenException(
                 "AUTH_004",
                 getMessage("error.auth.token.not.owned")
@@ -310,7 +311,7 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         if (Boolean.TRUE.equals(token.getIsRevoked())) {
-            log.warn("Logout failed: token already revoked: tokenId={}", token.getId());
+            log.warn("event={} Logout failed: token already revoked: tokenId={}", LogEvent.EX_INVALID_TOKEN, token.getId());
             throw new InvalidTokenException(
                 "AUTH_005",
                 getMessage("error.auth.token.already.revoked")
@@ -318,8 +319,8 @@ public class AuthServiceImpl implements IAuthService {
         }
 
         if (token.isExpired()) {
-            log.warn("Logout failed: token expired: tokenId={}, expiresAt={}",
-                token.getId(), token.getExpiresAt());
+            log.warn("event={} Logout failed: token expired: tokenId={}, expiresAt={}",
+                LogEvent.EX_INVALID_TOKEN, token.getId(), token.getExpiresAt());
             throw new InvalidTokenException(
                 "AUTH_006",
                 getMessage("error.auth.token.expired")
@@ -330,17 +331,17 @@ public class AuthServiceImpl implements IAuthService {
     private void revokeToken(final RefreshToken token) {
         token.revoke();
         refreshTokenRepository.save(token);
-        log.debug("Refresh token revoked: tokenId={}", token.getId());
+        log.debug("event={} Refresh token revoked: tokenId={}", LogEvent.AUTH_TOKEN_REVOKE, token.getId());
     }
 
     @Transactional
     @Override
     public void logoutAll(final UUID userId) {
-        log.info("Logout-all attempt: userId={}", userId);
+        log.info("event={} Logout-all attempt: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
 
         final User user = userRepository.findById(userId)
             .orElseThrow(() -> {
-                log.error("Logout-all failed: user not found: userId={}", userId);
+                log.error("event={} Logout-all failed: user not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
                 return new ResourceNotFoundException(
                     "USER_003",
                     getMessage("error.user.not.found", userId)
@@ -352,8 +353,8 @@ public class AuthServiceImpl implements IAuthService {
             Instant.now()
         );
 
-        log.info("User logged out from all devices: userId={}, tokensRevoked={}",
-            userId, revokedCount);
+        log.info("event={} User logged out from all devices: userId={}, tokensRevoked={}",
+            LogEvent.AUTH_TOKEN_REVOKE, userId, revokedCount);
     }
 
     private String getMessage(final String code, final Object... args) {

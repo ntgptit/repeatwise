@@ -13,6 +13,7 @@ import com.repeatwise.service.IFolderService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -73,8 +74,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/folders - Creating folder: name={}, userId={}",
-            request.getName(), userId);
+        log.info("event={} POST /api/folders - Creating folder: name={}, userId={}",
+            LogEvent.FOLDER_CREATE_START, request.getName(), userId);
 
         final FolderResponse response = folderService.createFolder(request, userId);
 
@@ -102,7 +103,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("PUT /api/folders/{} - Updating folder: userId={}", folderId, userId);
+        log.info("event={} PUT /api/folders/{} - Updating folder: userId={}", LogEvent.FOLDER_UPDATE_START, folderId, userId);
 
         final FolderResponse response = folderService.updateFolder(folderId, request, userId);
 
@@ -131,7 +132,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/folders/{}/move - Moving folder: userId={}", folderId, userId);
+        log.info("event={} POST /api/folders/{}/move - Moving folder: userId={}", LogEvent.FOLDER_MOVE_START, folderId, userId);
 
         final FolderResponse response = folderService.moveFolder(folderId, request, userId);
 
@@ -161,7 +162,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/folders/{}/copy - Copying folder: userId={}", folderId, userId);
+        log.info("event={} POST /api/folders/{}/copy - Copying folder: userId={}", LogEvent.FOLDER_COPY_START, folderId, userId);
 
         final FolderResponse response = folderService.copyFolder(folderId, request, userId);
 
@@ -179,8 +180,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/folders/copy-status/{} - Getting copy job status: userId={}",
-            jobId, userId);
+        log.info("event={} GET /api/folders/copy-status/{} - Getting copy job status: userId={}",
+            LogEvent.FOLDER_COPY_START, jobId, userId);
 
         final CopyJobResponse response = folderService.getCopyJobStatus(jobId, userId);
 
@@ -205,7 +206,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("DELETE /api/folders/{} - Soft-deleting folder: userId={}", folderId, userId);
+        log.info("event={} DELETE /api/folders/{} - Soft-deleting folder: userId={}", LogEvent.FOLDER_SOFT_DELETE_START, folderId, userId);
 
         folderService.deleteFolder(folderId, userId);
 
@@ -228,7 +229,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/folders/{}/restore - Restoring folder: userId={}", folderId, userId);
+        log.info("event={} POST /api/folders/{}/restore - Restoring folder: userId={}", LogEvent.FOLDER_RESTORE_START, folderId, userId);
 
         final FolderResponse response = folderService.restoreFolder(folderId, userId);
 
@@ -252,8 +253,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.warn("DELETE /api/folders/{}/permanent - Permanently deleting folder: userId={}",
-            folderId, userId);
+        log.warn("event={} DELETE /api/folders/{}/permanent - Permanently deleting folder: userId={}",
+            LogEvent.FOLDER_HARD_DELETE_START, folderId, userId);
 
         folderService.permanentlyDeleteFolder(folderId, userId);
 
@@ -288,8 +289,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/folders/{}/stats - Getting folder statistics: userId={}",
-            folderId, userId);
+        log.info("event={} GET /api/folders/{}/stats - Getting folder statistics: userId={}",
+            LogEvent.FOLDER_STATS_GET_START, folderId, userId);
 
         final FolderStatsResponse response = folderService.getFolderStats(folderId, userId);
 
@@ -315,8 +316,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("DELETE /api/folders/{}/stats - Invalidating folder statistics: userId={}",
-            folderId, userId);
+        log.info("event={} DELETE /api/folders/{}/stats - Invalidating folder statistics: userId={}",
+            LogEvent.FOLDER_STATS_INVALIDATE_START, folderId, userId);
 
         folderService.invalidateFolderStats(folderId, userId);
 
@@ -337,8 +338,8 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/folders - Getting folder tree: userId={}, maxDepth={}",
-            userId, maxDepth);
+        log.info("event={} GET /api/folders - Getting folder tree: userId={}, maxDepth={}",
+            LogEvent.START, userId, maxDepth);
 
         final List<FolderTreeResponse> response = folderService.getFolderTree(userId, maxDepth);
 
@@ -356,7 +357,7 @@ public class FolderController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/folders/{} - Getting folder details: userId={}", folderId, userId);
+        log.info("event={} GET /api/folders/{} - Getting folder details: userId={}", LogEvent.START, folderId, userId);
 
         final FolderResponse response = folderService.getFolderById(folderId, userId);
 

@@ -23,6 +23,7 @@ import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IFolderService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -111,8 +112,8 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(request, "CreateFolderRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Creating folder: name={}, parentFolderId={}, userId={}",
-            request.getName(), request.getParentFolderId(), userId);
+        log.info("event={} Creating folder: name={}, parentFolderId={}, userId={}",
+            LogEvent.FOLDER_CREATE_START, request.getName(), request.getParentFolderId(), userId);
 
         // Validate name
         validateFolderName(request.getName());
@@ -135,8 +136,8 @@ public class FolderServiceImpl implements IFolderService {
         // Save folder
         final Folder savedFolder = folderRepository.save(folder);
 
-        log.info("Folder created successfully: folderId={}, name={}, userId={}",
-            savedFolder.getId(), savedFolder.getName(), userId);
+        log.info("event={} Folder created successfully: folderId={}, name={}, userId={}",
+            LogEvent.FOLDER_CREATE_SUCCESS, savedFolder.getId(), savedFolder.getName(), userId);
 
         return folderMapper.toResponse(savedFolder);
     }
@@ -148,7 +149,7 @@ public class FolderServiceImpl implements IFolderService {
      */
     private void validateFolderName(final String name) {
         if (StringUtils.isBlank(name)) {
-            log.error("Folder creation failed: name is blank");
+            log.error("event={} Folder creation failed: name is blank", LogEvent.FOLDER_NAME_REQUIRED);
             throw new ValidationException(
                 "FOLDER_001",
                 getMessage("error.folder.name.required")
@@ -162,7 +163,7 @@ public class FolderServiceImpl implements IFolderService {
     private User getUser(final UUID userId) {
         return userRepository.findById(userId)
             .orElseThrow(() -> {
-                log.error("User not found: userId={}", userId);
+                log.error("event={} User not found: userId={}", LogEvent.USER_NOT_FOUND, userId);
                 return new ResourceNotFoundException(
                     "USER_001",
                     getMessage("error.user.not.found", userId)
@@ -181,7 +182,7 @@ public class FolderServiceImpl implements IFolderService {
 
         return folderRepository.findByIdAndUserId(parentFolderId, userId)
             .orElseThrow(() -> {
-                log.error("Parent folder not found: folderId={}, userId={}", parentFolderId, userId);
+                log.error("event={} Parent folder not found: folderId={}, userId={}", LogEvent.FOLDER_GET_PARENT_NOT_FOUND, parentFolderId, userId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.not.found", parentFolderId)
@@ -200,8 +201,8 @@ public class FolderServiceImpl implements IFolderService {
         final int newDepth = parentFolder.getDepth() + 1;
 
         if (newDepth > MAX_FOLDER_DEPTH) {
-            log.warn("Max depth exceeded: parentDepth={}, newDepth={}, maxDepth={}",
-                parentFolder.getDepth(), newDepth, MAX_FOLDER_DEPTH);
+            log.warn("event={} Max depth exceeded: parentDepth={}, newDepth={}, maxDepth={}",
+                LogEvent.FOLDER_MAX_DEPTH_EXCEEDED, parentFolder.getDepth(), newDepth, MAX_FOLDER_DEPTH);
 
             throw new MaxDepthExceededException(newDepth);
         }
@@ -216,7 +217,8 @@ public class FolderServiceImpl implements IFolderService {
         final boolean nameExists = isNameExistsInParent(trimmedName, parentFolder, userId);
 
         if (nameExists) {
-            log.warn("Folder name already exists: name={}, parentFolderId={}, userId={}",
+            log.warn("event={} Folder name already exists: name={}, parentFolderId={}, userId={}",
+                LogEvent.FOLDER_NAME_EXISTS,
                 trimmedName,
                 parentFolder != null ? parentFolder.getId() : null,
                 userId);
@@ -277,7 +279,7 @@ public class FolderServiceImpl implements IFolderService {
     private Folder getFolderByIdAndUserId(final UUID folderId, final UUID userId) {
         return folderRepository.findByIdAndUserId(folderId, userId)
             .orElseThrow(() -> {
-                log.error("Folder not found or not authorized: folderId={}, userId={}", folderId, userId);
+                log.error("event={} Folder not found or not authorized: folderId={}, userId={}", LogEvent.FOLDER_GET_NOT_FOUND_OR_UNAUTHORIZED, folderId, userId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.not.found", folderId)
@@ -310,7 +312,8 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (nameExists) {
-            log.warn("Folder name already exists: name={}, parentFolderId={}, userId={}, excludeFolderId={}",
+            log.warn("event={} Folder name already exists: name={}, parentFolderId={}, userId={}, excludeFolderId={}",
+                LogEvent.FOLDER_NAME_EXISTS,
                 trimmedName,
                 parentFolder != null ? parentFolder.getId() : null,
                 userId,
@@ -362,7 +365,7 @@ public class FolderServiceImpl implements IFolderService {
         folder.setName(trimmedName);
         folder.setDescription(trimmedDescription);
 
-        log.debug("Folder fields updated: folderId={}, name={}", folder.getId(), trimmedName);
+        log.debug("event={} Folder fields updated: folderId={}, name={}", LogEvent.FOLDER_UPDATE_START, folder.getId(), trimmedName);
     }
 
     /**
@@ -384,14 +387,13 @@ public class FolderServiceImpl implements IFolderService {
      */
     private Folder getTargetParentFolder(final UUID targetParentFolderId, final UUID userId) {
         if (targetParentFolderId == null) {
-            log.debug("Moving to root level");
+            log.debug("event={} Moving to root level", com.repeatwise.log.LogEvent.FOLDER_MOVE_START);
             return null;
         }
 
         return folderRepository.findByIdAndUserId(targetParentFolderId, userId)
             .orElseThrow(() -> {
-                log.error("Target parent folder not found: folderId={}, userId={}",
-                    targetParentFolderId, userId);
+                log.error("event={} Target parent folder not found: folderId={}, userId={}", com.repeatwise.log.LogEvent.FOLDER_GET_PARENT_NOT_FOUND, targetParentFolderId, userId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.parent.not.found")
@@ -440,8 +442,8 @@ public class FolderServiceImpl implements IFolderService {
             : null;
 
         if (Objects.equals(currentParentId, targetParentId)) {
-            log.warn("Folder is already in target location: folderId={}, parentId={}",
-                sourceFolder.getId(), targetParentId);
+            log.warn("event={} Folder is already in target location: folderId={}, parentId={}",
+                LogEvent.FOLDER_MOVE_START, sourceFolder.getId(), targetParentId);
 
             throw new ValidationException(
                 "FOLDER_MOVE_001",
@@ -464,7 +466,7 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check if moving into self
         if (sourceFolder.getId().equals(targetParentFolder.getId())) {
-            log.error("Cannot move folder into itself: folderId={}", sourceFolder.getId());
+            log.error("event={} Cannot move folder into itself: folderId={}", LogEvent.EX_VALIDATION, sourceFolder.getId());
 
             throw new CircularReferenceException(
                 getMessage("error.folder.move.into.self")
@@ -478,8 +480,8 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (isDescendant) {
-            log.error("Cannot move folder into descendant: sourceId={}, targetId={}",
-                sourceFolder.getId(), targetParentFolder.getId());
+            log.error("event={} Cannot move folder into descendant: sourceId={}, targetId={}",
+                LogEvent.EX_VALIDATION, sourceFolder.getId(), targetParentFolder.getId());
 
             throw new CircularReferenceException(
                 getMessage("error.folder.move.into.descendant",
@@ -512,14 +514,14 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check if exceeds max depth
         if (resultingMaxDepth > MAX_FOLDER_DEPTH) {
-            log.error("Move would exceed max depth: currentMaxDepth={}, depthDelta={}, resultingMaxDepth={}, maxAllowed={}",
-                maxDescendantDepth, depthDelta, resultingMaxDepth, MAX_FOLDER_DEPTH);
+            log.error("event={} Move would exceed max depth: currentMaxDepth={}, depthDelta={}, resultingMaxDepth={}, maxAllowed={}",
+                LogEvent.FOLDER_MAX_DEPTH_EXCEEDED, maxDescendantDepth, depthDelta, resultingMaxDepth, MAX_FOLDER_DEPTH);
 
             throw new MaxDepthExceededException(resultingMaxDepth);
         }
 
-        log.debug("Move depth validation passed: newDepth={}, depthDelta={}, resultingMaxDepth={}",
-            newDepth, depthDelta, resultingMaxDepth);
+        log.debug("event={} Move depth validation passed: newDepth={}, depthDelta={}, resultingMaxDepth={}",
+            LogEvent.FOLDER_MOVE_START, newDepth, depthDelta, resultingMaxDepth);
     }
 
     /**
@@ -547,7 +549,7 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (nameExists) {
-            log.warn("Folder name already exists in target location: name={}, targetParentId={}",
+            log.warn("event={} Folder name already exists in target location: name={}, targetParentId={}", com.repeatwise.log.LogEvent.FOLDER_NAME_EXISTS,
                 nameToUse,
                 targetParentFolder != null ? targetParentFolder.getId() : null);
 
@@ -584,8 +586,8 @@ public class FolderServiceImpl implements IFolderService {
         if (StringUtils.isNotBlank(request.getNewName())) {
             final String trimmedNewName = StringUtils.trim(request.getNewName());
             sourceFolder.setName(trimmedNewName);
-            log.debug("Folder renamed during move: oldName={}, newName={}",
-                sourceFolder.getName(), trimmedNewName);
+            log.debug("event={} Folder renamed during move: oldName={}, newName={}",
+                LogEvent.FOLDER_MOVE_RENAME, sourceFolder.getName(), trimmedNewName);
         }
 
         // Recalculate folder path and depth
@@ -620,8 +622,8 @@ public class FolderServiceImpl implements IFolderService {
             depthDelta
         );
 
-        log.info("Updated descendant paths: movedFolderId={}, descendantsUpdated={}, depthDelta={}",
-            movedFolder.getId(), updatedCount, depthDelta);
+        log.info("event={} Updated descendant paths: movedFolderId={}, descendantsUpdated={}, depthDelta={}",
+            LogEvent.FOLDER_MOVE_DESCENDANTS_UPDATED, movedFolder.getId(), updatedCount, depthDelta);
     }
 
     // ==================== UC-008: Copy Folder - Helper Methods ====================
@@ -669,14 +671,14 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check if exceeds max depth
         if (resultingMaxDepth > MAX_FOLDER_DEPTH) {
-            log.error("Copy would exceed max depth: sourceMaxDepth={}, depthDelta={}, resultingMaxDepth={}, maxAllowed={}",
-                maxSourceDepth, depthDelta, resultingMaxDepth, MAX_FOLDER_DEPTH);
+            log.error("event={} Copy would exceed max depth: sourceMaxDepth={}, depthDelta={}, resultingMaxDepth={}, maxAllowed={}",
+                LogEvent.FOLDER_COPY_DEPTH_EXCEEDED, maxSourceDepth, depthDelta, resultingMaxDepth, MAX_FOLDER_DEPTH);
 
             throw new MaxDepthExceededException(resultingMaxDepth);
         }
 
-        log.debug("Copy depth validation passed: newDepth={}, resultingMaxDepth={}",
-            newDepth, resultingMaxDepth);
+        log.debug("event={} Copy depth validation passed: newDepth={}, resultingMaxDepth={}",
+            LogEvent.FOLDER_COPY_DEPTH_VALID, newDepth, resultingMaxDepth);
     }
 
     /**
@@ -712,7 +714,7 @@ public class FolderServiceImpl implements IFolderService {
                 : String.format("%s (Copy %d)", copyPattern, copyNumber);
 
             if (!isNameExistsInParent(candidateName, targetParentFolder, userId)) {
-                log.debug("Generated unique copy name: original={}, unique={}",
+                log.debug("event={} Generated unique copy name: original={}, unique={}", com.repeatwise.log.LogEvent.FOLDER_COPY_START,
                     baseName, candidateName);
                 return candidateName;
             }
@@ -724,7 +726,7 @@ public class FolderServiceImpl implements IFolderService {
         final String fallbackName = String.format("%s (Copy %s)",
             copyPattern, UUID.randomUUID().toString().substring(0, 8));
 
-        log.warn("Used fallback name with UUID: {}", fallbackName);
+        log.warn("event={} Used fallback name with UUID: {}", com.repeatwise.log.LogEvent.FOLDER_COPY_START, fallbackName);
         return fallbackName;
     }
 
@@ -779,7 +781,7 @@ public class FolderServiceImpl implements IFolderService {
         // Save copied folder
         final Folder savedFolder = folderRepository.save(copiedFolder);
 
-        log.debug("Created copied folder: sourceId={}, copiedId={}, name={}",
+        log.debug("event={} Created copied folder: sourceId={}, copiedId={}, name={}", com.repeatwise.log.LogEvent.FOLDER_COPY_SUCCESS,
             sourceFolder.getId(), savedFolder.getId(), newName);
 
         // Recursively copy sub-folders if requested
@@ -834,11 +836,11 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (children.isEmpty()) {
-            log.debug("No sub-folders to copy for folder: {}", sourceFolder.getId());
+            log.debug("event={} No sub-folders to copy for folder: {}", com.repeatwise.log.LogEvent.FOLDER_COPY_START, sourceFolder.getId());
             return;
         }
 
-        log.debug("Copying {} sub-folders for folder: {}", children.size(), sourceFolder.getId());
+        log.debug("event={} Copying {} sub-folders for folder: {}", com.repeatwise.log.LogEvent.FOLDER_COPY_START, children.size(), sourceFolder.getId());
 
         // Recursively copy each child
         for (final Folder child : children) {
@@ -849,7 +851,7 @@ public class FolderServiceImpl implements IFolderService {
             performCopy(child, copiedParentFolder, childName, request);
         }
 
-        log.debug("Completed copying {} sub-folders", children.size());
+        log.debug("event={} Completed copying {} sub-folders", com.repeatwise.log.LogEvent.FOLDER_COPY_SUCCESS, children.size());
     }
 
     // ==================== UC-009: Delete Folder - Helper Methods ====================
@@ -865,7 +867,7 @@ public class FolderServiceImpl implements IFolderService {
         // Find folder including deleted ones
         final Folder folder = folderRepository.findById(folderId)
             .orElseThrow(() -> {
-                log.error("Folder not found for delete: folderId={}", folderId);
+                log.error("event={} Folder not found for delete: folderId={}", com.repeatwise.log.LogEvent.EX_RESOURCE_NOT_FOUND, folderId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.not.found", folderId)
@@ -874,7 +876,7 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check ownership
         if (!folder.getUser().getId().equals(userId)) {
-            log.error("Folder does not belong to user: folderId={}, userId={}", folderId, userId);
+            log.error("event={} Folder does not belong to user: folderId={}, userId={}", com.repeatwise.log.LogEvent.EX_FORBIDDEN, folderId, userId);
             throw new ResourceNotFoundException(
                 "FOLDER_002",
                 getMessage("error.folder.not.found", folderId)
@@ -883,7 +885,7 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check if already deleted
         if (folder.getDeletedAt() != null) {
-            log.warn("Folder already deleted: folderId={}, deletedAt={}", folderId, folder.getDeletedAt());
+            log.warn("event={} Folder already deleted: folderId={}, deletedAt={}", com.repeatwise.log.LogEvent.FOLDER_SOFT_DELETE_START, folderId, folder.getDeletedAt());
             throw new ValidationException(
                 "FOLDER_DELETE_001",
                 getMessage("error.folder.delete.already.deleted")
@@ -904,7 +906,7 @@ public class FolderServiceImpl implements IFolderService {
         // Find folder including deleted ones
         final Folder folder = folderRepository.findById(folderId)
             .orElseThrow(() -> {
-                log.error("Folder not found for restore: folderId={}", folderId);
+                log.error("event={} Folder not found for restore: folderId={}", com.repeatwise.log.LogEvent.EX_RESOURCE_NOT_FOUND, folderId);
                 return new ResourceNotFoundException(
                     "FOLDER_002",
                     getMessage("error.folder.not.found", folderId)
@@ -913,7 +915,7 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check ownership
         if (!folder.getUser().getId().equals(userId)) {
-            log.error("Folder does not belong to user: folderId={}, userId={}", folderId, userId);
+            log.error("event={} Folder does not belong to user: folderId={}, userId={}", com.repeatwise.log.LogEvent.EX_FORBIDDEN, folderId, userId);
             throw new ResourceNotFoundException(
                 "FOLDER_002",
                 getMessage("error.folder.not.found", folderId)
@@ -922,7 +924,7 @@ public class FolderServiceImpl implements IFolderService {
 
         // Check if in trash (deleted)
         if (folder.getDeletedAt() == null) {
-            log.warn("Folder not in trash, cannot restore: folderId={}", folderId);
+            log.warn("event={} Folder not in trash, cannot restore: folderId={}", com.repeatwise.log.LogEvent.EX_VALIDATION, folderId);
             throw new ValidationException(
                 "FOLDER_RESTORE_001",
                 getMessage("error.folder.restore.not.deleted")
@@ -968,7 +970,7 @@ public class FolderServiceImpl implements IFolderService {
         // TODO: Update folder_stats when implemented
         // updateStatsAfterDelete(folder);
 
-        log.debug("Soft-deleted folder and descendants: folderId={}, path={}",
+        log.debug("event={} Soft-deleted folder and descendants: folderId={}, path={}", com.repeatwise.log.LogEvent.FOLDER_SOFT_DELETE_SUCCESS,
             folder.getId(), folder.getPath());
     }
 
@@ -983,11 +985,11 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (descendants.isEmpty()) {
-            log.debug("No descendants to delete for folder: {}", folder.getId());
+            log.debug("event={} No descendants to delete for folder: {}", com.repeatwise.log.LogEvent.FOLDER_SOFT_DELETE_SUCCESS, folder.getId());
             return;
         }
 
-        log.debug("Soft-deleting {} descendants for folder: {}", descendants.size(), folder.getId());
+        log.debug("event={} Soft-deleting {} descendants for folder: {}", com.repeatwise.log.LogEvent.FOLDER_SOFT_DELETE_START, descendants.size(), folder.getId());
 
         // Soft-delete each descendant
         for (final Folder descendant : descendants) {
@@ -996,7 +998,7 @@ public class FolderServiceImpl implements IFolderService {
 
         folderRepository.saveAll(descendants);
 
-        log.debug("Soft-deleted {} descendants", descendants.size());
+        log.debug("event={} Soft-deleted {} descendants", com.repeatwise.log.LogEvent.FOLDER_SOFT_DELETE_SUCCESS, descendants.size());
     }
 
     /**
@@ -1024,7 +1026,7 @@ public class FolderServiceImpl implements IFolderService {
         // TODO: Update folder_stats when implemented
         // updateStatsAfterRestore(folder);
 
-        log.debug("Restored folder and descendants: folderId={}, path={}",
+        log.debug("event={} Restored folder and descendants: folderId={}, path={}", com.repeatwise.log.LogEvent.FOLDER_RESTORE_SUCCESS,
             folder.getId(), folder.getPath());
     }
 
@@ -1041,11 +1043,11 @@ public class FolderServiceImpl implements IFolderService {
         );
 
         if (descendants.isEmpty()) {
-            log.debug("No descendants to restore for folder: {}", folder.getId());
+            log.debug("event={} No descendants to restore for folder: {}", com.repeatwise.log.LogEvent.FOLDER_RESTORE_SUCCESS, folder.getId());
             return;
         }
 
-        log.debug("Restoring {} descendants for folder: {}", descendants.size(), folder.getId());
+        log.debug("event={} Restoring {} descendants for folder: {}", com.repeatwise.log.LogEvent.FOLDER_RESTORE_START, descendants.size(), folder.getId());
 
         // Restore each descendant
         for (final Folder descendant : descendants) {
@@ -1056,7 +1058,7 @@ public class FolderServiceImpl implements IFolderService {
 
         folderRepository.saveAll(descendants);
 
-        log.debug("Restored {} descendants", descendants.size());
+        log.debug("event={} Restored {} descendants", com.repeatwise.log.LogEvent.FOLDER_RESTORE_SUCCESS, descendants.size());
     }
 
     /**
@@ -1093,7 +1095,7 @@ public class FolderServiceImpl implements IFolderService {
         // Hard-delete the folder itself
         folderRepository.delete(folder);
 
-        log.warn("Hard-deleted folder and {} descendants: folderId={}, path={}",
+        log.warn("event={} Hard-deleted folder and {} descendants: folderId={}, path={}", com.repeatwise.log.LogEvent.FOLDER_HARD_DELETE_SUCCESS,
             descendants.size(), folder.getId(), folder.getPath());
     }
 
@@ -1103,11 +1105,11 @@ public class FolderServiceImpl implements IFolderService {
      */
     private void hardDeleteFolderDescendants(final List<Folder> descendants) {
         if (descendants.isEmpty()) {
-            log.debug("No descendants to hard-delete");
+            log.debug("event={} No descendants to hard-delete", com.repeatwise.log.LogEvent.FOLDER_HARD_DELETE_DESCENDANTS_DONE);
             return;
         }
 
-        log.warn("Hard-deleting {} descendants", descendants.size());
+        log.warn("event={} Hard-deleting {} descendants", com.repeatwise.log.LogEvent.FOLDER_HARD_DELETE_DESCENDANTS, descendants.size());
 
         // Sort by depth descending (delete deepest first)
         descendants.sort((f1, f2) -> Integer.compare(f2.getDepth(), f1.getDepth()));
@@ -1115,7 +1117,7 @@ public class FolderServiceImpl implements IFolderService {
         // Delete each descendant
         folderRepository.deleteAll(descendants);
 
-        log.warn("Hard-deleted {} descendants", descendants.size());
+        log.warn("event={} Hard-deleted {} descendants", com.repeatwise.log.LogEvent.FOLDER_HARD_DELETE_DESCENDANTS_DONE, descendants.size());
     }
 
     // ==================== Placeholder Methods (To be implemented) ====================
@@ -1161,8 +1163,8 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(request, "UpdateFolderRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Updating folder: folderId={}, newName={}, userId={}",
-            folderId, request.getName(), userId);
+        log.info("event={} Updating folder: folderId={}, newName={}, userId={}",
+            LogEvent.FOLDER_UPDATE_START, folderId, request.getName(), userId);
 
         // Validate name
         validateFolderName(request.getName());
@@ -1184,8 +1186,8 @@ public class FolderServiceImpl implements IFolderService {
         // Save folder
         final Folder savedFolder = folderRepository.save(folder);
 
-        log.info("Folder updated successfully: folderId={}, newName={}, userId={}",
-            savedFolder.getId(), savedFolder.getName(), userId);
+        log.info("event={} Folder updated successfully: folderId={}, newName={}, userId={}",
+            LogEvent.FOLDER_UPDATE_SUCCESS, savedFolder.getId(), savedFolder.getName(), userId);
 
         return folderMapper.toResponse(savedFolder);
     }
@@ -1224,8 +1226,8 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(request, "MoveFolderRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Moving folder: folderId={}, newParentFolderId={}, userId={}",
-            folderId, request.getNewParentFolderId(), userId);
+        log.info("event={} Moving folder: folderId={}, newParentFolderId={}, userId={}",
+            LogEvent.FOLDER_MOVE_START, folderId, request.getNewParentFolderId(), userId);
 
         // Get source folder with ownership check
         final Folder sourceFolder = getFolderByIdAndUserId(folderId, userId);
@@ -1239,7 +1241,7 @@ public class FolderServiceImpl implements IFolderService {
         // Perform move
         performMove(sourceFolder, targetParentFolder, request);
 
-        log.info("Folder moved successfully: folderId={}, newParentFolderId={}, userId={}",
+        log.info("event={} Folder moved successfully: folderId={}, newParentFolderId={}, userId={} ", com.repeatwise.log.LogEvent.FOLDER_MOVE_SUCCESS,
             folderId, request.getNewParentFolderId(), userId);
 
         return folderMapper.toResponse(sourceFolder);
@@ -1283,7 +1285,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(request, "CopyFolderRequest cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Copying folder: folderId={}, targetParentId={}, newName={}, userId={}",
+        log.info("event={} Copying folder: folderId={}, targetParentId={}, newName={}, userId={}", com.repeatwise.log.LogEvent.FOLDER_COPY_START,
             folderId, request.getTargetParentFolderId(), request.getNewName(), userId);
 
         // Validate copy name
@@ -1308,7 +1310,7 @@ public class FolderServiceImpl implements IFolderService {
         // Perform recursive copy
         final Folder copiedFolder = performCopy(sourceFolder, targetParentFolder, uniqueName, request);
 
-        log.info("Folder copied successfully: sourceFolderId={}, copiedFolderId={}, userId={}",
+        log.info("event={} Folder copied successfully: sourceFolderId={}, copiedFolderId={}, userId={}", com.repeatwise.log.LogEvent.FOLDER_COPY_SUCCESS,
             folderId, copiedFolder.getId(), userId);
 
         return folderMapper.toResponse(copiedFolder);
@@ -1355,7 +1357,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Soft-deleting folder: folderId={}, userId={}", folderId, userId);
+        log.info("event={} Soft-deleting folder: folderId={}, userId={}", LogEvent.FOLDER_SOFT_DELETE_START, folderId, userId);
 
         // Get folder (must exist and not be deleted)
         final Folder folder = getFolderForDelete(folderId, userId);
@@ -1363,8 +1365,8 @@ public class FolderServiceImpl implements IFolderService {
         // Perform soft delete
         performSoftDelete(folder);
 
-        log.info("Folder soft-deleted successfully: folderId={}, name={}, userId={}",
-            folderId, folder.getName(), userId);
+        log.info("event={} Folder soft-deleted successfully: folderId={}, name={}, userId={}",
+            LogEvent.FOLDER_SOFT_DELETE_SUCCESS, folderId, folder.getName(), userId);
     }
 
     /**
@@ -1394,7 +1396,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Restoring folder from trash: folderId={}, userId={}", folderId, userId);
+        log.info("event={} Restoring folder from trash: folderId={}, userId={}", LogEvent.FOLDER_RESTORE_START, folderId, userId);
 
         // Get deleted folder
         final Folder folder = getFolderForRestore(folderId, userId);
@@ -1402,8 +1404,8 @@ public class FolderServiceImpl implements IFolderService {
         // Perform restore
         performRestore(folder);
 
-        log.info("Folder restored successfully: folderId={}, name={}, userId={}",
-            folderId, folder.getName(), userId);
+        log.info("event={} Folder restored successfully: folderId={}, name={}, userId={}",
+            LogEvent.FOLDER_RESTORE_SUCCESS, folderId, folder.getName(), userId);
 
         return folderMapper.toResponse(folder);
     }
@@ -1436,7 +1438,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.warn("Permanently deleting folder: folderId={}, userId={}", folderId, userId);
+        log.warn("event={} Permanently deleting folder: folderId={}, userId={}", LogEvent.FOLDER_HARD_DELETE_START, folderId, userId);
 
         // Get deleted folder (must be in trash)
         final Folder folder = getFolderForPermanentDelete(folderId, userId);
@@ -1444,8 +1446,8 @@ public class FolderServiceImpl implements IFolderService {
         // Perform hard delete
         performHardDelete(folder);
 
-        log.warn("Folder permanently deleted: folderId={}, name={}, userId={}",
-            folderId, folder.getName(), userId);
+        log.warn("event={} Folder permanently deleted: folderId={}, name={}, userId={}",
+            LogEvent.FOLDER_HARD_DELETE_SUCCESS, folderId, folder.getName(), userId);
     }
 
     /**
@@ -1473,7 +1475,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Getting folder stats: folderId={}, userId={}", folderId, userId);
+        log.info("event={} Getting folder stats: folderId={}, userId={}", LogEvent.FOLDER_STATS_GET_START, folderId, userId);
 
         // Validate folder exists and user owns it
         final Folder folder = getFolderByIdAndUserId(folderId, userId);
@@ -1482,16 +1484,16 @@ public class FolderServiceImpl implements IFolderService {
         final Optional<FolderStats> cachedStats = folderStatsRepository.findByFolderIdAndUserId(folderId, userId);
 
         if (cachedStats.isPresent() && !cachedStats.get().isStale()) {
-            log.debug("Returning cached stats: folderId={}, lastComputedAt={}",
-                folderId, cachedStats.get().getLastComputedAt());
+            log.debug("event={} Returning cached stats: folderId={}, lastComputedAt={}",
+                LogEvent.FOLDER_STATS_CACHE_HIT, folderId, cachedStats.get().getLastComputedAt());
             return buildStatsResponse(folder, cachedStats.get(), false);
         }
 
         // Calculate new stats
         final FolderStats stats = calculateAndCacheStats(folder, userId, cachedStats);
 
-        log.info("Stats calculated and cached: folderId={}, totalCards={}",
-            folderId, stats.getTotalCardsCount());
+        log.info("event={} Stats calculated and cached: folderId={}, totalCards={}",
+            LogEvent.FOLDER_STATS_CALCULATED, folderId, stats.getTotalCardsCount());
 
         return buildStatsResponse(folder, stats, false);
     }
@@ -1518,7 +1520,7 @@ public class FolderServiceImpl implements IFolderService {
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
 
-        log.info("Invalidating folder stats: folderId={}, userId={}", folderId, userId);
+        log.info("event={} Invalidating folder stats: folderId={}, userId={}", LogEvent.FOLDER_STATS_INVALIDATE_START, folderId, userId);
 
         // Validate folder exists and user owns it
         getFolderByIdAndUserId(folderId, userId);
@@ -1526,7 +1528,7 @@ public class FolderServiceImpl implements IFolderService {
         // Delete cached stats
         folderStatsRepository.deleteByFolderIdAndUserId(folderId, userId);
 
-        log.info("Folder stats invalidated: folderId={}, userId={}", folderId, userId);
+        log.info("event={} Folder stats invalidated: folderId={}, userId={}", LogEvent.FOLDER_STATS_INVALIDATE_SUCCESS, folderId, userId);
     }
 
     // ==================== UC-010: Folder Statistics - Helper Methods ====================
@@ -1542,7 +1544,7 @@ public class FolderServiceImpl implements IFolderService {
             final UUID userId,
             final Optional<FolderStats> existingStats) {
 
-        log.debug("Calculating stats for folder: folderId={}", folder.getId());
+        log.debug("event={} Calculating stats for folder: folderId={}", LogEvent.FOLDER_STATS_GET_START, folder.getId());
 
         // For MVP: Return zero stats (no decks/cards implemented yet)
         // TODO: Calculate actual stats when Deck and Card entities are ready
@@ -1587,3 +1589,6 @@ public class FolderServiceImpl implements IFolderService {
             .build();
     }
 }
+
+
+

@@ -2,6 +2,7 @@ package com.repeatwise.security;
 
 import com.repeatwise.exception.InvalidCredentialsException;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
@@ -39,7 +40,7 @@ public final class SecurityUtils {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.error("User not authenticated");
+            log.error("event={} User not authenticated", LogEvent.EX_FORBIDDEN);
             throw new InvalidCredentialsException(
                 "AUTH_007",
                 "User not authenticated"
@@ -54,7 +55,7 @@ public final class SecurityUtils {
             try {
                 return UUID.fromString((String) principal);
             } catch (IllegalArgumentException e) {
-                log.error("Invalid user ID format in principal: {}", principal);
+                log.error("event={} Invalid user ID format in principal: {}", LogEvent.EX_ILLEGAL_ARGUMENT, principal);
                 throw new InvalidCredentialsException(
                     "AUTH_008",
                     "Invalid user ID format"
@@ -62,7 +63,7 @@ public final class SecurityUtils {
             }
         }
 
-        log.error("Unexpected principal type: {}", principal.getClass().getName());
+        log.error("event={} Unexpected principal type: {}", LogEvent.EX_INTERNAL_SERVER, principal.getClass().getName());
         throw new InvalidCredentialsException(
             "AUTH_009",
             "Invalid authentication principal"

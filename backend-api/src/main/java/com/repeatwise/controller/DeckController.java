@@ -10,6 +10,7 @@ import com.repeatwise.service.IDeckService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -92,8 +93,8 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/decks - Creating deck: name={}, folderId={}, userId={}",
-            request.getName(), request.getFolderId(), userId);
+        log.info("event={} POST /api/decks - Creating deck: name={}, folderId={}, userId={}",
+            LogEvent.DECK_CREATE_START, request.getName(), request.getFolderId(), userId);
 
         final DeckResponse response = deckService.createDeck(request, userId);
 
@@ -110,7 +111,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/decks - Getting all decks: userId={}", userId);
+        log.info("event={} GET /api/decks - Getting all decks: userId={}", LogEvent.START, userId);
 
         final List<DeckResponse> response = deckService.getAllDecks(userId);
 
@@ -128,7 +129,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/decks/{} - Getting deck details: userId={}", deckId, userId);
+        log.info("event={} GET /api/decks/{} - Getting deck details: userId={}", LogEvent.START, deckId, userId);
 
         final DeckResponse response = deckService.getDeckById(deckId, userId);
 
@@ -149,7 +150,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("PUT /api/decks/{} - Updating deck: userId={}", deckId, userId);
+        log.info("event={} PUT /api/decks/{} - Updating deck: userId={}", LogEvent.START, deckId, userId);
 
         final DeckResponse response = deckService.updateDeck(deckId, request, userId);
 
@@ -167,7 +168,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("DELETE /api/decks/{} - Soft-deleting deck: userId={}", deckId, userId);
+        log.info("event={} DELETE /api/decks/{} - Soft-deleting deck: userId={}", LogEvent.START, deckId, userId);
 
         deckService.deleteDeck(deckId, userId);
 
@@ -185,7 +186,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/decks/{}/restore - Restoring deck: userId={}", deckId, userId);
+        log.info("event={} POST /api/decks/{}/restore - Restoring deck: userId={}", LogEvent.START, deckId, userId);
 
         final DeckResponse response = deckService.restoreDeck(deckId, userId);
 
@@ -205,8 +206,8 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.warn("DELETE /api/decks/{}/permanent - Permanently deleting deck: userId={}",
-            deckId, userId);
+        log.warn("event={} DELETE /api/decks/{}/permanent - Permanently deleting deck: userId={}",
+            LogEvent.START, deckId, userId);
 
         deckService.permanentlyDeleteDeck(deckId, userId);
 
@@ -226,7 +227,7 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("GET /api/decks/folder/{} - Getting decks in folder: userId={}", folderId, userId);
+        log.info("event={} GET /api/decks/folder/{} - Getting decks in folder: userId={}", LogEvent.START, folderId, userId);
 
         final List<DeckResponse> response = deckService.getDecksByFolderId(folderId, userId);
 
@@ -298,13 +299,13 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/decks/{}/move - Moving deck: newFolderId={}, userId={}",
-            deckId, request.getNewFolderId(), userId);
+        log.info("event={} POST /api/decks/{}/move - Moving deck: newFolderId={}, userId={}",
+            LogEvent.DECK_MOVE_START, deckId, request.getNewFolderId(), userId);
 
         final DeckResponse response = deckService.moveDeck(deckId, request.getNewFolderId(), userId);
 
-        log.info("Deck moved successfully: deckId={}, newFolderId={}, userId={}",
-            deckId, request.getNewFolderId(), userId);
+        log.info("event={} Deck moved successfully: deckId={}, newFolderId={}, userId={}",
+            LogEvent.DECK_MOVE_SUCCESS, deckId, request.getNewFolderId(), userId);
 
         return ResponseEntity.ok(response);
     }
@@ -379,13 +380,13 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("POST /api/decks/{}/copy - Copying deck: newName={}, destinationFolderId={}, userId={}",
-            deckId, request.getNewName(), request.getDestinationFolderId(), userId);
+        log.info("event={} POST /api/decks/{}/copy - Copying deck: newName={}, destinationFolderId={}, userId={}",
+            LogEvent.DECK_COPY_START, deckId, request.getNewName(), request.getDestinationFolderId(), userId);
 
         final DeckResponse response = deckService.copyDeck(deckId, request, userId);
 
-        log.info("Deck copied successfully: sourceDeckId={}, newDeckId={}, cardCount={}, userId={}",
-            deckId, response.getId(), response.getCardCount(), userId);
+        log.info("event={} Deck copied successfully: sourceDeckId={}, newDeckId={}, cardCount={}, userId={}",
+            LogEvent.DECK_COPY_SUCCESS, deckId, response.getId(), response.getCardCount(), userId);
 
         return ResponseEntity.ok(response);
     }
