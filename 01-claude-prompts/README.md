@@ -3,9 +3,10 @@
 These prompt packs compress the essential knowledge from `00_docs` so you can brief Claude Code/Codex quickly without paying to stream the entire documentation set. Use them as "knowledge bookmarks": start from the pack that matches the task, skim the bullet points, then selectively pull the linked source files when you truly need details.
 
 ## How to navigate
-1. **Start with [`00-MASTER-KNOWLEDGE-BASE.md`](./00-MASTER-KNOWLEDGE-BASE.md)** for the global context and reading order.
-2. Jump into the folder that matches your activity (domains, implementation, APIs, testing, etc.).
-3. Copy the relevant snippet into your Claude session, then call out only the referenced documents you actually need Claude to open.
+1. **Start với [`00-MASTER-KNOWLEDGE-BASE.md`](./00-MASTER-KNOWLEDGE-BASE.md)** để nắm bối cảnh tổng quan và thứ tự đọc.
+2. Nếu mới mở phiên trò chuyện, đọc thêm [`HOW-TO-CHAT-WITH-AI-BOT.md`](./HOW-TO-CHAT-WITH-AI-BOT.md) để biết cách đặt câu hỏi và quản lý token.
+3. Nhảy vào thư mục khớp với hoạt động của bạn (domain, implementation, API, testing, v.v.).
+4. Copy đoạn trích phù hợp vào phiên Claude, rồi chỉ gọi các tài liệu nguồn thật sự cần thiết để Claude mở.
 
 > ⚠️ Reminder: Claude cannot remember hundreds of lines reliably. Feed the minimal pack, confirm understanding, then drip-feed extra documents on demand.
 
