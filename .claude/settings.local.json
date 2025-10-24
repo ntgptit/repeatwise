@@ -66,7 +66,11 @@
       "Bash(javac:*)",
       "Bash(git checkout:*)",
       "Bash(git rebase:*)",
-      "Bash(git diff:*)"
+      "Bash(git diff:*)",
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogConfiguration.java\" -Force)",
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogProperties.java\" -Force)",
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogScheduler.java\" -Force)",
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogAlert.java\" -Force)"
     ],
     "deny": [],
     "ask": []

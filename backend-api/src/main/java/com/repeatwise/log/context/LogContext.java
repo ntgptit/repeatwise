@@ -1,4 +1,4 @@
-package com.repeatwise.log;
+package com.repeatwise.log.context;
 
 import org.slf4j.MDC;
 
