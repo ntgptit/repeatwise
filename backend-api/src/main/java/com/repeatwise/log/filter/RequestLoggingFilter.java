@@ -1,5 +1,7 @@
-package com.repeatwise.log;
+package com.repeatwise.log.filter;
 
+import com.repeatwise.log.context.LogContext;
+import com.repeatwise.log.util.LogSanitizer;
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -123,11 +125,12 @@ public class RequestLoggingFilter implements Filter {
             msg.append(" | headers={").append(headers).append("}");
         }
 
-        // Log request body for POST/PUT/PATCH
+        // Log request body for POST/PUT/PATCH (sanitize sensitive data)
         if (isRequestBodyLoggable(request)) {
             String body = getRequestBody(request);
             if (body != null && !body.isEmpty()) {
-                msg.append(" | body=").append(truncate(body));
+                String sanitizedBody = LogSanitizer.sanitize(body);
+                msg.append(" | body=").append(truncate(sanitizedBody));
             }
         }
 
@@ -147,11 +150,12 @@ public class RequestLoggingFilter implements Filter {
            .append(" | status=").append(response.getStatus())
            .append(" | duration=").append(duration).append("ms");
 
-        // Log response body for errors or if explicitly enabled
+        // Log response body for errors or if explicitly enabled (sanitize sensitive data)
         if (response.getStatus() >= 400) {
             String body = getResponseBody(response);
             if (body != null && !body.isEmpty()) {
-                msg.append(" | body=").append(truncate(body));
+                String sanitizedBody = LogSanitizer.sanitize(body);
+                msg.append(" | body=").append(truncate(sanitizedBody));
             }
         }
 

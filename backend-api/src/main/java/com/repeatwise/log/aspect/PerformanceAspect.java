@@ -1,5 +1,6 @@
-package com.repeatwise.log;
+package com.repeatwise.log.aspect;
 
+import com.repeatwise.log.annotation.PerformanceLog;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -22,13 +23,13 @@ public class PerformanceAspect {
     /**
      * Pointcut for methods annotated with @PerformanceLog.
      */
-    @Pointcut("@annotation(com.repeatwise.log.PerformanceLog)")
+    @Pointcut("@annotation(com.repeatwise.log.annotation.PerformanceLog)")
     public void performanceLogMethods() {}
 
     /**
      * Pointcut for classes annotated with @PerformanceLog.
      */
-    @Pointcut("@within(com.repeatwise.log.PerformanceLog)")
+    @Pointcut("@within(com.repeatwise.log.annotation.PerformanceLog)")
     public void performanceLogClasses() {}
 
     /**

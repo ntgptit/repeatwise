@@ -1,4 +1,7 @@
-package com.repeatwise.log;
+package com.repeatwise.log.annotation;
+
+import com.repeatwise.log.LogEvent;
+import com.repeatwise.log.LogLevel;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

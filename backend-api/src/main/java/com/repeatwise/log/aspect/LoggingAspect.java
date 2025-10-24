@@ -1,5 +1,8 @@
-package com.repeatwise.log;
+package com.repeatwise.log.aspect;
 
+import com.repeatwise.log.LogEvent;
+import com.repeatwise.log.LogLevel;
+import com.repeatwise.log.annotation.Loggable;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -21,13 +24,13 @@ public class LoggingAspect {
     /**
      * Pointcut for methods annotated with @Loggable.
      */
-    @Pointcut("@annotation(com.repeatwise.log.Loggable)")
+    @Pointcut("@annotation(com.repeatwise.log.annotation.Loggable)")
     public void loggableMethods() {}
 
     /**
      * Pointcut for classes annotated with @Loggable.
      */
-    @Pointcut("@within(com.repeatwise.log.Loggable)")
+    @Pointcut("@within(com.repeatwise.log.annotation.Loggable)")
     public void loggableClasses() {}
 
     /**
