@@ -24,11 +24,17 @@ import lombok.experimental.SuperBuilder;
  * Card entity - Flashcard with front/back text
  *
  * Requirements:
- * - UC-014: Create Card (future)
- * - UC-019: Review Cards with SRS (future)
+ * - UC-017: Create/Edit Card
+ * - UC-018: Delete Card
+ * - UC-019: Review Cards with SRS
+ * - Schema: cards table (section 2.5)
  *
- * Note: This is a STUB for now to allow Deck entity to compile.
- * Full implementation will be added when card features are developed.
+ * Business Rules:
+ * - BR-CARD-001: Front and back text cannot be empty
+ * - BR-CARD-002: Max length 5000 characters per side
+ * - BR-CARD-003: Cards created without CardBoxPosition are auto-initialized on first access
+ * - BR-CARD-004: Soft delete removes card from review schedule
+ * - BR-CARD-005: Editing card during review session updates content but preserves SRS state
  *
  * @author RepeatWise Team
  */
@@ -47,39 +53,37 @@ import lombok.experimental.SuperBuilder;
 public class Card extends SoftDeletableEntity {
 
     @NotBlank(message = "{card.front.required}")
-    @Size(max = 1000, message = "{card.front.size}")
-    @Column(name = "front", nullable = false, length = 1000)
+    @Size(min = 1, max = 5000, message = "{card.front.size}")
+    @Column(name = "front", nullable = false, columnDefinition = "TEXT")
     private String front;
 
     @NotBlank(message = "{card.back.required}")
-    @Size(max = 1000, message = "{card.back.size}")
-    @Column(name = "back", nullable = false, length = 1000)
+    @Size(min = 1, max = 5000, message = "{card.back.size}")
+    @Column(name = "back", nullable = false, columnDefinition = "TEXT")
     private String back;
 
     // ==================== Relationships ====================
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
     private Deck deck;
 
-    // ==================== SRS Fields (Future) ====================
-    // These will be added when SRS algorithm is implemented
+    // ==================== Business Methods ====================
 
-    // @Column(name = "box_number")
-    // private Integer boxNumber = 1;
-
-    // @Column(name = "review_count")
-    // private Integer reviewCount = 0;
-
-    // @Column(name = "due_date")
-    // private LocalDate dueDate;
-
-    // @Column(name = "last_reviewed_at")
-    // private Instant lastReviewedAt;
+    /**
+     * Trim whitespace from front and back fields
+     * Called before persist and update
+     */
+    @jakarta.persistence.PrePersist
+    @jakarta.persistence.PreUpdate
+    public void trimFields() {
+        if (this.front != null) {
+            this.front = this.front.trim();
+        }
+        if (this.back != null) {
+            this.back = this.back.trim();
+        }
+    }
 
     // ==================== Equals & HashCode ====================
 
@@ -104,7 +108,7 @@ public class Card extends SoftDeletableEntity {
         return "Card{" +
                 "id=" + getId() +
                 ", deckId=" + (this.deck != null ? this.deck.getId() : null) +
-                ", front='" + (this.front != null ? this.front.substring(0, Math.min(20, this.front.length())) + "..."
+                ", front='" + (this.front != null ? this.front.substring(0, Math.min(30, this.front.length())) + "..."
                         : null) + '\'' +
                 '}';
     }

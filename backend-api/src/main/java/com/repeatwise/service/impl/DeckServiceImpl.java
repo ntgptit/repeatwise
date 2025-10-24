@@ -12,6 +12,7 @@ import com.repeatwise.exception.DuplicateResourceException;
 import com.repeatwise.exception.ResourceNotFoundException;
 import com.repeatwise.exception.ValidationException;
 import com.repeatwise.mapper.DeckMapper;
+import com.repeatwise.repository.CardRepository;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.UserRepository;
@@ -65,6 +66,7 @@ public class DeckServiceImpl implements IDeckService {
     private final DeckRepository deckRepository;
     private final FolderRepository folderRepository;
     private final UserRepository userRepository;
+    private final CardRepository cardRepository;
     private final DeckMapper deckMapper;
     private final MessageSource messageSource;
 
@@ -143,19 +145,143 @@ public class DeckServiceImpl implements IDeckService {
         throw new UnsupportedOperationException("Not implemented yet");
     }
 
+    // ==================== UC-014: Delete Deck ====================
+
+    /**
+     * Soft delete deck
+     *
+     * Requirements:
+     * - UC-014: Delete Deck
+     * - BR-052: Soft delete policy (deleted_at timestamp)
+     * - BR-053: Cascade deletion to all cards
+     *
+     * Steps:
+     * 1. Validate deck exists and belongs to user
+     * 2. Get card count for logging
+     * 3. Soft delete deck (set deleted_at)
+     * 4. Cascade soft delete to all cards
+     * 5. Log success
+     *
+     * Performance: < 200ms per UC-014
+     */
+    @Transactional
     @Override
     public void deleteDeck(final UUID deckId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // Guard clause: Validate parameters
+        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("Deleting deck: deckId={}, userId={}", deckId, userId);
+
+        // Step 1: Get deck with ownership check
+        final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
+
+        // Step 2: Get card count for logging
+        final int cardCount = deck.getCardCount();
+        final String deckName = deck.getName();
+
+        // Step 3: Soft delete deck
+        deck.softDelete();
+
+        // Step 4: Cascade soft delete to all cards
+        softDeleteAllCardsInDeck(deckId);
+
+        // Step 5: Save deck
+        deckRepository.save(deck);
+
+        log.info("Deck deleted successfully: deckId={}, name={}, cardCount={}, userId={}",
+            deckId, deckName, cardCount, userId);
     }
 
+    /**
+     * Restore soft-deleted deck
+     *
+     * Requirements:
+     * - UC-014: Restore from Trash (A5)
+     * - BR-055: Restoration within 30 days
+     *
+     * Steps:
+     * 1. Get deck by ID (include deleted)
+     * 2. Validate deck is actually deleted
+     * 3. Restore deck (set deleted_at to null)
+     * 4. Restore all cards in deck
+     * 5. Return restored deck response
+     *
+     * Note: This method must fetch deleted decks,
+     * so we can't use findByIdAndUserId which filters deleted
+     */
+    @Transactional
     @Override
     public DeckResponse restoreDeck(final UUID deckId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // Guard clause: Validate parameters
+        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("Restoring deck: deckId={}, userId={}", deckId, userId);
+
+        // Step 1: Get deck (including deleted) with ownership check
+        final Deck deck = getDeckIncludingDeletedWithOwnershipCheck(deckId, userId);
+
+        // Step 2: Validate deck is actually deleted
+        validateDeckIsDeleted(deck);
+
+        // Step 3: Restore deck
+        deck.restore();
+
+        // Step 4: Restore all cards in deck
+        restoreAllCardsInDeck(deckId);
+
+        // Step 5: Save deck
+        final Deck restoredDeck = deckRepository.save(deck);
+
+        log.info("Deck restored successfully: deckId={}, name={}, userId={}",
+            deckId, restoredDeck.getName(), userId);
+
+        return deckMapper.toResponse(restoredDeck);
     }
 
+    /**
+     * Permanently delete deck (hard delete)
+     *
+     * Requirements:
+     * - UC-014: Permanent Deletion (A6)
+     * - BR-056: Delete after 30 days, no recovery
+     *
+     * Steps:
+     * 1. Get deck by ID (include deleted)
+     * 2. Validate deck is in trash
+     * 3. Hard delete all cards (permanently)
+     * 4. Hard delete deck
+     * 5. Log success
+     *
+     * Performance: < 500ms per UC-014
+     */
+    @Transactional
     @Override
     public void permanentlyDeleteDeck(final UUID deckId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // Guard clause: Validate parameters
+        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("Permanently deleting deck: deckId={}, userId={}", deckId, userId);
+
+        // Step 1: Get deck (including deleted) with ownership check
+        final Deck deck = getDeckIncludingDeletedWithOwnershipCheck(deckId, userId);
+
+        // Step 2: Validate deck is in trash
+        validateDeckIsDeleted(deck);
+
+        final String deckName = deck.getName();
+        final int cardCount = deck.getCardCount();
+
+        // Step 3: Hard delete all cards (cascade delete via JPA)
+        // Cards will be deleted automatically due to CascadeType.ALL and orphanRemoval
+
+        // Step 4: Hard delete deck
+        deckRepository.delete(deck);
+
+        log.info("Deck permanently deleted: deckId={}, name={}, cardCount={}, userId={}",
+            deckId, deckName, cardCount, userId);
     }
 
     // ==================== UC-012: Move Deck ====================
@@ -506,6 +632,58 @@ public class DeckServiceImpl implements IDeckService {
         });
 
         log.debug("event={} Copied {} cards to new deck", LogEvent.DECK_COPY_SUCCESS, sourceDeck.getCards().size());
+    }
+
+    /**
+     * Soft delete all cards in deck
+     * UC-014: BR-053 - Cascade deletion
+     */
+    private void softDeleteAllCardsInDeck(final UUID deckId) {
+        // Use CardRepository to soft delete all cards
+        // This is more efficient than loading all cards into memory
+        cardRepository.softDeleteByDeckId(deckId);
+
+        log.debug("Soft deleted all cards in deck: deckId={}", deckId);
+    }
+
+    /**
+     * Get deck including deleted (for restore/permanent delete)
+     * UC-014: Restore and permanent delete operations
+     */
+    private Deck getDeckIncludingDeletedWithOwnershipCheck(final UUID deckId, final UUID userId) {
+        return deckRepository.findByIdAndUserIdIncludingDeleted(deckId, userId)
+            .orElseThrow(() -> {
+                log.error("Deck not found: deckId={}, userId={}", deckId, userId);
+                return new ResourceNotFoundException(
+                    "DECK_008",
+                    getMessage("error.deck.delete.not.found", deckId)
+                );
+            });
+    }
+
+    /**
+     * Validate deck is actually deleted (in trash)
+     * UC-014: Ensure deck can be restored or permanently deleted
+     */
+    private void validateDeckIsDeleted(final Deck deck) {
+        if (!deck.isDeleted()) {
+            log.warn("Deck is not deleted: deckId={}, deckName={}", deck.getId(), deck.getName());
+            throw new ValidationException(
+                "DECK_009",
+                getMessage("error.deck.restore.not.deleted")
+            );
+        }
+    }
+
+    /**
+     * Restore all cards in deck
+     * UC-014: BR-055 - Restore with review progress
+     */
+    private void restoreAllCardsInDeck(final UUID deckId) {
+        // Use CardRepository to restore all cards
+        cardRepository.restoreByDeckId(deckId);
+
+        log.debug("Restored all cards in deck: deckId={}", deckId);
     }
 
     /**

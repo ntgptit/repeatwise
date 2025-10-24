@@ -184,4 +184,18 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
         @Param("userId") UUID userId,
         @Param("folderPath") String folderPath
     );
+
+    // ==================== UC-014: Delete/Restore Deck ====================
+
+    /**
+     * Find deck by ID and user ID including deleted decks
+     * UC-014: Restore Deck, Permanent Delete
+     */
+    @Query("SELECT d FROM Deck d " +
+           "WHERE d.id = :deckId " +
+           "AND d.user.id = :userId")
+    Optional<Deck> findByIdAndUserIdIncludingDeleted(
+        @Param("deckId") UUID deckId,
+        @Param("userId") UUID userId
+    );
 }

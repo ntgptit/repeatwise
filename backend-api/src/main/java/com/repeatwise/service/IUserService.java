@@ -1,9 +1,9 @@
 package com.repeatwise.service;
 
+import java.util.UUID;
+
 import com.repeatwise.dto.request.user.UpdateProfileRequest;
 import com.repeatwise.dto.response.user.UserProfileResponse;
-
-import java.util.UUID;
 
 /**
  * User Service Interface - Manages user operations
@@ -36,7 +36,7 @@ public interface IUserService {
      * - theme: Required, must be LIGHT, DARK, or SYSTEM
      * - username and email are read-only (cannot be changed in MVP)
      *
-     * @param userId authenticated user ID from JWT token
+     * @param userId  authenticated user ID from JWT token
      * @param request UpdateProfileRequest with updated profile data
      * @return UserProfileResponse with updated profile
      */
