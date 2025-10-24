@@ -1,11 +1,16 @@
 package com.repeatwise.service;
 
+import java.util.UUID;
+
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
 import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.UserResponse;
-
-import java.util.UUID;
+import com.repeatwise.exception.DuplicateEmailException;
+import com.repeatwise.exception.DuplicateUsernameException;
+import com.repeatwise.exception.ForbiddenException;
+import com.repeatwise.exception.InvalidCredentialsException;
+import com.repeatwise.exception.InvalidTokenException;
 
 /**
  * Authentication Service Interface
@@ -18,25 +23,6 @@ import java.util.UUID;
  * @author RepeatWise Team
  */
 public interface IAuthService {
-
-    /**
-     * Register new user account
-     *
-     * Business Logic:
-     * 1. Validate username uniqueness (case-insensitive)
-     * 2. Validate email uniqueness (case-insensitive)
-     * 3. Hash password with bcrypt (cost 12)
-     * 4. Create user with default settings
-     * 5. Create default SRS settings
-     * 6. Create default user stats
-     * 7. Return user response
-     *
-     * @param request RegisterRequest containing username, email, password, name
-     * @return UserResponse with user details
-     * @throws DuplicateUsernameException if username already exists
-     * @throws DuplicateEmailException if email already exists
-     */
-    UserResponse register(RegisterRequest request);
 
     /**
      * Login user with username or email
@@ -68,9 +54,9 @@ public interface IAuthService {
      * Note: Access token remains valid until expiry (client-side cleanup)
      *
      * @param refreshToken Refresh token string from HttpOnly cookie
-     * @param userId Current authenticated user ID
+     * @param userId       Current authenticated user ID
      * @throws InvalidTokenException if token not found or invalid
-     * @throws ForbiddenException if token doesn't belong to user
+     * @throws ForbiddenException    if token doesn't belong to user
      */
     void logout(String refreshToken, UUID userId);
 
@@ -87,4 +73,23 @@ public interface IAuthService {
      * @param userId Current authenticated user ID
      */
     void logoutAll(UUID userId);
+
+    /**
+     * Register new user account
+     *
+     * Business Logic:
+     * 1. Validate username uniqueness (case-insensitive)
+     * 2. Validate email uniqueness (case-insensitive)
+     * 3. Hash password with bcrypt (cost 12)
+     * 4. Create user with default settings
+     * 5. Create default SRS settings
+     * 6. Create default user stats
+     * 7. Return user response
+     *
+     * @param request RegisterRequest containing username, email, password, name
+     * @return UserResponse with user details
+     * @throws DuplicateUsernameException if username already exists
+     * @throws DuplicateEmailException    if email already exists
+     */
+    UserResponse register(RegisterRequest request);
 }

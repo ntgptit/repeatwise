@@ -1,12 +1,14 @@
 package com.repeatwise.service;
 
+import java.util.List;
+import java.util.UUID;
+
 import com.repeatwise.dto.request.deck.CopyDeckRequest;
 import com.repeatwise.dto.request.deck.CreateDeckRequest;
 import com.repeatwise.dto.request.deck.UpdateDeckRequest;
 import com.repeatwise.dto.response.deck.DeckResponse;
-
-import java.util.List;
-import java.util.UUID;
+import com.repeatwise.exception.DuplicateResourceException;
+import com.repeatwise.exception.ResourceNotFoundException;
 
 /**
  * Deck Service Interface
@@ -25,167 +27,6 @@ import java.util.UUID;
 public interface IDeckService {
 
     // ==================== UC-011: Create Deck ====================
-
-    /**
-     * Create a new deck
-     *
-     * Requirements:
-     * - UC-011: Create Deck
-     * - BR-031: Deck naming (1-100 chars)
-     * - BR-032: Deck can be at root level (folder_id nullable)
-     * - BR-033: Name unique within same folder
-     * - BR-034: Initial state (0 cards)
-     *
-     * Validation:
-     * - Name must be 1-100 chars, trimmed
-     * - Folder must exist and belong to user (if not null)
-     * - Name must be unique within folder (or root level)
-     *
-     * @param request CreateDeckRequest
-     * @param userId  Current user ID
-     * @return Created deck details
-     * @throws DuplicateResourceException if name exists in same folder
-     * @throws ResourceNotFoundException  if folder not found
-     * @throws ValidationException        if validation fails
-     */
-    DeckResponse createDeck(CreateDeckRequest request, UUID userId);
-
-    /**
-     * Get all decks for user
-     *
-     * Requirements:
-     * - UC-011: List all decks
-     *
-     * @param userId Current user ID
-     * @return List of all user's decks
-     */
-    List<DeckResponse> getAllDecks(UUID userId);
-
-    /**
-     * Get deck by ID
-     *
-     * Requirements:
-     * - UC-011: View deck details
-     *
-     * @param deckId Deck ID
-     * @param userId Current user ID
-     * @return Deck details
-     * @throws ResourceNotFoundException if deck not found or not owned by user
-     */
-    DeckResponse getDeckById(UUID deckId, UUID userId);
-
-    /**
-     * Get all decks in a folder
-     *
-     * Requirements:
-     * - UC-011: List decks in folder
-     *
-     * @param folderId Folder ID
-     * @param userId   Current user ID
-     * @return List of decks in folder
-     * @throws ResourceNotFoundException if folder not found
-     */
-    List<DeckResponse> getDecksByFolderId(UUID folderId, UUID userId);
-
-    /**
-     * Update deck (rename and change description)
-     *
-     * Requirements:
-     * - UC-011: Update deck details
-     * - BR-033: Name unique within folder
-     *
-     * Validation:
-     * - Name must be unique in folder (excluding current deck)
-     * - Name must be 1-100 chars
-     *
-     * @param deckId  Deck ID
-     * @param request UpdateDeckRequest
-     * @param userId  Current user ID
-     * @return Updated deck
-     * @throws DuplicateResourceException if name exists in folder
-     * @throws ResourceNotFoundException  if deck not found
-     */
-    DeckResponse updateDeck(UUID deckId, UpdateDeckRequest request, UUID userId);
-
-    /**
-     * Soft-delete deck
-     *
-     * Requirements:
-     * - UC-014: Delete Deck
-     * - Cascade soft-delete to all cards
-     *
-     * @param deckId Deck ID
-     * @param userId Current user ID
-     * @throws ResourceNotFoundException if deck not found
-     */
-    void deleteDeck(UUID deckId, UUID userId);
-
-    /**
-     * Restore soft-deleted deck
-     *
-     * Requirements:
-     * - UC-014: Undo delete
-     *
-     * @param deckId Deck ID
-     * @param userId Current user ID
-     * @return Restored deck
-     * @throws ResourceNotFoundException if deck not found
-     * @throws ValidationException       if deck not deleted
-     */
-    DeckResponse restoreDeck(UUID deckId, UUID userId);
-
-    /**
-     * Permanently delete deck (hard delete)
-     *
-     * Requirements:
-     * - UC-014: Permanent delete from trash
-     *
-     * @param deckId Deck ID
-     * @param userId Current user ID
-     * @throws ResourceNotFoundException if deck not found
-     * @throws ValidationException       if deck not in trash
-     */
-    void permanentlyDeleteDeck(UUID deckId, UUID userId);
-
-    // ==================== UC-012: Move Deck ====================
-
-    /**
-     * Move deck to a different folder
-     *
-     * Requirements:
-     * - UC-012: Move Deck
-     * - BR-040: Move validation
-     * - BR-041: Name conflict handling
-     * - BR-042: Statistics update
-     * - BR-043: Review progress preservation
-     *
-     * Steps:
-     * 1. Validate deck exists and belongs to user
-     * 2. Validate destination folder exists and belongs to user (if not null)
-     * 3. Validate not moving to same folder
-     * 4. Validate no name conflict in destination
-     * 5. Update deck.folder_id
-     * 6. Invalidate folder statistics for both old and new folders
-     * 7. Preserve all review progress (card_box_position unchanged)
-     *
-     * Validation:
-     * - Deck must exist and belong to user
-     * - Destination folder must exist and belong to user (if not null)
-     * - Cannot move to same folder
-     * - Deck name must be unique in destination folder
-     * - newFolderId can be NULL (move to root level)
-     *
-     * @param deckId       Deck ID to move
-     * @param newFolderId  Target folder ID (nullable - null = move to root)
-     * @param userId       Current user ID
-     * @return Updated deck details
-     * @throws ResourceNotFoundException  if deck or folder not found
-     * @throws ValidationException        if moving to same location
-     * @throws DuplicateResourceException if name exists in destination
-     */
-    DeckResponse moveDeck(UUID deckId, UUID newFolderId, UUID userId);
-
-    // ==================== UC-013: Copy Deck ====================
 
     /**
      * Copy deck with all cards
@@ -232,4 +73,165 @@ public interface IDeckService {
      * @throws ValidationException        if deck too large (>= 100 cards in MVP)
      */
     DeckResponse copyDeck(UUID deckId, CopyDeckRequest request, UUID userId);
+
+    /**
+     * Create a new deck
+     *
+     * Requirements:
+     * - UC-011: Create Deck
+     * - BR-031: Deck naming (1-100 chars)
+     * - BR-032: Deck can be at root level (folder_id nullable)
+     * - BR-033: Name unique within same folder
+     * - BR-034: Initial state (0 cards)
+     *
+     * Validation:
+     * - Name must be 1-100 chars, trimmed
+     * - Folder must exist and belong to user (if not null)
+     * - Name must be unique within folder (or root level)
+     *
+     * @param request CreateDeckRequest
+     * @param userId  Current user ID
+     * @return Created deck details
+     * @throws DuplicateResourceException if name exists in same folder
+     * @throws ResourceNotFoundException  if folder not found
+     * @throws ValidationException        if validation fails
+     */
+    DeckResponse createDeck(CreateDeckRequest request, UUID userId);
+
+    /**
+     * Soft-delete deck
+     *
+     * Requirements:
+     * - UC-014: Delete Deck
+     * - Cascade soft-delete to all cards
+     *
+     * @param deckId Deck ID
+     * @param userId Current user ID
+     * @throws ResourceNotFoundException if deck not found
+     */
+    void deleteDeck(UUID deckId, UUID userId);
+
+    /**
+     * Get all decks for user
+     *
+     * Requirements:
+     * - UC-011: List all decks
+     *
+     * @param userId Current user ID
+     * @return List of all user's decks
+     */
+    List<DeckResponse> getAllDecks(UUID userId);
+
+    /**
+     * Get deck by ID
+     *
+     * Requirements:
+     * - UC-011: View deck details
+     *
+     * @param deckId Deck ID
+     * @param userId Current user ID
+     * @return Deck details
+     * @throws ResourceNotFoundException if deck not found or not owned by user
+     */
+    DeckResponse getDeckById(UUID deckId, UUID userId);
+
+    /**
+     * Get all decks in a folder
+     *
+     * Requirements:
+     * - UC-011: List decks in folder
+     *
+     * @param folderId Folder ID
+     * @param userId   Current user ID
+     * @return List of decks in folder
+     * @throws ResourceNotFoundException if folder not found
+     */
+    List<DeckResponse> getDecksByFolderId(UUID folderId, UUID userId);
+
+    /**
+     * Move deck to a different folder
+     *
+     * Requirements:
+     * - UC-012: Move Deck
+     * - BR-040: Move validation
+     * - BR-041: Name conflict handling
+     * - BR-042: Statistics update
+     * - BR-043: Review progress preservation
+     *
+     * Steps:
+     * 1. Validate deck exists and belongs to user
+     * 2. Validate destination folder exists and belongs to user (if not null)
+     * 3. Validate not moving to same folder
+     * 4. Validate no name conflict in destination
+     * 5. Update deck.folder_id
+     * 6. Invalidate folder statistics for both old and new folders
+     * 7. Preserve all review progress (card_box_position unchanged)
+     *
+     * Validation:
+     * - Deck must exist and belong to user
+     * - Destination folder must exist and belong to user (if not null)
+     * - Cannot move to same folder
+     * - Deck name must be unique in destination folder
+     * - newFolderId can be NULL (move to root level)
+     *
+     * @param deckId      Deck ID to move
+     * @param newFolderId Target folder ID (nullable - null = move to root)
+     * @param userId      Current user ID
+     * @return Updated deck details
+     * @throws ResourceNotFoundException  if deck or folder not found
+     * @throws ValidationException        if moving to same location
+     * @throws DuplicateResourceException if name exists in destination
+     */
+    DeckResponse moveDeck(UUID deckId, UUID newFolderId, UUID userId);
+
+    /**
+     * Permanently delete deck (hard delete)
+     *
+     * Requirements:
+     * - UC-014: Permanent delete from trash
+     *
+     * @param deckId Deck ID
+     * @param userId Current user ID
+     * @throws ResourceNotFoundException if deck not found
+     * @throws ValidationException       if deck not in trash
+     */
+    void permanentlyDeleteDeck(UUID deckId, UUID userId);
+
+    // ==================== UC-012: Move Deck ====================
+
+    /**
+     * Restore soft-deleted deck
+     *
+     * Requirements:
+     * - UC-014: Undo delete
+     *
+     * @param deckId Deck ID
+     * @param userId Current user ID
+     * @return Restored deck
+     * @throws ResourceNotFoundException if deck not found
+     * @throws ValidationException       if deck not deleted
+     */
+    DeckResponse restoreDeck(UUID deckId, UUID userId);
+
+    // ==================== UC-013: Copy Deck ====================
+
+    /**
+     * Update deck (rename and change description)
+     *
+     * Requirements:
+     * - UC-011: Update deck details
+     * - BR-033: Name unique within folder
+     *
+     * Validation:
+     * - Name must be unique in folder (excluding current deck)
+     * - Name must be 1-100 chars
+     *
+     * @param deckId  Deck ID
+     * @param request UpdateDeckRequest
+     * @param userId  Current user ID
+     * @return Updated deck
+     * @throws DuplicateResourceException if name exists in folder
+     * @throws ResourceNotFoundException  if deck not found
+     */
+    DeckResponse updateDeck(UUID deckId, UpdateDeckRequest request, UUID userId);
 }
