@@ -355,171 +355,178 @@ User cấu hình hành động khi nhấn "Again" (quên card):
 ### 4.1 Core Tables
 
 **users**
-```sql
-id (UUID),
-email (unique),
-password_hash,
-name,
-timezone,
-language (EN/VI, default 'VI'),
-theme (LIGHT/DARK/SYSTEM, default 'SYSTEM'),
-created_at,
-updated_at
-```
+
+Bảng users chứa các trường:
+
+- id: UUID làm primary key
+- email: unique, dùng để đăng nhập
+- password_hash: mật khẩu đã được mã hóa
+- name: tên người dùng
+- timezone: múi giờ
+- language: EN hoặc VI, mặc định 'VI'
+- theme: LIGHT/DARK/SYSTEM, mặc định 'SYSTEM'
+- created_at, updated_at: thời gian tạo và cập nhật
 
 **refresh_tokens** ⭐ (MVP)
-```sql
-id (UUID),
-user_id (FK),
-token_hash (VARCHAR(255), bcrypt hashed),
-expires_at (timestamp),
-revoked_at (timestamp, nullable),
-created_at,
-updated_at
 
--- Indexes:
--- idx_refresh_tokens_user ON refresh_tokens(user_id)
--- idx_refresh_tokens_hash ON refresh_tokens(token_hash)
--- idx_refresh_tokens_expires ON refresh_tokens(expires_at) for cleanup job
-```
+Bảng refresh_tokens chứa các trường:
+
+- id: UUID làm primary key
+- user_id: Foreign key tới bảng users
+- token_hash: VARCHAR(255), token đã được mã hóa bằng bcrypt
+- expires_at: thời gian hết hạn (timestamp)
+- revoked_at: thời gian thu hồi token (timestamp, nullable)
+- created_at, updated_at: thời gian tạo và cập nhật
+
+Indexes quan trọng:
+
+- idx_refresh_tokens_user trên user_id
+- idx_refresh_tokens_hash trên token_hash
+- idx_refresh_tokens_expires trên expires_at để cleanup job có thể xóa token hết hạn
 
 **folders** ⭐
-```sql
-id (UUID),
-user_id (FK),
-parent_folder_id (FK, nullable - null = root level),
-name,
-description,
-path (materialized path: /1/5/12), -- for quick ancestor queries
-depth (int - level trong tree, CHECK depth <= 10), -- constraint: max 10 levels
-created_at,
-updated_at,
-deleted_at (soft delete)
 
--- Indexes:
--- idx_folders_path ON folders(path) for quick descendant queries
--- idx_folders_user_parent ON folders(user_id, parent_folder_id)
--- idx_folders_depth ON folders(depth) for validation
+Bảng folders chứa các trường:
 
--- Removed for MVP: color, icon, is_public, shared_with
-```
+- id: UUID làm primary key
+- user_id: Foreign key tới bảng users
+- parent_folder_id: Foreign key tới chính bảng folders, nullable (null = root level)
+- name: tên folder
+- description: mô tả folder
+- path: materialized path (ví dụ: /1/5/12) để truy vấn nhanh các ancestor
+- depth: int - cấp độ trong tree, có constraint CHECK depth <= 10 (tối đa 10 levels)
+- created_at, updated_at: thời gian tạo và cập nhật
+- deleted_at: soft delete
+
+Indexes quan trọng:
+
+- idx_folders_path trên path để truy vấn nhanh các descendant
+- idx_folders_user_parent trên (user_id, parent_folder_id)
+- idx_folders_depth trên depth để validation
+
+Các trường đã loại bỏ cho MVP: color, icon, is_public, shared_with
 
 **decks**
-```sql
-id (UUID),
-user_id (FK),
-folder_id (FK, nullable),
-name,
-description,
-created_at,
-updated_at,
-deleted_at
 
--- Removed: is_public, tags
-```
+Bảng decks chứa các trường:
+
+- id: UUID làm primary key
+- user_id: Foreign key tới bảng users
+- folder_id: Foreign key tới bảng folders, nullable (deck có thể không thuộc folder nào)
+- name: tên deck
+- description: mô tả deck
+- created_at, updated_at: thời gian tạo và cập nhật
+- deleted_at: soft delete
+
+Các trường đã loại bỏ: is_public, tags
 
 **cards**
-```sql
-id (UUID),
-deck_id (FK),
-front (text),
-back (text),
-created_at,
-updated_at,
-deleted_at (soft delete)
 
--- Removed: card_type, metadata table
-```
+Bảng cards chứa các trường:
+
+- id: UUID làm primary key
+- deck_id: Foreign key tới bảng decks
+- front: text - mặt trước của flashcard
+- back: text - mặt sau của flashcard
+- created_at, updated_at: thời gian tạo và cập nhật
+- deleted_at: soft delete
+
+Các trường đã loại bỏ: card_type, metadata table
 
 ### 4.2 SRS-Specific Tables
 
 **srs_settings** (per user)
-```sql
-id (UUID),
-user_id (FK, unique),
-total_boxes (int, default 7, fixed),
-review_order (ASCENDING/DESCENDING/RANDOM, default RANDOM),
-notification_enabled (boolean, default true),
-notification_time (time, default '09:00'),
-forgotten_card_action (MOVE_TO_BOX_1/MOVE_DOWN_N_BOXES/STAY_IN_BOX, default MOVE_TO_BOX_1),
-move_down_boxes (int, default 1),
-new_cards_per_day (int, default 20),
-max_reviews_per_day (int, default 200),
-created_at,
-updated_at
-```
+
+Bảng srs_settings chứa các trường:
+
+- id: UUID làm primary key
+- user_id: Foreign key tới bảng users, unique (mỗi user chỉ có 1 setting)
+- total_boxes: int, mặc định 7, cố định
+- review_order: ASCENDING/DESCENDING/RANDOM, mặc định RANDOM
+- notification_enabled: boolean, mặc định true
+- notification_time: time, mặc định '09:00'
+- forgotten_card_action: MOVE_TO_BOX_1/MOVE_DOWN_N_BOXES/STAY_IN_BOX, mặc định MOVE_TO_BOX_1
+- move_down_boxes: int, mặc định 1
+- new_cards_per_day: int, mặc định 20
+- max_reviews_per_day: int, mặc định 200
+- created_at, updated_at: thời gian tạo và cập nhật
 
 **card_box_position**
-```sql
-id (UUID),
-card_id (FK),
-user_id (FK),
-current_box (1-7),
-ease_factor (decimal, default 2.5),
-interval_days (int),
-due_date (timestamp),
-last_reviewed_at (timestamp),
-review_count (int),
-lapse_count (int),
-created_at,
-updated_at
 
--- Composite index for review queries (most important!)
--- CREATE INDEX idx_card_box_user_due ON card_box_position(user_id, due_date, current_box);
--- This covers: WHERE user_id = ? AND due_date <= ? ORDER BY due_date, current_box
-```
+Bảng card_box_position chứa các trường:
+
+- id: UUID làm primary key
+- card_id: Foreign key tới bảng cards
+- user_id: Foreign key tới bảng users
+- current_box: int từ 1-7, ô hiện tại của card
+- ease_factor: decimal, mặc định 2.5
+- interval_days: int - khoảng thời gian đến lần review tiếp theo
+- due_date: timestamp - ngày cần review
+- last_reviewed_at: timestamp - lần review cuối cùng
+- review_count: int - số lần đã review
+- lapse_count: int - số lần quên
+- created_at, updated_at: thời gian tạo và cập nhật
+
+Composite index quan trọng nhất cho review queries:
+
+- idx_card_box_user_due trên (user_id, due_date, current_box)
+- Index này cover cho query: WHERE user_id = ? AND due_date <= ? ORDER BY due_date, current_box
 
 **review_logs**
-```sql
-id (UUID),
-card_id (FK),
-user_id (FK),
-rating (AGAIN/HARD/GOOD/EASY),
-previous_box,
-new_box,
-interval_days,
-reviewed_at
 
--- Removed: time_taken_seconds
-```
+Bảng review_logs chứa các trường:
+
+- id: UUID làm primary key
+- card_id: Foreign key tới bảng cards
+- user_id: Foreign key tới bảng users
+- rating: AGAIN/HARD/GOOD/EASY - đánh giá của user
+- previous_box: ô trước khi review
+- new_box: ô sau khi review
+- interval_days: khoảng thời gian đến lần review tiếp theo
+- reviewed_at: thời gian review
+
+Trường đã loại bỏ: time_taken_seconds
 
 **user_stats** ⭐
-```sql
-user_id (FK, unique),
-total_cards_learned (int),
-streak_days (int),
-last_study_date (date),
-total_study_time_minutes (int),
-updated_at (timestamp)
 
--- Update mechanism:
--- Triggered by: review_logs insert (after each review submit)
--- Strategy: Increment counters, recalculate streak
--- Frequency: Real-time (synchronous update in review transaction)
-```
+Bảng user_stats chứa các trường:
+
+- user_id: Foreign key tới bảng users, unique (mỗi user chỉ có 1 record stats)
+- total_cards_learned: int - tổng số cards đã học
+- streak_days: int - số ngày học liên tục
+- last_study_date: date - ngày học gần nhất
+- total_study_time_minutes: int - tổng thời gian học (phút)
+- updated_at: timestamp - thời gian cập nhật
+
+Cơ chế cập nhật:
+
+- Triggered by: review_logs insert (sau mỗi lần review submit)
+- Strategy: Tăng các counters, tính lại streak
+- Frequency: Real-time (cập nhật đồng bộ trong review transaction)
 
 **folder_stats** ⭐ (denormalized cache)
-```sql
-folder_id (FK),
-user_id (FK),
-total_cards_count (int, recursive),
-due_cards_count (int, recursive),
-new_cards_count (int),
-mature_cards_count (int),
-last_computed_at (timestamp)
 
--- Update mechanism:
--- Triggered by: card CRUD, deck CRUD, review submit
--- Strategy: Async batch recalculation (not real-time)
--- Frequency:
---   - Auto refresh: Every 5 minutes (scheduled job)
---   - On-demand: When user requests folder stats
---   - Invalidation: Set last_computed_at = NULL when cards/decks change
--- Trade-off: Slightly stale data (max 5min old) for better performance
+Bảng folder_stats chứa các trường:
 
--- Composite primary key
-PRIMARY KEY (folder_id, user_id)
-```
+- folder_id: Foreign key tới bảng folders
+- user_id: Foreign key tới bảng users
+- total_cards_count: int - tổng số cards (recursive - tính cả sub-folders)
+- due_cards_count: int - số cards cần review (recursive)
+- new_cards_count: int - số cards mới
+- mature_cards_count: int - số cards đã thuộc
+- last_computed_at: timestamp - lần tính toán cuối cùng
+
+Composite primary key: (folder_id, user_id)
+
+Cơ chế cập nhật:
+
+- Triggered by: card CRUD, deck CRUD, review submit
+- Strategy: Async batch recalculation (không real-time)
+- Frequency:
+  - Auto refresh: Mỗi 5 phút (scheduled job)
+  - On-demand: Khi user yêu cầu folder stats
+  - Invalidation: Set last_computed_at = NULL khi cards/decks thay đổi
+- Trade-off: Dữ liệu hơi cũ (tối đa 5 phút) để có performance tốt hơn
 
 ### 4.3 Indexes (Performance Critical)
 
@@ -864,6 +871,7 @@ PRIMARY KEY (folder_id, user_id)
 ### 9.1 Code Organization
 
 **Backend (Spring Boot 3 + JPA)**
+
 ```
 backend/
 ├── src/main/java/com/repeatwise/
@@ -971,6 +979,7 @@ backend/
 ```
 
 **Frontend Web (React TypeScript + Tailwind CSS + Shadcn)**
+
 ```
 frontend-web/
 ├── src/
@@ -1019,6 +1028,7 @@ frontend-web/
 ```
 
 **Mobile (React Native)**
+
 ```
 frontend-mobile/
 ├── src/
@@ -1247,23 +1257,14 @@ frontend-mobile/
 - Timeout handling: cancel operation after 2 minutes
 
 **Database Query Optimization:** ⭐
+
 - **Review queries (Critical!)**:
   - Use composite index: (user_id, due_date, current_box)
   - LIMIT 200 cards per request
   - Batch fetch với single JOIN query instead of N+1
-  - Example optimized query:
-    ```sql
-    SELECT c.*, cbp.*, d.name as deck_name
-    FROM card_box_position cbp
-    JOIN cards c ON c.id = cbp.card_id
-    JOIN decks d ON d.id = c.deck_id
-    WHERE cbp.user_id = ?
-      AND cbp.due_date <= CURRENT_DATE
-    ORDER BY cbp.due_date ASC, cbp.current_box ASC
-    LIMIT 200;
-    ```
+  - Example optimized query: SELECT cards, card_box_position, deck name FROM card_box_position JOIN cards JOIN decks WHERE user_id = ? AND due_date <= CURRENT_DATE ORDER BY due_date ASC, current_box ASC LIMIT 200
 - **Folder tree queries**:
-  - Materialized path index: `CREATE INDEX idx_folders_path ON folders(path varchar_pattern_ops)`
+  - Materialized path index: CREATE INDEX idx_folders_path ON folders(path varchar_pattern_ops)
   - Avoid N+1: batch fetch all descendants in single query
   - Limit recursive depth: max 10 levels enforced
   - Use CTE (Common Table Expressions) for complex tree operations

@@ -35,6 +35,7 @@ import com.repeatwise.service.IAuthService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 
 /**
  * Authentication Service Implementation
@@ -64,7 +65,7 @@ public class AuthServiceImpl implements IAuthService {
         final var normalizedEmail = normalizeEmail(email);
 
         if (this.userRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-            log.warn("Registration failed: email already exists: {}", normalizedEmail);
+            log.warn("event={} Email already exists: {}", LogEvent.EX_DUPLICATE_RESOURCE, normalizedEmail);
             throw new DuplicateEmailException(
                     "USER_001",
                     getMessage("error.user.email.already.exists", normalizedEmail));
@@ -75,7 +76,7 @@ public class AuthServiceImpl implements IAuthService {
         final var normalizedUsername = normalizeUsername(username);
 
         if (this.userRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
-            log.warn("Registration failed: username already exists: {}", normalizedUsername);
+            log.warn("event={} Username already exists: {}", LogEvent.EX_DUPLICATE_RESOURCE, normalizedUsername);
             throw new DuplicateUsernameException(
                     "USER_002",
                     getMessage("error.user.username.already.exists", normalizedUsername));
@@ -87,13 +88,13 @@ public class AuthServiceImpl implements IAuthService {
         final var srsSettings = SrsSettings.createDefault(user);
         this.srsSettingsRepository.save(srsSettings);
 
-        log.debug("Created default SRS settings for user: userId={}", user.getId());
+        log.debug("event={} Created default SRS settings for user: userId={}", LogEvent.SUCCESS, user.getId());
 
         // Create default user stats
         final var userStats = UserStats.createDefault(user);
         this.userStatsRepository.save(userStats);
 
-        log.debug("Created default user stats for user: userId={}", user.getId());
+        log.debug("event={} Created default user stats for user: userId={}", LogEvent.SUCCESS, user.getId());
     }
 
     private User createUser(final RegisterRequest request) {
@@ -131,7 +132,7 @@ public class AuthServiceImpl implements IAuthService {
     private RefreshToken findRefreshToken(final String tokenString) {
         return this.refreshTokenRepository.findByToken(tokenString)
                 .orElseThrow(() -> {
-                    log.warn("Logout failed: refresh token not found");
+                    log.warn("event={} Refresh token not found", LogEvent.EX_INVALID_TOKEN);
                     return new InvalidTokenException(
                             "AUTH_003",
                             getMessage("error.auth.token.invalid"));
@@ -147,7 +148,7 @@ public class AuthServiceImpl implements IAuthService {
                 : this.userRepository.findByUsernameIgnoreCase(normalized);
 
         return userOptional.orElseThrow(() -> {
-            log.warn("Login failed: user not found: {}", normalized);
+            log.warn("event={} User not found: {}", LogEvent.EX_INVALID_CREDENTIALS, normalized);
             return new InvalidCredentialsException(
                     "AUTH_001",
                     getMessage("error.user.invalid.credentials"));
@@ -176,7 +177,7 @@ public class AuthServiceImpl implements IAuthService {
     @Transactional(readOnly = true)
     @Override
     public LoginResponse login(final LoginRequest request) {
-        log.info("Login attempt: usernameOrEmail={}", request.getUsernameOrEmail());
+        log.info("event={} Login attempt: usernameOrEmail={}", LogEvent.AUTH_LOGIN_START, request.getUsernameOrEmail());
 
         validateLoginRequest(request);
 
@@ -186,8 +187,8 @@ public class AuthServiceImpl implements IAuthService {
         final var accessToken = generateAccessToken(user);
         final var expiresIn = this.jwtTokenProvider.getAccessTokenExpirationSeconds();
 
-        log.info("User logged in successfully: userId={}, username={}, email={}",
-                user.getId(), user.getUsername(), user.getEmail());
+        log.info("event={} User logged in: userId={}, username={}, email={}",
+                LogEvent.AUTH_LOGIN_SUCCESS, user.getId(), user.getUsername(), user.getEmail());
 
         return LoginResponse.builder()
                 .accessToken(accessToken)
@@ -198,7 +199,7 @@ public class AuthServiceImpl implements IAuthService {
     @Transactional
     @Override
     public void logout(final String refreshToken, final UUID userId) {
-        log.info("Logout attempt: userId={}", userId);
+        log.info("event={} Logout attempt: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
 
         validateLogoutRequest(refreshToken);
 
@@ -207,8 +208,8 @@ public class AuthServiceImpl implements IAuthService {
 
         revokeToken(token);
 
-        log.info("User logged out successfully: userId={}, tokenId={}",
-                userId, token.getId());
+        log.info("event={} User logged out: userId={}, tokenId={}",
+                LogEvent.SUCCESS, userId, token.getId());
     }
 
     @Transactional
@@ -218,7 +219,7 @@ public class AuthServiceImpl implements IAuthService {
 
         this.userRepository.findById(userId)
                 .orElseThrow(() -> {
-                    log.error("Logout-all failed: user not found: userId={}", userId);
+                    log.error("event={} Logout-all failed: user not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
                     return new ResourceNotFoundException(
                             "USER_003",
                             getMessage("error.user.not.found", userId));
@@ -228,8 +229,8 @@ public class AuthServiceImpl implements IAuthService {
                 userId,
                 Instant.now());
 
-        log.info("User logged out from all devices: userId={}, tokensRevoked={}",
-                userId, revokedCount);
+        log.info("event={} Logout-all success: userId={}, tokensRevoked={}",
+                LogEvent.SUCCESS, userId, revokedCount);
     }
 
     private String normalizeEmail(final String email) {
@@ -249,8 +250,8 @@ public class AuthServiceImpl implements IAuthService {
     @Transactional
     @Override
     public UserResponse register(final RegisterRequest request) {
-        log.info("Starting user registration: username={}, email={}",
-                request.getUsername(), request.getEmail());
+        log.info("event={} Starting user registration: username={}, email={}",
+                LogEvent.AUTH_REGISTER_START, request.getUsername(), request.getEmail());
 
         validateRegistrationRequest(request);
         checkUsernameAvailability(request.getUsername());

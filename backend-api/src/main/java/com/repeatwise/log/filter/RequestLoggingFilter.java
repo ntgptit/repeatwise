@@ -6,6 +6,7 @@ import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import com.repeatwise.log.LogEvent;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -134,7 +135,7 @@ public class RequestLoggingFilter implements Filter {
             }
         }
 
-        log.info(msg.toString());
+        log.info("event={} {}", LogEvent.START, msg.toString());
     }
 
     /**
@@ -161,11 +162,11 @@ public class RequestLoggingFilter implements Filter {
 
         // Determine log level based on status
         if (response.getStatus() >= 500) {
-            log.error(msg.toString());
+            log.error("event={} {}", LogEvent.EX_INTERNAL_SERVER, msg.toString());
         } else if (response.getStatus() >= 400) {
-            log.warn(msg.toString());
+            log.warn("event={} {}", LogEvent.EX_VALIDATION, msg.toString());
         } else {
-            log.info(msg.toString());
+            log.info("event={} {}", LogEvent.SUCCESS, msg.toString());
         }
     }
 

@@ -1,6 +1,7 @@
 package com.repeatwise.log.aspect;
 
 import com.repeatwise.log.annotation.PerformanceLog;
+import com.repeatwise.log.LogEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -100,16 +101,16 @@ public class PerformanceAspect {
         if (executionTimeMs >= perfLog.errorThresholdMs()) {
             msg.append(" | status=CRITICAL - Exceeded error threshold (")
                .append(perfLog.errorThresholdMs()).append("ms)");
-            log.error(msg.toString());
+            log.error("event={} {}", LogEvent.FAIL, msg.toString());
 
         } else if (executionTimeMs >= perfLog.warnThresholdMs()) {
             msg.append(" | status=SLOW - Exceeded warn threshold (")
                .append(perfLog.warnThresholdMs()).append("ms)");
-            log.warn(msg.toString());
+            log.warn("event={} {}", LogEvent.FAIL, msg.toString());
 
         } else if (perfLog.alwaysLog()) {
             msg.append(" | status=OK");
-            log.info(msg.toString());
+            log.info("event={} {}", LogEvent.START, msg.toString());
         }
         // If not alwaysLog and below warn threshold, don't log (for performance)
     }
@@ -133,8 +134,8 @@ public class PerformanceAspect {
 
             // Log slow queries (>100ms is considered slow for DB operations)
             if (executionTimeMs > 100) {
-                log.warn("[PERFORMANCE] [SLOW_QUERY] repository={} | method={} | executionTime={}ms",
-                    className, methodName, executionTimeMs);
+                log.warn("event={} [PERFORMANCE] [SLOW_QUERY] repository={} | method={} | executionTime={}ms",
+                    LogEvent.FAIL, className, methodName, executionTimeMs);
             }
         }
     }
@@ -164,11 +165,11 @@ public class PerformanceAspect {
 
             // Log slow HTTP requests (>1000ms)
             if (executionTimeMs > 1000) {
-                log.warn("[PERFORMANCE] [SLOW_REQUEST] controller={} | endpoint={} | executionTime={}ms | success={}",
-                    className, methodName, executionTimeMs, success);
+                log.warn("event={} [PERFORMANCE] [SLOW_REQUEST] controller={} | endpoint={} | executionTime={}ms | success={}",
+                    LogEvent.FAIL, className, methodName, executionTimeMs, success);
             } else if (executionTimeMs > 500) {
-                log.info("[PERFORMANCE] [REQUEST] controller={} | endpoint={} | executionTime={}ms | success={}",
-                    className, methodName, executionTimeMs, success);
+                log.info("event={} [PERFORMANCE] [REQUEST] controller={} | endpoint={} | executionTime={}ms | success={}",
+                    LogEvent.START, className, methodName, executionTimeMs, success);
             }
         }
     }

@@ -70,7 +70,12 @@
       "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogConfiguration.java\" -Force)",
       "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogProperties.java\" -Force)",
       "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogScheduler.java\" -Force)",
-      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogAlert.java\" -Force)"
+      "Bash(Remove-Item \"d:\\workspace\\repeatwise\\backend-api\\src\\main\\java\\com\\repeatwise\\log\\LogAlert.java\" -Force)",
+      "Bash(for dir in 00-introduction 01-business-analysis 02-system-analysis 03-design 04-detail-design 05-dev-guidelines 06-api 07-database 08-infrastructure 09-testing 10-release-notes)",
+      "Bash(do echo \"📁 $dir:\")",
+      "Bash(echo:*)",
+      "Bash(for dir in */)",
+      "Bash(do echo \"📁 $dir%/:\")"
     ],
     "deny": [],
     "ask": []

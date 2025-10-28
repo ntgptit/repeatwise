@@ -643,7 +643,7 @@ public class DeckServiceImpl implements IDeckService {
         // This is more efficient than loading all cards into memory
         cardRepository.softDeleteByDeckId(deckId);
 
-        log.debug("Soft deleted all cards in deck: deckId={}", deckId);
+        log.debug("event={} Soft deleted all cards in deck: deckId={}", LogEvent.SUCCESS, deckId);
     }
 
     /**
@@ -653,7 +653,7 @@ public class DeckServiceImpl implements IDeckService {
     private Deck getDeckIncludingDeletedWithOwnershipCheck(final UUID deckId, final UUID userId) {
         return deckRepository.findByIdAndUserIdIncludingDeleted(deckId, userId)
             .orElseThrow(() -> {
-                log.error("Deck not found: deckId={}, userId={}", deckId, userId);
+                log.error("event={} Deck not found: deckId={}, userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, deckId, userId);
                 return new ResourceNotFoundException(
                     "DECK_008",
                     getMessage("error.deck.delete.not.found", deckId)
@@ -667,7 +667,7 @@ public class DeckServiceImpl implements IDeckService {
      */
     private void validateDeckIsDeleted(final Deck deck) {
         if (!deck.isDeleted()) {
-            log.warn("Deck is not deleted: deckId={}, deckName={}", deck.getId(), deck.getName());
+            log.warn("event={} Deck is not deleted: deckId={}, deckName={}", LogEvent.EX_VALIDATION, deck.getId(), deck.getName());
             throw new ValidationException(
                 "DECK_009",
                 getMessage("error.deck.restore.not.deleted")
@@ -683,7 +683,7 @@ public class DeckServiceImpl implements IDeckService {
         // Use CardRepository to restore all cards
         cardRepository.restoreByDeckId(deckId);
 
-        log.debug("Restored all cards in deck: deckId={}", deckId);
+        log.debug("event={} Restored all cards in deck: deckId={}", LogEvent.SUCCESS, deckId);
     }
 
     /**
