@@ -1,5 +1,6 @@
 package com.repeatwise.controller;
 
+import com.repeatwise.dto.request.user.ChangePasswordRequest;
 import com.repeatwise.dto.request.user.UpdateProfileRequest;
 import com.repeatwise.dto.response.user.UserProfileResponse;
 import com.repeatwise.security.SecurityUtils;
@@ -96,5 +97,44 @@ public class UserController {
         final UserProfileResponse updatedProfile = userService.updateProfile(userId, request);
 
         return ResponseEntity.ok(updatedProfile);
+    }
+
+    /**
+     * Change user password
+     * Endpoint: POST /api/users/change-password
+     *
+     * Use Case: UC-006 Step 7 - Change Password
+     *
+     * Validates:
+     * - currentPassword: Required
+     * - newPassword: Required, min 8 characters
+     * - confirmNewPassword: Required, must match newPassword
+     *
+     * Business Rules:
+     * - Current password must be verified
+     * - New password must be different from current password
+     * - All refresh tokens are revoked (logout from all devices)
+     *
+     * Response:
+     * - 200 OK: Password changed successfully
+     * - 400 Bad Request: Validation errors or incorrect current password
+     * - 401 Unauthorized: User not authenticated
+     *
+     * @param request ChangePasswordRequest with currentPassword, newPassword, confirmNewPassword
+     * @return ResponseEntity with no content
+     */
+    @PostMapping("/change-password")
+    public ResponseEntity<Void> changePassword(
+            @Valid @RequestBody final ChangePasswordRequest request) {
+
+        final UUID userId = SecurityUtils.getCurrentUserId();
+
+        log.info("event={} POST /api/users/change-password - userId: {}", LogEvent.USER_CHANGE_PASSWORD, userId);
+
+        userService.changePassword(userId, request);
+
+        log.info("event={} Password changed successfully: userId: {}", LogEvent.SUCCESS, userId);
+
+        return ResponseEntity.ok().build();
     }
 }

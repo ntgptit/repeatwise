@@ -1,10 +1,24 @@
 package com.repeatwise.entity;
 
-import jakarta.persistence.*;
-import lombok.*;
+import com.repeatwise.entity.base.BaseEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EntityListeners;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.experimental.SuperBuilder;
 
 import java.time.Instant;
-import java.util.UUID;
 
 /**
  * Refresh Token Entity
@@ -13,12 +27,14 @@ import java.util.UUID;
  * - UC-003: User Logout - Token blacklist for logout
  * - API Spec: POST /api/auth/refresh - Refresh token rotation
  * - Security: 7-day expiry, HttpOnly cookie storage
+ * - Database Schema: refresh_tokens table (section 2.9)
  *
  * Business Rules:
  * - BR-005: Token Invalidation - Server-side token blacklist
  * - BR-007: Multi-Device Logout - Track tokens per device
  *
- * Table: refresh_tokens
+ * Note: Extends BaseEntity for id, created_at, updated_at
+ * But also has created_at field explicitly for backward compatibility
  *
  * @author RepeatWise Team
  */
@@ -26,23 +42,21 @@ import java.util.UUID;
 @Table(name = "refresh_tokens", indexes = {
     @Index(name = "idx_refresh_tokens_token", columnList = "token"),
     @Index(name = "idx_refresh_tokens_user_id", columnList = "user_id"),
-    @Index(name = "idx_refresh_tokens_user_device", columnList = "user_id,device_id")
+    @Index(name = "idx_refresh_tokens_user_device", columnList = "user_id, device_id")
 })
+@EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
-public class RefreshToken {
+@SuperBuilder
+public class RefreshToken extends BaseEntity {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id", nullable = false)
-    private UUID id;
-
+    @NotNull(message = "{error.refreshtoken.token.required}")
     @Column(name = "token", nullable = false, unique = true, length = 500)
     private String token;
 
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -56,25 +70,17 @@ public class RefreshToken {
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
 
+    @NotNull(message = "{error.refreshtoken.expiresat.required}")
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private Instant createdAt;
 
     @Column(name = "revoked_at")
     private Instant revokedAt;
 
+    @NotNull(message = "{error.refreshtoken.isrevoked.required}")
     @Column(name = "is_revoked", nullable = false)
     @Builder.Default
     private Boolean isRevoked = false;
-
-    @PrePersist
-    protected void onCreate() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-    }
 
     /**
      * Check if refresh token is expired
@@ -107,11 +113,10 @@ public class RefreshToken {
         if (this == o) {
             return true;
         }
-        if (!(o instanceof RefreshToken)) {
+        if (!(o instanceof final RefreshToken that)) {
             return false;
         }
-        final RefreshToken that = (RefreshToken) o;
-        return id != null && id.equals(that.getId());
+        return (getId() != null) && getId().equals(that.getId());
     }
 
     @Override

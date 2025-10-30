@@ -6,6 +6,7 @@ import java.util.UUID;
 import com.repeatwise.dto.request.deck.CopyDeckRequest;
 import com.repeatwise.dto.request.deck.CreateDeckRequest;
 import com.repeatwise.dto.request.deck.UpdateDeckRequest;
+import com.repeatwise.dto.response.deck.DeckDeleteResponse;
 import com.repeatwise.dto.response.deck.DeckResponse;
 import com.repeatwise.exception.DuplicateResourceException;
 import com.repeatwise.exception.ResourceNotFoundException;
@@ -102,14 +103,15 @@ public interface IDeckService {
      * Soft-delete deck
      *
      * Requirements:
-     * - UC-014: Delete Deck
+     * - UC-017: Delete Deck
      * - Cascade soft-delete to all cards
      *
      * @param deckId Deck ID
      * @param userId Current user ID
+     * @return Deck deletion response with deletedAt timestamp
      * @throws ResourceNotFoundException if deck not found
      */
-    void deleteDeck(UUID deckId, UUID userId);
+    DeckDeleteResponse deleteDeck(UUID deckId, UUID userId);
 
     /**
      * Get all decks for user

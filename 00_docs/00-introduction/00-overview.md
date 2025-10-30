@@ -70,7 +70,7 @@ RepeatWise giúp người dùng:
 
 ### 1. User Management
 
-- Đăng ký/Đăng nhập với email + password
+- Đăng ký/Đăng nhập với email + password (có thể đăng nhập bằng username hoặc email)
 - Quản lý profile: tên, timezone, ngôn ngữ (VI/EN), theme (Light/Dark/System)
 - JWT với Refresh Token (security tốt hơn)
 
@@ -108,7 +108,7 @@ RepeatWise giúp người dùng:
 - 7 ô cố định với intervals: 1, 3, 7, 14, 30, 60, 120 ngày
 - Review order: Ascending, Descending, Random
 - Rating options: Again, Hard, Good, Easy
-- Forgotten card actions: Move to Box 1, Move down N boxes, Stay in box
+- Forgotten card actions: Move to Box 1, Move down N boxes (1-3 configurable), Repeat in session
 
 **Daily Limits**:
 
@@ -165,9 +165,11 @@ RepeatWise giúp người dùng:
 
 ### Performance
 
-- API response time: < 200ms (CRUD operations)
-- Load folder tree: < 300ms
-- Load review session: < 500ms
+- API response time: 
+  - Average: < 200ms (CRUD operations)
+  - P95 percentile: < 300ms (typical requests)
+- Load folder tree: < 300ms (even with 1,000+ folders)
+- Load review session: < 500ms (with 100+ due cards)
 - Hỗ trợ: 10,000+ cards/deck, 1,000+ folders/user
 
 ## Ngoài phạm vi MVP (Future)
@@ -221,7 +223,7 @@ RepeatWise giúp người dùng:
 ### Technical Metrics
 
 - Test coverage ≥ 70% (core logic)
-- API response time < 200ms
+- API response time: Average < 200ms, P95 < 300ms
 - Zero critical bugs at launch
 
 ## Tài liệu tham khảo

@@ -2,6 +2,37 @@
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
+## Format on Save
+
+Project đã được cấu hình để tự động format code khi save file:
+
+- **Prettier**: Format code theo chuẩn đã cấu hình trong `.prettierrc`
+- **ESLint**: Tự động fix các lỗi lint có thể fix được
+- **VSCode/Cursor**: Cấu hình trong `.vscode/settings.json` để enable format on save
+
+### Cài đặt Extensions (Tự động nhắc khi mở project)
+
+Khi mở project trong VSCode/Cursor, bạn sẽ được nhắc cài đặt các extensions cần thiết:
+- Prettier - Code formatter
+- ESLint
+- Tailwind CSS IntelliSense
+- TypeScript and JavaScript Language Features
+
+### Manual Format
+
+Bạn cũng có thể format code thủ công:
+
+```bash
+# Format tất cả files
+npm run format
+
+# Check format (không sửa)
+npm run format:check
+
+# Fix ESLint errors
+npm run lint:fix
+```
+
 Currently, two official plugins are available:
 
 - [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh

@@ -109,6 +109,45 @@ public class AuthController {
     }
 
     /**
+     * Refresh access token using refresh token (token rotation)
+     *
+     * Endpoint: POST /api/auth/refresh
+     * Cookie: refresh_token (HttpOnly)
+     * Response: 200 OK with LoginResponse (accessToken, expiresIn)
+     *
+     * Business Flow:
+     * 1. Extract refresh token from cookie
+     * 2. Find refresh token in database
+     * 3. Validate token (not expired, not revoked)
+     * 4. Generate new access token (15-minute expiry)
+     * 5. Generate new refresh token (token rotation)
+     * 6. Revoke old refresh token
+     * 7. Save new refresh token
+     * 8. Return new access token and expires_in
+     *
+     * Use Case: UC-003 - Refresh Access Token
+     *
+     * Error Responses:
+     * - 401 UNAUTHORIZED: Token invalid/expired/revoked
+     *
+     * @param refreshToken Refresh token from HttpOnly cookie
+     * @return ResponseEntity with LoginResponse
+     */
+    @PostMapping("/refresh")
+    public ResponseEntity<LoginResponse> refreshToken(
+            @CookieValue(name = "refresh_token", required = false) final String refreshToken) {
+
+        log.info("event={} Received refresh token request", LogEvent.AUTH_TOKEN_REFRESH);
+
+        final LoginResponse response = authService.refreshToken(refreshToken);
+
+        log.info("event={} Token refreshed successfully: expiresIn={} seconds",
+                LogEvent.AUTH_TOKEN_REFRESH, response.getExpiresIn());
+
+        return ResponseEntity.ok(response);
+    }
+
+    /**
      * Logout user from current device
      *
      * Endpoint: POST /api/auth/logout

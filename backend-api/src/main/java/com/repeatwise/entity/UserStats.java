@@ -41,9 +41,27 @@ public class UserStats extends BaseEntity {
 
     @NotNull(message = "{error.userstats.totalcards.required}")
     @Min(value = 0, message = "{error.userstats.totalcards.non.negative}")
-    @Column(name = "total_cards_learned", nullable = false)
+    @Column(name = "total_cards", nullable = false)
     @Builder.Default
-    private Integer totalCardsLearned = 0;
+    private Integer totalCards = 0;
+
+    @NotNull(message = "{error.userstats.totaldecks.required}")
+    @Min(value = 0, message = "{error.userstats.totaldecks.non.negative}")
+    @Column(name = "total_decks", nullable = false)
+    @Builder.Default
+    private Integer totalDecks = 0;
+
+    @NotNull(message = "{error.userstats.totalfolders.required}")
+    @Min(value = 0, message = "{error.userstats.totalfolders.non.negative}")
+    @Column(name = "total_folders", nullable = false)
+    @Builder.Default
+    private Integer totalFolders = 0;
+
+    @NotNull(message = "{error.userstats.cardsreviewedtoday.required}")
+    @Min(value = 0, message = "{error.userstats.cardsreviewedtoday.non.negative}")
+    @Column(name = "cards_reviewed_today", nullable = false)
+    @Builder.Default
+    private Integer cardsReviewedToday = 0;
 
     @NotNull(message = "{error.userstats.streakdays.required}")
     @Min(value = 0, message = "{error.userstats.streakdays.non.negative}")
@@ -66,7 +84,10 @@ public class UserStats extends BaseEntity {
     public static UserStats createDefault(final User user) {
         return UserStats.builder()
             .user(user)
-            .totalCardsLearned(0)
+            .totalCards(0)
+            .totalDecks(0)
+            .totalFolders(0)
+            .cardsReviewedToday(0)
             .streakDays(0)
             .lastStudyDate(null)
             .totalStudyTimeMinutes(0)
@@ -129,7 +150,10 @@ public class UserStats extends BaseEntity {
         return "UserStats{" +
                 "id=" + getId() +
                 ", userId=" + (user != null ? user.getId() : null) +
-                ", totalCardsLearned=" + totalCardsLearned +
+                ", totalCards=" + totalCards +
+                ", totalDecks=" + totalDecks +
+                ", totalFolders=" + totalFolders +
+                ", cardsReviewedToday=" + cardsReviewedToday +
                 ", streakDays=" + streakDays +
                 ", lastStudyDate=" + lastStudyDate +
                 '}';

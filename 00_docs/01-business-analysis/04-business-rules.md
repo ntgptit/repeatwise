@@ -14,6 +14,15 @@ This document defines business rules (constraints and policies) that the RepeatW
 - Email must match standard format (regex validation).
 - Email is stored in lowercase; comparisons are case‑insensitive.
 
+### BR-1.1a: Username Validation
+
+- Username is optional during registration but can be set later.
+- **Username must be unique in the system** (enforced at database level with unique constraint).
+- Username format: 3-30 characters, alphanumeric + underscore/hyphen only.
+- Username is case-sensitive (stored as provided).
+- Username cannot match any existing email format.
+- When setting username (during registration or profile update), system must validate uniqueness before saving.
+
 ### BR-1.2: Password Policy
 
 - Minimum length 8 characters.
@@ -31,6 +40,7 @@ This document defines business rules (constraints and policies) that the RepeatW
 ### BR-1.4: User Profile
 
 - Name: 1–100 characters.
+- Username: Optional, 3-30 characters (alphanumeric + underscore/hyphen), **must be unique if set** (enforced at database level).
 - Timezone: must be a valid IANA timezone (e.g., `Asia/Ho_Chi_Minh`).
 - Language: `VI` or `EN`.
 - Theme: `LIGHT`, `DARK`, or `SYSTEM`.
@@ -156,7 +166,10 @@ This document defines business rules (constraints and policies) that the RepeatW
 - Default total_boxes = 7.
 - Due card: `due_date <= current_date` and not soft‑deleted.
 - Ratings:
-  - AGAIN: move to box 1 (forgotten policy)
+  - AGAIN: action based on forgotten_card_action setting:
+    - MOVE_TO_BOX_1: Move to box 1 (reset to beginning)
+    - MOVE_DOWN_N_BOXES: Move down N boxes (1-3, configurable), minimum box 1
+    - REPEAT_IN_SESSION: Show again in current session without changing box
   - HARD: optional keep/decrement per policy
   - GOOD: increment box by 1 (cap at max)
   - EASY: increment by >1 (e.g., +2) (cap at max)
@@ -229,6 +242,7 @@ This document defines business rules (constraints and policies) that the RepeatW
 ### BR-11.2: Unique Constraints
 
 - `users.email` unique.
+- `users.username` unique (nullable, but must be unique when set).
 - `folders`: unique `(user_id, parent_folder_id, name)`.
 - `decks`: unique `(user_id, folder_id, name)`.
 

@@ -330,6 +330,89 @@ public class AuthServiceImpl implements IAuthService {
         }
     }
 
+    @Transactional
+    @Override
+    public LoginResponse refreshToken(final String refreshToken) {
+        log.info("event={} Refresh token attempt", LogEvent.AUTH_TOKEN_REFRESH);
+
+        if (StringUtils.isBlank(refreshToken)) {
+            throw new InvalidTokenException(
+                    "AUTH_007",
+                    getMessage("error.auth.refresh.token.missing"));
+        }
+
+        final var token = findRefreshToken(refreshToken);
+        validateRefreshToken(token);
+
+        final var user = token.getUser();
+        final var newAccessToken = generateAccessToken(user);
+        final var expiresIn = this.jwtTokenProvider.getAccessTokenExpirationSeconds();
+
+        // Token rotation: revoke old token and create new one
+        rotateRefreshToken(token, user);
+
+        log.info("event={} Token refreshed successfully: userId={}", LogEvent.AUTH_TOKEN_REFRESH, user.getId());
+
+        return LoginResponse.builder()
+                .accessToken(newAccessToken)
+                .expiresIn(expiresIn)
+                .build();
+    }
+
+    private RefreshToken createRefreshToken(final User user) {
+        final var tokenString = UUID.randomUUID().toString();
+        final var expiresAt = Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS);
+
+        return RefreshToken.builder()
+                .token(tokenString)
+                .user(user)
+                .expiresAt(expiresAt)
+                .isRevoked(false)
+                .build();
+    }
+
+    private String generateRefreshTokenString() {
+        return UUID.randomUUID().toString();
+    }
+
+    private void rotateRefreshToken(final RefreshToken oldToken, final User user) {
+        // Revoke old token
+        oldToken.revoke();
+        this.refreshTokenRepository.save(oldToken);
+
+        // Create new refresh token
+        final var newTokenString = generateRefreshTokenString();
+        final var expiresAt = Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS);
+
+        final var newToken = RefreshToken.builder()
+                .token(newTokenString)
+                .user(user)
+                .expiresAt(expiresAt)
+                .isRevoked(false)
+                .build();
+
+        this.refreshTokenRepository.save(newToken);
+
+        log.debug("Token rotated: oldTokenId={}, newTokenId={}", oldToken.getId(), newToken.getId());
+    }
+
+    private void validateRefreshToken(final RefreshToken token) {
+        if (Boolean.TRUE.equals(token.getIsRevoked())) {
+            log.warn("Refresh failed: token already revoked: tokenId={}", token.getId());
+            throw new InvalidTokenException(
+                    "AUTH_008",
+                    getMessage("error.auth.refresh.token.revoked"));
+        }
+
+        if (token.isExpired()) {
+            log.warn("Refresh failed: token expired: tokenId={}, expiresAt={}",
+                    token.getId(), token.getExpiresAt());
+            throw new InvalidTokenException(
+                    "AUTH_009",
+                    getMessage("error.auth.refresh.token.expired"));
+        }
+    }
+
     private void verifyTokenOwnership(final RefreshToken token, final UUID userId) {
         if (!token.getUser().getId().equals(userId)) {
             log.warn("Logout failed: token does not belong to user: userId={}, tokenUserId={}",

@@ -2,8 +2,6 @@ package com.repeatwise.entity;
 
 import java.time.LocalTime;
 
-import org.hibernate.annotations.SQLRestriction;
-
 import com.repeatwise.entity.base.BaseEntity;
 import com.repeatwise.entity.enums.NotificationMethod;
 
@@ -46,7 +44,6 @@ import lombok.experimental.SuperBuilder;
 @Entity
 @Table(name = "notification_settings")
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
-@SQLRestriction("deleted_at IS NULL")
 @Getter
 @Setter
 @SuperBuilder

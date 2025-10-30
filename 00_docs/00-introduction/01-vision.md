@@ -52,7 +52,7 @@ RepeatWise hướng đến trở thành một công cụ học tập cá nhân h
 
 4. **Trải nghiệm tối giản**
    - Giao diện sạch, tập trung vào việc học
-   - Performance tốt: < 200ms API response, < 1s thao tác
+   - Performance tốt: Average < 200ms API response, P95 < 300ms
    - Multi-platform: Web + Mobile (React Native)
    - Dark/Light mode, đa ngôn ngữ (VI/EN)
 
@@ -336,7 +336,8 @@ RepeatWise hướng đến trở thành một công cụ học tập cá nhân h
 
 **API Response Time**:
 
-- Target: < 200ms (95th percentile)
+- Target: Average < 200ms (CRUD operations)
+- Target: P95 percentile < 300ms (typical requests)
 - Critical endpoints: /review/due, /folders, /decks
 
 **App Load Time**:

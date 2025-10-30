@@ -16,12 +16,50 @@ Scenario: Successful registration
 Given I am on the registration page
 And the email "user@example.com" does not exist
 When I enter email "user@example.com"
+And I optionally enter username "john_doe123"
 And I enter password "Password123"
 And I enter confirm password "Password123"
 And I click "Register"
 Then my account is created
 And I see "Registration successful. Please login."
 And I am redirected to the Login page
+```
+
+Scenario: Successful registration without username
+
+```gherkin
+Given I am on the registration page
+And the email "user@example.com" does not exist
+When I enter email "user@example.com"
+And I leave username empty
+And I enter password "Password123"
+And I enter confirm password "Password123"
+And I click "Register"
+Then my account is created without username
+And I see "Registration successful. Please login."
+And I am redirected to the Login page
+```
+
+Scenario: Username already exists
+
+```gherkin
+Given I am on the registration page
+And the username "john_doe123" already exists
+When I enter username "john_doe123"
+And I submit the form
+Then I see error "Username already exists"
+And my account is not created
+```
+
+Scenario: Invalid username format
+
+```gherkin
+Given I am on the registration page
+When I enter username "ab" (too short)
+Or I enter username "user@name" (contains @)
+Or I enter username "user name" (contains space)
+Then I see "Username must be 3-30 characters, alphanumeric + underscore/hyphen only"
+And the "Register" button is disabled
 ```
 
 Scenario: Email already exists
@@ -54,7 +92,7 @@ And the "Register" button is disabled
 
 ### AC-1.2: Login (US-1.2)
 
-Scenario: Successful login
+Scenario: Successful login with email
 
 ```gherkin
 Given a user exists with email "user@example.com" and password "Password123"
@@ -66,20 +104,40 @@ And the refresh token is set in an HTTP-only cookie
 And I am redirected to the Dashboard
 ```
 
+Scenario: Successful login with username
+
+```gherkin
+Given a user exists with username "john_doe123" and password "Password123"
+And I am on the login page
+When I enter "john_doe123" and "Password123"
+And I click "Login"
+Then I am logged in
+And the refresh token is set in an HTTP-only cookie
+And I am redirected to the Dashboard
+```
+
 Scenario: Wrong password
 
 ```gherkin
-Given a user exists with email "user@example.com"
+Given a user exists with username "john_doe123" or email "user@example.com"
 When I enter password "WrongPassword"
-Then I see "Invalid email or password"
+Then I see "Invalid username/email or password"
 ```
 
-Scenario: Email not found
+Scenario: Username/Email not found
 
 ```gherkin
-Given the email "nonexistent@example.com" does not exist
+Given the username "nonexistent" or email "nonexistent@example.com" does not exist
 When I try to login
-Then I see "Invalid email or password"
+Then I see "Invalid username/email or password"
+```
+
+Scenario: Case sensitive username
+
+```gherkin
+Given a user exists with username "JohnDoe" and password "Password123"
+When I enter "johndoe" and "Password123"
+Then I see "Invalid username/email or password"
 ```
 
 ### AC-1.3: Auto refresh token (US-1.3)

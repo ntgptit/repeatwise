@@ -3,6 +3,7 @@ package com.repeatwise.service.impl;
 import com.repeatwise.dto.request.deck.CopyDeckRequest;
 import com.repeatwise.dto.request.deck.CreateDeckRequest;
 import com.repeatwise.dto.request.deck.UpdateDeckRequest;
+import com.repeatwise.dto.response.deck.DeckDeleteResponse;
 import com.repeatwise.dto.response.deck.DeckResponse;
 import com.repeatwise.entity.Card;
 import com.repeatwise.entity.Deck;
@@ -29,6 +30,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.time.Instant;
 
 /**
  * Implementation of Deck Service
@@ -127,22 +129,79 @@ public class DeckServiceImpl implements IDeckService {
 
     @Override
     public List<DeckResponse> getAllDecks(final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("event={} Getting all decks: userId={}", LogEvent.START, userId);
+
+        final List<Deck> decks = deckRepository.findAll().stream()
+            .filter(deck -> deck.getUser() != null && deck.getUser().getId().equals(userId))
+            .filter(deck -> !deck.isDeleted())
+            .toList();
+
+        return deckMapper.toResponseList(decks);
     }
 
     @Override
     public DeckResponse getDeckById(final UUID deckId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("event={} Getting deck: deckId={}, userId={}", LogEvent.START, deckId, userId);
+
+        final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
+
+        return deckMapper.toResponse(deck);
     }
 
     @Override
     public List<DeckResponse> getDecksByFolderId(final UUID folderId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("event={} Getting decks by folder: folderId={}, userId={}", LogEvent.START, folderId, userId);
+
+        final List<Deck> decks;
+        if (folderId == null) {
+            // Root level decks
+            decks = deckRepository.findAll().stream()
+                .filter(deck -> deck.getUser().getId().equals(userId) && deck.getFolder() == null)
+                .toList();
+        } else {
+            // Validate folder exists and belongs to user
+            getFolder(folderId, userId);
+            decks = deckRepository.findByFolderId(folderId);
+        }
+
+        return deckMapper.toResponseList(decks);
     }
 
     @Override
     public DeckResponse updateDeck(final UUID deckId, final UpdateDeckRequest request, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(request, "UpdateDeckRequest cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("event={} Updating deck: deckId={}, userId={}", LogEvent.START, deckId, userId);
+
+        // Step 1: Get deck with ownership check
+        final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
+
+        // Step 2: Validate name
+        validateDeckName(request.getName());
+
+        // Step 3: Validate name uniqueness (excluding current deck)
+        final String trimmedName = StringUtils.trim(request.getName());
+        validateNameUniquenessForUpdate(trimmedName, deck.getFolder(), userId, deckId);
+
+        // Step 4: Update deck fields
+        updateDeckFields(deck, request);
+
+        // Step 5: Save deck
+        final Deck savedDeck = deckRepository.save(deck);
+
+        log.info("event={} Deck updated successfully: deckId={}, name={}, userId={}",
+            LogEvent.SUCCESS, deckId, savedDeck.getName(), userId);
+
+        return deckMapper.toResponse(savedDeck);
     }
 
     // ==================== UC-014: Delete Deck ====================
@@ -151,7 +210,7 @@ public class DeckServiceImpl implements IDeckService {
      * Soft delete deck
      *
      * Requirements:
-     * - UC-014: Delete Deck
+     * - UC-017: Delete Deck
      * - BR-052: Soft delete policy (deleted_at timestamp)
      * - BR-053: Cascade deletion to all cards
      *
@@ -160,13 +219,14 @@ public class DeckServiceImpl implements IDeckService {
      * 2. Get card count for logging
      * 3. Soft delete deck (set deleted_at)
      * 4. Cascade soft delete to all cards
-     * 5. Log success
+     * 5. Save deck
+     * 6. Return response with deletedAt timestamp
      *
-     * Performance: < 200ms per UC-014
+     * Performance: < 200ms per UC-017
      */
     @Transactional
     @Override
-    public void deleteDeck(final UUID deckId, final UUID userId) {
+    public DeckDeleteResponse deleteDeck(final UUID deckId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
         Objects.requireNonNull(userId, "User ID cannot be null");
@@ -176,21 +236,37 @@ public class DeckServiceImpl implements IDeckService {
         // Step 1: Get deck with ownership check
         final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
 
-        // Step 2: Get card count for logging
+        // Step 2: Validate deck is not already deleted
+        if (deck.isDeleted()) {
+            log.warn("event={} Deck already deleted: deckId={}, userId={}", LogEvent.EX_VALIDATION, deckId, userId);
+            throw new ValidationException(
+                "DECK_010",
+                getMessage("error.deck.already.deleted")
+            );
+        }
+
+        // Step 3: Get card count and deck name for logging
         final int cardCount = deck.getCardCount();
         final String deckName = deck.getName();
 
-        // Step 3: Soft delete deck
+        // Step 4: Soft delete deck
         deck.softDelete();
+        final Instant deletedAt = deck.getDeletedAt();
 
-        // Step 4: Cascade soft delete to all cards
+        // Step 5: Cascade soft delete to all cards
         softDeleteAllCardsInDeck(deckId);
 
-        // Step 5: Save deck
+        // Step 6: Save deck
         deckRepository.save(deck);
 
         log.info("Deck deleted successfully: deckId={}, name={}, cardCount={}, userId={}",
             deckId, deckName, cardCount, userId);
+
+        // Step 7: Return response
+        return DeckDeleteResponse.builder()
+            .message(getMessage("deck.delete.success"))
+            .deletedAt(deletedAt)
+            .build();
     }
 
     /**
@@ -351,18 +427,19 @@ public class DeckServiceImpl implements IDeckService {
     // ==================== UC-013: Copy Deck ====================
 
     /**
-     * Copy deck with all cards (Synchronous for < 100 cards)
+     * Copy deck with all cards (Synchronous for <= 1000 cards)
      *
      * Requirements:
-     * - UC-013: Copy Deck
-     * - BR-048: Copy thresholds (< 100 cards synchronous)
-     * - BR-049: Card state reset (all cards start in Box 1)
-     * - BR-050: Naming convention
+     * - UC-016: Copy Deck
+     * - BR-DECK-COPY-01: Sync copy if <= 1000 cards
+     * - BR-DECK-COPY-02: Async copy if 1001–10,000 cards
+     * - BR-DECK-COPY-03: Reject > 10,000 cards
+     * - BR-DECK-COPY-04: Name conflict resolved with suffix
      *
      * Steps:
      * 1. Validate request and parameters
      * 2. Get source deck with ownership check
-     * 3. Validate deck size (< 100 cards for sync in MVP)
+     * 3. Validate deck size (<= 1000 cards for sync in MVP, reject > 10000)
      * 4. Get destination folder (if specified)
      * 5. Validate new name uniqueness in destination
      * 6. Create new deck
@@ -370,10 +447,10 @@ public class DeckServiceImpl implements IDeckService {
      * 8. Return new deck response
      *
      * Performance:
-     * - < 100 cards: < 2 seconds (synchronous)
+     * - <= 1000 cards: < 2 seconds (synchronous)
      * - Batch insert cards for efficiency
      *
-     * Note: Async copy (>= 100 cards) NOT implemented in MVP
+     * Note: Async copy (1001-10000 cards) NOT implemented in MVP
      */
     @Transactional
     @Override
@@ -389,19 +466,19 @@ public class DeckServiceImpl implements IDeckService {
         // Step 2: Get source deck with ownership check
         final Deck sourceDeck = getDeckWithOwnershipCheck(deckId, userId);
 
-        // Step 3: Validate deck size (< 100 cards for synchronous copy)
+        // Step 3: Validate deck size (<= 1000 cards for synchronous copy, 1001-10000 for async, reject > 10000)
         validateDeckSizeForCopy(sourceDeck);
 
         // Step 4: Get destination folder (if specified)
         final Folder destinationFolder = getFolder(request.getDestinationFolderId(), userId);
 
-        // Step 5: Validate new name uniqueness
+        // Step 5: Validate new name uniqueness and resolve conflicts
         final String trimmedNewName = StringUtils.trim(request.getNewName());
-        validateNameUniqueness(trimmedNewName, destinationFolder, userId);
+        final String finalName = resolveNameConflict(trimmedNewName, destinationFolder, userId);
 
         // Step 6: Create new deck
         final User user = getUser(userId);
-        final Deck newDeck = createNewDeckFromSource(sourceDeck, trimmedNewName, destinationFolder, user);
+        final Deck newDeck = createNewDeckFromSource(sourceDeck, finalName, destinationFolder, user);
 
         // Step 7: Copy all cards from source to new deck
         copyCardsToNewDeck(sourceDeck, newDeck, user);
@@ -464,7 +541,77 @@ public class DeckServiceImpl implements IDeckService {
     }
 
     /**
+     * Validate deck name is unique within folder or root level (excluding current deck)
+     * Used for update operations
+     */
+    private void validateNameUniquenessForUpdate(final String name, final Folder folder, final UUID userId, final UUID excludeDeckId) {
+        final String trimmedName = StringUtils.trim(name);
+
+        final boolean nameExists = isNameExistsInFolderExcluding(trimmedName, folder, userId, excludeDeckId);
+
+        if (nameExists) {
+            log.warn("event={} Deck name already exists: name={}, folderId={}, userId={}, excludeDeckId={}", LogEvent.EX_DUPLICATE_RESOURCE, trimmedName,
+                folder != null ? folder.getId() : null,
+                userId, excludeDeckId);
+
+            throw new DuplicateResourceException(
+                "DECK_002",
+                getMessage("error.deck.name.exists", trimmedName)
+            );
+        }
+    }
+
+    /**
+     * Check if deck name exists in folder or root level (excluding specific deck)
+     */
+    private boolean isNameExistsInFolderExcluding(final String name, final Folder folder, final UUID userId, final UUID excludeDeckId) {
+        if (folder == null) {
+            // Root level
+            return deckRepository.existsByUserIdAndRootAndNameExcluding(userId, name, excludeDeckId);
+        }
+
+        // Folder level
+        return deckRepository.existsByFolderIdAndNameExcluding(folder.getId(), name, excludeDeckId);
+    }
+
+    /**
+     * Update deck fields from request
+     */
+    private void updateDeckFields(final Deck deck, final UpdateDeckRequest request) {
+        final String trimmedName = StringUtils.trim(request.getName());
+        final String trimmedDescription = StringUtils.trim(request.getDescription());
+
+        deck.setName(trimmedName);
+        if (trimmedDescription != null) {
+            deck.setDescription(trimmedDescription);
+        }
+    }
+
+    /**
+     * Resolve name conflict by appending "(copy)" suffix if needed
+     * UC-016: BR-DECK-COPY-04 - Name conflict resolution
+     */
+    private String resolveNameConflict(final String name, final Folder folder, final UUID userId) {
+        if (!isNameExistsInFolder(name, folder, userId)) {
+            return name;
+        }
+
+        // Try with "(copy)" suffix
+        String newName = name + " (copy)";
+        int counter = 1;
+
+        while (isNameExistsInFolder(newName, folder, userId)) {
+            counter++;
+            newName = name + " (copy " + counter + ")";
+        }
+
+        log.debug("event={} Resolved name conflict: original={}, resolved={}", LogEvent.SUCCESS, name, newName);
+        return newName;
+    }
+
+    /**
      * Validate deck name is unique within folder or root level
+     * Used for create operations
      */
     private void validateNameUniqueness(final String name, final Folder folder, final UUID userId) {
         final String trimmedName = StringUtils.trim(name);
@@ -579,18 +726,18 @@ public class DeckServiceImpl implements IDeckService {
 
     /**
      * Validate deck size for copy operation
-     * UC-013: BR-048 - < 100 cards for synchronous copy
+     * UC-016: BR-DECK-COPY-01 - <= 1000 cards for synchronous copy
      */
     private void validateDeckSizeForCopy(final Deck deck) {
         final long cardCount = deck.getCardCount();
 
-        if (cardCount >= 100) {
-            log.warn("event={} Deck too large for synchronous copy: deckId={}, cardCount={}, maximum=99", LogEvent.EX_VALIDATION,
+        if (cardCount > 10000) {
+            log.warn("event={} Deck too large to copy: deckId={}, cardCount={}, maximum=10000", LogEvent.EX_VALIDATION,
                 deck.getId(), cardCount);
 
             throw new ValidationException(
                 "DECK_007",
-                getMessage("error.deck.copy.too.large", cardCount, 99)
+                getMessage("error.deck.copy.too.large", cardCount, 10000)
             );
         }
     }

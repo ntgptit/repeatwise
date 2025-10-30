@@ -2,7 +2,7 @@
 
 ## 1. Brief Description
 
-Registered user logs into RepeatWise system using email and password, receiving access token and refresh token for authenticated sessions.
+Registered user logs into RepeatWise system using username or email and password, receiving access token and refresh token for authenticated sessions.
 
 ## 2. Actors
 
@@ -40,54 +40,61 @@ Registered user logs into RepeatWise system using email and password, receiving 
 
 1. User accesses Login page
 2. System displays login form with fields:
-   - Email (required)
+   - Username or Email (required)
    - Password (required)
    - Remember me checkbox (optional - future)
-3. User enters email "<user@example.com>"
+3. User enters username or email (e.g., "john_doe123" or "<user@example.com>")
 4. User enters password "Password123"
 5. User clicks "Login" button
 6. System validates input format:
-   - Email is not empty
+   - Username/Email is not empty
    - Password is not empty
-7. System normalizes email to lowercase: "<user@example.com>"
-8. System queries database for user by email
-9. System retrieves user record with password_hash
-10. System compares input password with stored password_hash using bcrypt.compare()
-11. Password match confirmed
-12. System generates access token (JWT):
-    - Payload: { userId, email, iat, exp }
+7. System determines if input is email or username:
+   - If input contains "@" symbol: treat as email
+   - Otherwise: treat as username
+8. System normalizes input:
+   - If email: convert to lowercase
+   - If username: keep as provided (case-sensitive)
+9. System queries database for user:
+   - If email: query by email (case-insensitive)
+   - If username: query by username (case-sensitive)
+10. System retrieves user record with password_hash
+11. System compares input password with stored password_hash using bcrypt.compare()
+12. Password match confirmed
+13. System generates access token (JWT):
+    - Payload: { userId, email, username, iat, exp }
     - Expiry: 15 minutes (900 seconds)
     - Signed with secret key
-13. System generates refresh token:
+14. System generates refresh token:
     - Random secure token (UUID or crypto.randomBytes)
     - Expiry: 7 days
-14. System hashes refresh token with bcrypt
-15. System saves refresh token to `refresh_tokens` table:
+15. System hashes refresh token with bcrypt
+16. System saves refresh token to `refresh_tokens` table:
     - id: UUID
     - user_id: user id
     - token_hash: bcrypt(refresh_token)
     - expires_at: current time + 7 days
     - created_at: current timestamp
-16. System returns response:
+17. System returns response:
     - Body: { access_token, expires_in: 900, user: {...} }
     - Set-Cookie: refresh_token=<token>; HttpOnly; Secure; SameSite=Strict; Max-Age=604800
-17. Client stores access token in memory (not localStorage for security)
-18. System redirects user to Dashboard
-19. User sees Dashboard with personalized content
+18. Client stores access token in memory (not localStorage for security)
+19. System redirects user to Dashboard
+20. User sees Dashboard with personalized content
 
 ## 6. Alternative Flows
 
-### 6a. Invalid Credentials - Email Not Found
+### 6a. Invalid Credentials - Username/Email Not Found
 
-**Trigger:** Step 8 - Email does not exist in database
+**Trigger:** Step 9 - Username or Email does not exist in database
 
-1. System queries database and finds no matching email
+1. System queries database and finds no matching username or email
 2. System returns 401 Unauthorized
-3. UI displays generic error: "Invalid email or password"
+3. UI displays generic error: "Invalid username/email or password"
 4. User remains on login page
 5. Use case ends (failure)
 
-**Note:** Use generic error message to avoid disclosing whether email exists (security best practice)
+**Note:** Use generic error message to avoid disclosing whether username/email exists (security best practice)
 
 ### 6b. Invalid Credentials - Wrong Password
 
@@ -96,7 +103,7 @@ Registered user logs into RepeatWise system using email and password, receiving 
 1. System compares password with hash
 2. bcrypt.compare() returns false
 3. System returns 401 Unauthorized
-4. UI displays generic error: "Invalid email or password"
+3. UI displays generic error: "Invalid username/email or password"
 5. User remains on login page
 6. Use case ends (failure)
 
@@ -180,6 +187,7 @@ Registered user logs into RepeatWise system using email and password, receiving 
   {
     "userId": "uuid",
     "email": "user@example.com",
+    "username": "john_doe123",
     "iat": 1234567890,
     "exp": 1234568790
   }
@@ -206,8 +214,9 @@ Registered user logs into RepeatWise system using email and password, receiving 
 
 ### 8.3 Database Query Optimization
 
-- Index on users.email for fast lookup
-- Single query to fetch user with password_hash
+- Index on users.email for fast email lookup
+- Index on users.username for fast username lookup
+- Single query to fetch user with password_hash (by email or username)
 
 ## 9. Frequency of Occurrence
 
@@ -254,7 +263,16 @@ POST /api/auth/login
 
 ```json
 {
-  "email": "user@example.com",
+  "usernameOrEmail": "john_doe123",
+  "password": "Password123"
+}
+```
+
+**Alternative (with email):**
+
+```json
+{
+  "usernameOrEmail": "user@example.com",
   "password": "Password123"
 }
 ```
@@ -268,6 +286,7 @@ POST /api/auth/login
   "user": {
     "id": "uuid",
     "email": "user@example.com",
+    "username": "john_doe123",
     "name": "John Doe",
     "language": "VI",
     "theme": "SYSTEM",
@@ -300,8 +319,8 @@ Set-Cookie: refresh_token=<secure-token>; HttpOnly; Secure; SameSite=Strict; Max
   "error": "Validation failed",
   "details": [
     {
-      "field": "email",
-      "message": "Email is required"
+      "field": "usernameOrEmail",
+      "message": "Username or email is required"
     }
   ]
 }
@@ -327,29 +346,35 @@ Set-Cookie: refresh_token=<secure-token>; HttpOnly; Secure; SameSite=Strict; Max
 
 ## 15. Test Cases
 
-### TC-002-001: Successful Login
+### TC-002-001: Successful Login with Email
 
 - **Given:** User with email "<user@example.com>" and password "Password123" exists
-- **When:** User submits valid credentials
+- **When:** User submits valid email and password
+- **Then:** Access token returned, refresh token set in cookie, redirected to dashboard
+
+### TC-002-001b: Successful Login with Username
+
+- **Given:** User with username "john_doe123" and password "Password123" exists
+- **When:** User submits valid username and password
 - **Then:** Access token returned, refresh token set in cookie, redirected to dashboard
 
 ### TC-002-002: Wrong Password
 
-- **Given:** User with email "<user@example.com>" exists
+- **Given:** User with username "john_doe123" or email "<user@example.com>" exists
 - **When:** User submits wrong password "WrongPass"
-- **Then:** 401 error with message "Invalid email or password"
+- **Then:** 401 error with message "Invalid username/email or password"
 
-### TC-002-003: Email Not Found
+### TC-002-003: Username/Email Not Found
 
-- **Given:** Email "<nonexistent@example.com>" does not exist
+- **Given:** Username "nonexistent" or email "<nonexistent@example.com>" does not exist
 - **When:** User submits credentials
-- **Then:** 401 error with generic message "Invalid email or password"
+- **Then:** 401 error with generic message "Invalid username/email or password"
 
-### TC-002-004: Empty Email
+### TC-002-004: Empty Username/Email
 
-- **Given:** User leaves email field empty
+- **Given:** User leaves username/email field empty
 - **When:** User clicks Login
-- **Then:** Validation error "Email is required"
+- **Then:** Validation error "Username or email is required"
 
 ### TC-002-005: Empty Password
 
@@ -363,13 +388,25 @@ Set-Cookie: refresh_token=<secure-token>; HttpOnly; Secure; SameSite=Strict; Max
 - **When:** User logs in with "<user@example.com>"
 - **Then:** Login successful (email normalized to lowercase)
 
-### TC-002-007: Token Expiry
+### TC-002-007: Case Sensitive Username
+
+- **Given:** User registered with username "JohnDoe"
+- **When:** User logs in with "johndoe"
+- **Then:** 401 error (username is case-sensitive)
+
+### TC-002-008: Email Format Detection
+
+- **Given:** User with username "test@example" exists
+- **When:** User logs in with "test@example"
+- **Then:** System treats as email (checks email field), login fails if no email match
+
+### TC-002-009: Token Expiry
 
 - **Given:** User logged in successfully
 - **When:** Access token expires after 15 minutes
 - **Then:** Subsequent API calls return 401, client should refresh token
 
-### TC-002-008: Refresh Token in Cookie
+### TC-002-010: Refresh Token in Cookie
 
 - **Given:** User logged in successfully
 - **When:** Response received

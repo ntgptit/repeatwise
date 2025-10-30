@@ -5,12 +5,15 @@ import lombok.Getter;
 /**
  * User theme preference enum
  * Design: Entity Specifications - User entity, theme field
+ *
+ * Requirements:
+ * - Database Schema: users.theme constraint (LIGHT, DARK, SYSTEM)
  */
 @Getter
 public enum Theme {
     LIGHT("Light Mode"),
     DARK("Dark Mode"),
-    AUTO("Auto (System)");
+    SYSTEM("System (Auto)");
 
     private final String description;
 

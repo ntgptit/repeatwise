@@ -75,6 +75,27 @@ public interface IAuthService {
     void logoutAll(UUID userId);
 
     /**
+     * Refresh access token using refresh token (token rotation)
+     *
+     * Business Logic:
+     * 1. Extract refresh token from cookie
+     * 2. Find refresh token in database
+     * 3. Validate token (not expired, not revoked, belongs to user)
+     * 4. Generate new access token (15 minutes expiry)
+     * 5. Generate new refresh token (token rotation)
+     * 6. Revoke old refresh token
+     * 7. Save new refresh token
+     * 8. Return new access token and expires_in
+     *
+     * Use Case: UC-003 - Refresh Access Token
+     *
+     * @param refreshToken Refresh token string from HttpOnly cookie
+     * @return LoginResponse with new accessToken and expiresIn
+     * @throws InvalidTokenException if token not found, expired, or revoked
+     */
+    LoginResponse refreshToken(String refreshToken);
+
+    /**
      * Register new user account
      *
      * Business Logic:

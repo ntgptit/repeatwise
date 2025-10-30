@@ -41,4 +41,22 @@ public interface IUserService {
      * @return UserProfileResponse with updated profile
      */
     UserProfileResponse updateProfile(UUID userId, UpdateProfileRequest request);
+
+    /**
+     * Change user password
+     * Used by: POST /api/users/change-password
+     *
+     * Business Rules:
+     * - Current password must be verified
+     * - New password must be different from current password
+     * - New password must be at least 8 characters
+     * - All refresh tokens for user are revoked (logout from all devices)
+     *
+     * Use Case: UC-006 - Change Password
+     *
+     * @param userId Current authenticated user ID
+     * @param request ChangePasswordRequest with currentPassword, newPassword, confirmNewPassword
+     * @throws InvalidCredentialsException if current password is incorrect
+     */
+    void changePassword(UUID userId, com.repeatwise.dto.request.user.ChangePasswordRequest request);
 }

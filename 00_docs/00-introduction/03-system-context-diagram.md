@@ -408,7 +408,7 @@ Client                 Backend              Database
 
 **Non-Functional**:
 
-- ✅ Performance: < 200ms API, < 300ms folder load
+- ✅ Performance: Average < 200ms API, P95 < 300ms; < 300ms folder load
 - ✅ Security: bcrypt, HTTPS, JWT rotation
 - ✅ Reliability: Soft delete, daily backups
 - ✅ Usability: Dark/Light mode, i18n (VI/EN)

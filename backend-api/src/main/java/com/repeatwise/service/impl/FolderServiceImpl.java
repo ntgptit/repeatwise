@@ -478,7 +478,16 @@ public class FolderServiceImpl implements IFolderService {
 
     @Override
     public FolderResponse getFolderById(final UUID folderId, final UUID userId) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // Guard clause: Validate parameters
+        Objects.requireNonNull(folderId, "Folder ID cannot be null");
+        Objects.requireNonNull(userId, "User ID cannot be null");
+
+        log.info("Getting folder by ID: folderId={}, userId={}", folderId, userId);
+
+        // Get folder with ownership check
+        final var folder = getFolderByIdAndUserId(folderId, userId);
+
+        return this.folderMapper.toResponse(folder);
     }
 
     // ==================== UC-007: Move Folder - Helper Methods ====================
@@ -632,7 +641,99 @@ public class FolderServiceImpl implements IFolderService {
 
     @Override
     public List<FolderTreeResponse> getFolderTree(final UUID userId, final Integer maxDepth) {
-        throw new UnsupportedOperationException("Not implemented yet");
+        // Guard clause: Validate parameters
+        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(maxDepth, "Max depth cannot be null");
+
+        log.info("Getting folder tree: userId={}, maxDepth={}", userId, maxDepth);
+
+        // Get all folders for user up to max depth
+        final var folders = this.folderRepository.findByUserIdAndMaxDepth(userId, maxDepth);
+
+        if (folders.isEmpty()) {
+            log.debug("No folders found for user: userId={}", userId);
+            return List.of();
+        }
+
+        // Get folder IDs for stats lookup
+        final var folderIds = folders.stream()
+                .map(Folder::getId)
+                .toList();
+
+        // Get stats for all folders (batch query)
+        final var statsMap = this.folderStatsRepository.findByFolderIdsAndUserId(folderIds, userId)
+                .stream()
+                .collect(java.util.stream.Collectors.toMap(
+                        fs -> fs.getFolder().getId(),
+                        fs -> fs
+                ));
+
+        // Build tree structure
+        return buildFolderTree(folders, statsMap);
+    }
+
+    /**
+     * Build hierarchical tree structure from flat folder list
+     *
+     * Steps:
+     * 1. Convert folders to tree responses with stats
+     * 2. Build parent-child relationships
+     * 3. Return only root folders (children are nested)
+     */
+    private List<FolderTreeResponse> buildFolderTree(
+            final List<Folder> folders,
+            final java.util.Map<UUID, FolderStats> statsMap) {
+
+        // Convert all folders to tree responses
+        final var folderMap = new java.util.HashMap<UUID, FolderTreeResponse>();
+        for (final Folder folder : folders) {
+            final var treeResponse = this.folderMapper.toTreeResponse(folder);
+            enrichTreeResponseWithStats(treeResponse, folder, statsMap.get(folder.getId()));
+            folderMap.put(folder.getId(), treeResponse);
+        }
+
+        // Build parent-child relationships
+        final var rootFolders = new java.util.ArrayList<FolderTreeResponse>();
+        for (final Folder folder : folders) {
+            final var treeResponse = folderMap.get(folder.getId());
+
+            if (folder.getParentFolder() == null) {
+                // Root folder
+                rootFolders.add(treeResponse);
+            } else {
+                // Child folder - add to parent's children list
+                final var parentResponse = folderMap.get(folder.getParentFolder().getId());
+                if (parentResponse != null) {
+                    parentResponse.addChild(treeResponse);
+                }
+            }
+        }
+
+        // Sort root folders by name
+        rootFolders.sort(Comparator.comparing(FolderTreeResponse::getName));
+
+        log.debug("Built folder tree: totalFolders={}, rootFolders={}", folders.size(), rootFolders.size());
+
+        return rootFolders;
+    }
+
+    /**
+     * Enrich tree response with statistics from FolderStats
+     */
+    private void enrichTreeResponseWithStats(
+            final FolderTreeResponse treeResponse,
+            final Folder folder,
+            final FolderStats stats) {
+
+        if (stats == null) {
+            // No stats available, keep defaults (0)
+            return;
+        }
+
+        treeResponse.setTotalCards(stats.getTotalCardsCount());
+        treeResponse.setDueCards(stats.getDueCardsCount());
+        treeResponse.setNewCards(stats.getNewCardsCount());
+        treeResponse.setMatureCards(stats.getMatureCardsCount());
     }
 
     /**

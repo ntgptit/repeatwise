@@ -16,12 +16,12 @@ Each story includes Priority (MoSCoW) and Story Points (relative effort).
 
 ### US-1.1: Register an account
 
-As a new user, I want to sign up with email and password, so that I can use the app to study.
+As a new user, I want to sign up with email, optional username, and password, so that I can use the app to study.
 Priority: Must Have — Story Points: 3
 
 ### US-1.2: Log in
 
-As a registered user, I want to log in with my email and password, so that I can access my study data.
+As a registered user, I want to log in with my username or email and password, so that I can access my study data.
 Priority: Must Have — Story Points: 3
 
 ### US-1.3: Auto refresh token
@@ -41,7 +41,7 @@ Priority: Should Have — Story Points: 3
 
 ### US-1.6: Update profile
 
-As a user, I want to update my name, timezone, language, and theme, so that the app matches my preferences and locale.
+As a user, I want to update my name, username (if not set during registration), timezone, language, and theme, so that the app matches my preferences and locale.
 Priority: Must Have — Story Points: 3
 
 ### US-1.7: Change password

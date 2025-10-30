@@ -50,9 +50,6 @@ public interface UserMapper {
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
     @Mapping(target = "language", constant = "EN")
-    @Mapping(target = "theme", constant = "LIGHT")
-    @Mapping(target = "dateOfBirth", ignore = true)
-    @Mapping(target = "bio", ignore = true)
-    @Mapping(target = "avatarUrl", ignore = true)
+    @Mapping(target = "theme", constant = "SYSTEM")
     User toEntity(RegisterRequest request);
 }

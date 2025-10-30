@@ -5,9 +5,9 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import com.repeatwise.dto.request.CreateCardRequest;
-import com.repeatwise.dto.request.UpdateCardRequest;
-import com.repeatwise.dto.response.CardResponse;
+import com.repeatwise.dto.request.card.CreateCardRequest;
+import com.repeatwise.dto.request.card.UpdateCardRequest;
+import com.repeatwise.dto.response.card.CardResponse;
 
 /**
  * Card service interface

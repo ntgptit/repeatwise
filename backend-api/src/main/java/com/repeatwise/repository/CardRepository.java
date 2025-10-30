@@ -7,6 +7,7 @@ import java.util.UUID;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -80,4 +81,26 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
      * @return List of cards
      */
     List<Card> findByDeckIdAndDeletedAtIsNull(UUID deckId);
+
+    /**
+     * Soft delete all cards in a deck
+     * UC-017: Delete Deck - Cascade soft delete to cards
+     *
+     * @param deckId Deck UUID
+     */
+    @Modifying
+    @Query("UPDATE Card c SET c.deletedAt = CURRENT_TIMESTAMP " +
+           "WHERE c.deck.id = :deckId AND c.deletedAt IS NULL")
+    void softDeleteByDeckId(@Param("deckId") UUID deckId);
+
+    /**
+     * Restore all soft-deleted cards in a deck
+     * UC-017: Restore Deck - Restore cards along with deck
+     *
+     * @param deckId Deck UUID
+     */
+    @Modifying
+    @Query("UPDATE Card c SET c.deletedAt = NULL " +
+           "WHERE c.deck.id = :deckId AND c.deletedAt IS NOT NULL")
+    void restoreByDeckId(@Param("deckId") UUID deckId);
 }

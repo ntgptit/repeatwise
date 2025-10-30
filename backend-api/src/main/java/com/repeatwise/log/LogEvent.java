@@ -14,6 +14,7 @@ public enum LogEvent {
     // User
     USER_GET_PROFILE,
     USER_UPDATE_PROFILE,
+    USER_CHANGE_PASSWORD,
     USER_NOT_FOUND,
 
     // Auth

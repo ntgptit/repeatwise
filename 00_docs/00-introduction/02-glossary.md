@@ -166,9 +166,10 @@ Tài liệu này định nghĩa các thuật ngữ, khái niệm và abbreviatio
 - Hành động khi user rate "Again" (quên card)
 - Options:
   - Move to Box 1: Reset về ô đầu (default)
-  - Move down N boxes: Lùi lại N ô (1-3)
-  - Stay in box: Giữ nguyên ô, giảm interval
-- Configurable trong SRS settings
+  - Move down N boxes: Lùi lại N ô (1-3, configurable), minimum là Box 1
+  - Repeat in Session: Giữ nguyên ô, hiển thị lại trong session hiện tại
+- Configurable trong SRS settings (forgotten_card_action + move_down_boxes)
+- Ví dụ: Box 5 với move_down_boxes=2 → Box 3
 
 ### I
 
@@ -276,7 +277,10 @@ Tài liệu này định nghĩa các thuật ngữ, khái niệm và abbreviatio
 
 - Đánh giá của user sau khi review card
 - 4 options:
-  - **Again** (< 1 min): Không nhớ/sai → action based on forgotten_card_action
+  - **Again** (< 1 min): Không nhớ/sai → action based on forgotten_card_action:
+    - MOVE_TO_BOX_1: Reset về Box 1
+    - MOVE_DOWN_N_BOXES: Lùi lại N ô (1-3, configurable), minimum Box 1
+    - REPEAT_IN_SESSION: Giữ nguyên ô, hiển thị lại trong session
   - **Hard** (< 6 min): Nhớ khó khăn → stay in box, reduce interval
   - **Good** (next interval): Nhớ tốt → move to next box
   - **Easy** (4x interval): Nhớ rất dễ → skip 1-2 boxes
@@ -386,6 +390,16 @@ Tài liệu này định nghĩa các thuật ngữ, khái niệm và abbreviatio
 - Support keyboard navigation (future)
 
 ### U
+
+**Username**
+
+- Tên người dùng tùy chọn (3-30 ký tự)
+- Format: alphanumeric + underscore/hyphen only
+- Case-sensitive (phân biệt hoa thường)
+- **Must be unique** trong hệ thống nếu được cung cấp (enforced at database level với unique constraint)
+- Có thể đăng ký trong registration hoặc set sau trong profile
+- Có thể dùng để login thay cho email
+- Database constraint: `UNIQUE` trên column `users.username`
 
 **User Stats**
 

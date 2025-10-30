@@ -1,7 +1,5 @@
 package com.repeatwise.entity;
 
-import java.time.LocalDate;
-
 import org.hibernate.annotations.SQLRestriction;
 
 import com.repeatwise.entity.base.SoftDeletableEntity;
@@ -83,26 +81,13 @@ public class User extends SoftDeletableEntity {
     @Enumerated(EnumType.STRING)
     @Column(name = "theme", nullable = false, length = 10)
     @Builder.Default
-    private Theme theme = Theme.LIGHT;
+    private Theme theme = Theme.SYSTEM;
 
     @NotBlank(message = "{error.user.timezone.required}")
     @Size(max = 50, message = "{error.user.timezone.length}")
     @Column(name = "timezone", nullable = false, length = 50)
     @Builder.Default
     private String timezone = "Asia/Ho_Chi_Minh";
-
-    @Column(name = "date_of_birth")
-    private LocalDate dateOfBirth;
-
-    @Size(max = 500, message = "{error.user.bio.length}")
-    @Column(name = "bio", length = 500)
-    private String bio;
-
-    @Size(max = 500, message = "{error.user.avatar.length}")
-    @Column(name = "avatar_url", length = 500)
-    private String avatarUrl;
-
-    // Relationships will be added when needed (folders, decks, etc.)
 
     @Override
     public boolean equals(final Object o) {

@@ -45,7 +45,7 @@ import lombok.NoArgsConstructor;
 public class MoveDeckRequest {
 
     /**
-     * Target folder ID
+     * Target folder ID (destination)
      * - If null: move to root level (no folder)
      * - If not null: move to specified folder
      *
@@ -53,5 +53,5 @@ public class MoveDeckRequest {
      * - Must exist and belong to user
      * - Cannot be same as current folder
      */
-    private UUID newFolderId;
+    private UUID destinationFolderId;
 }

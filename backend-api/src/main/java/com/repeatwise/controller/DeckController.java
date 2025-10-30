@@ -4,6 +4,7 @@ import com.repeatwise.dto.request.deck.CopyDeckRequest;
 import com.repeatwise.dto.request.deck.CreateDeckRequest;
 import com.repeatwise.dto.request.deck.MoveDeckRequest;
 import com.repeatwise.dto.request.deck.UpdateDeckRequest;
+import com.repeatwise.dto.response.deck.DeckDeleteResponse;
 import com.repeatwise.dto.response.deck.DeckResponse;
 import com.repeatwise.security.SecurityUtils;
 import com.repeatwise.service.IDeckService;
@@ -137,20 +138,38 @@ public class DeckController {
     }
 
     /**
-     * Update deck (rename and update description)
+     * Update deck (rename and update description) (UC-014)
+     *
+     * Requirements:
+     * - UC-014: Update Deck
+     * - BR-DECK-01: Deck name unique within same folder/root
+     * - BR-DECK-02: Deck name max length 100 characters, not empty
+     *
+     * Request Body:
+     * {
+     *   "name": "IELTS Academic Vocabulary",
+     *   "description": "Advanced vocabulary for IELTS Band 7+"
+     * }
+     *
+     * Response: 200 OK with updated deck
+     *
+     * Error Responses:
+     * - 400 Bad Request: Validation errors, duplicate name
+     * - 404 Not Found: Deck not found
+     * - 409 Conflict: Concurrent update conflict
      *
      * @param deckId Deck ID to update
      * @param request Update deck request
      * @return Updated deck response
      */
-    @PutMapping("/{deckId}")
+    @PatchMapping("/{deckId}")
     public ResponseEntity<DeckResponse> updateDeck(
             @PathVariable final UUID deckId,
             @Valid @RequestBody final UpdateDeckRequest request) {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("event={} PUT /api/decks/{} - Updating deck: userId={}", LogEvent.START, deckId, userId);
+        log.info("event={} PATCH /api/decks/{} - Updating deck: userId={}", LogEvent.START, deckId, userId);
 
         final DeckResponse response = deckService.updateDeck(deckId, request, userId);
 
@@ -158,21 +177,38 @@ public class DeckController {
     }
 
     /**
-     * Soft delete deck
+     * Soft delete deck (UC-017)
+     *
+     * Requirements:
+     * - UC-017: Delete Deck
+     * - BR-DEL-01: Soft delete using deleted_at timestamp
+     * - BR-DEL-02: Permanent cleanup after 30 days
+     * - BR-DEL-03: Only deck owner can delete deck
+     *
+     * Response: 200 OK with success message and deletedAt timestamp
+     * {
+     *   "message": "Deck deleted successfully. You can restore it within 30 days.",
+     *   "deletedAt": "2025-01-31T17:00:00Z"
+     * }
+     *
+     * Error Responses:
+     * - 404 Not Found: Deck not found
+     * - 400 Bad Request: Deck already deleted
+     * - 403 Forbidden: Access denied
      *
      * @param deckId Deck ID to delete
-     * @return 204 No Content
+     * @return 200 OK with deletion response
      */
     @DeleteMapping("/{deckId}")
-    public ResponseEntity<Void> deleteDeck(@PathVariable final UUID deckId) {
+    public ResponseEntity<DeckDeleteResponse> deleteDeck(@PathVariable final UUID deckId) {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
         log.info("event={} DELETE /api/decks/{} - Soft-deleting deck: userId={}", LogEvent.START, deckId, userId);
 
-        deckService.deleteDeck(deckId, userId);
+        final DeckDeleteResponse response = deckService.deleteDeck(deckId, userId);
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok(response);
     }
 
     /**
@@ -237,10 +273,10 @@ public class DeckController {
     // ==================== UC-012: Move Deck ====================
 
     /**
-     * Move deck to a different folder (UC-012)
+     * Move deck to a different folder (UC-015)
      *
      * Requirements:
-     * - UC-012: Move Deck
+     * - UC-015: Move Deck
      * - BR-040: Move validation
      * - BR-041: Name conflict handling
      * - BR-042: Statistics update
@@ -248,7 +284,7 @@ public class DeckController {
      *
      * Request Body:
      * {
-     *   "newFolderId": "uuid" // nullable - null means move to root
+     *   "destinationFolderId": "uuid" // nullable - null means move to root
      * }
      *
      * Response: 200 OK with DeckResponse
@@ -299,13 +335,13 @@ public class DeckController {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("event={} POST /api/decks/{}/move - Moving deck: newFolderId={}, userId={}",
-            LogEvent.DECK_MOVE_START, deckId, request.getNewFolderId(), userId);
+        log.info("event={} POST /api/decks/{}/move - Moving deck: destinationFolderId={}, userId={}",
+            LogEvent.DECK_MOVE_START, deckId, request.getDestinationFolderId(), userId);
 
-        final DeckResponse response = deckService.moveDeck(deckId, request.getNewFolderId(), userId);
+        final DeckResponse response = deckService.moveDeck(deckId, request.getDestinationFolderId(), userId);
 
-        log.info("event={} Deck moved successfully: deckId={}, newFolderId={}, userId={}",
-            LogEvent.DECK_MOVE_SUCCESS, deckId, request.getNewFolderId(), userId);
+        log.info("event={} Deck moved successfully: deckId={}, destinationFolderId={}, userId={}",
+            LogEvent.DECK_MOVE_SUCCESS, deckId, request.getDestinationFolderId(), userId);
 
         return ResponseEntity.ok(response);
     }

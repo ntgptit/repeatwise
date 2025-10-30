@@ -2,7 +2,7 @@
 
 ## 1. Brief Description
 
-User registers a new account in RepeatWise system using email and password.
+User registers a new account in RepeatWise system using email, optional username, and password.
 
 ## 2. Actors
 
@@ -39,23 +39,28 @@ User registers a new account in RepeatWise system using email and password.
 1. User accesses Registration page
 2. System displays registration form with fields:
    - Email (required)
+   - Username (optional, 3-30 chars, alphanumeric + underscore/hyphen)
    - Password (required, min 8 chars)
    - Confirm Password (required, must match password)
    - Name (optional)
 3. User enters valid email (e.g., "<user@example.com>")
-4. User enters strong password (e 8 characters)
-5. User enters matching confirm password
-6. User enters name (optional)
-7. User clicks "Register" button
-8. System validates input:
+4. User optionally enters username (e.g., "john_doe123")
+5. User enters strong password (e 8 characters)
+6. User enters matching confirm password
+7. User enters name (optional)
+8. User clicks "Register" button
+9. System validates input:
    - Email format is valid (regex)
+   - Username format is valid if provided (3-30 chars, alphanumeric + underscore/hyphen)
    - Password e 8 characters
    - Confirm password matches password
-9. System checks email does not exist in database (case-insensitive)
-10. System hashes password using bcrypt (cost factor 12)
-11. System creates record in `users` table:
+10. System checks email does not exist in database (case-insensitive)
+11. System checks username does not exist if provided (case-sensitive, validated against unique constraint)
+12. System hashes password using bcrypt (cost factor 12)
+13. System creates record in `users` table:
     - id: UUID (auto-generated)
     - email: lowercase(input email)
+    - username: input username or null
     - password_hash: bcrypt hash
     - name: input name or null
     - timezone: auto-detect or default
@@ -69,6 +74,7 @@ User registers a new account in RepeatWise system using email and password.
     - notification_enabled: true
     - notification_time: '09:00'
     - forgotten_card_action: 'MOVE_TO_BOX_1'
+    - move_down_boxes: 1
     - new_cards_per_day: 20
     - max_reviews_per_day: 200
 13. System creates record in `user_stats` table:
@@ -102,29 +108,51 @@ User registers a new account in RepeatWise system using email and password.
 4. User must enter valid email
 5. Return to Step 3 (Main Flow)
 
-### 6c. Weak Password
+### 6c. Username Already Exists
 
-**Trigger:** Step 8 - Password < 8 characters
+**Trigger:** Step 11 - Username already exists in database (violates unique constraint)
+
+1. System detects username is already taken (checks unique constraint)
+2. System returns 400 Bad Request
+3. UI displays error message: "Username already exists. Please choose another username."
+4. User remains on registration page
+5. Use case ends (failure)
+
+**Note:** Database unique constraint on `users.username` ensures no duplicate usernames can be saved.
+
+### 6d. Invalid Username Format
+
+**Trigger:** Step 9 - Username format is invalid
+
+1. System validates username and detects invalid format
+2. UI displays inline validation error: "Username must be 3-30 characters, alphanumeric + underscore/hyphen only"
+3. "Register" button is disabled
+4. User must enter valid username or leave it empty
+5. Return to Step 4 (Main Flow)
+
+### 6e. Weak Password
+
+**Trigger:** Step 9 - Password < 8 characters
 
 1. System validates password and detects insufficient length
 2. UI displays inline validation error: "Password must be at least 8 characters"
 3. "Register" button is disabled
 4. User must enter valid password
-5. Return to Step 4 (Main Flow)
+5. Return to Step 5 (Main Flow)
 
-### 6d. Password Mismatch
+### 6f. Password Mismatch
 
-**Trigger:** Step 8 - Confirm password does not match password
+**Trigger:** Step 9 - Confirm password does not match password
 
 1. System validates and detects password mismatch
 2. UI displays inline validation error: "Passwords do not match"
 3. "Register" button is disabled
 4. User must re-enter confirm password
-5. Return to Step 5 (Main Flow)
+5. Return to Step 6 (Main Flow)
 
-### 6e. Network Error
+### 6g. Network Error
 
-**Trigger:** Step 11-13 - Database connection error or server error
+**Trigger:** Step 13-15 - Database connection error or server error
 
 1. System encounters error when creating user in database
 2. System rolls back transaction (if partially created)
@@ -133,9 +161,9 @@ User registers a new account in RepeatWise system using email and password.
 5. User remains on registration page
 6. Use case ends (failure)
 
-### 6f. Empty Required Fields
+### 6h. Empty Required Fields
 
-**Trigger:** Step 7 - User clicks Register with empty required fields
+**Trigger:** Step 8 - User clicks Register with empty required fields
 
 1. Client-side validation detects empty required fields
 2. UI displays validation errors for each empty field
@@ -201,8 +229,7 @@ User registers a new account in RepeatWise system using email and password.
 
 - **Email verification:** MVP does not require email verification. Future version may add email verification flow.
 - **CAPTCHA:** MVP does not include CAPTCHA. May need to add if spam registration occurs.
-- **Password complexity:** MVP only requires min 8 chars. Future may require uppercase, number, special char.
-- **Username:** MVP does not have username, only uses email. Future may add username field.
+- **Username:** MVP supports optional username during registration. **Username must be unique** if provided (enforced at database level with unique constraint).
 - **Social login:** OAuth (Google/Facebook) is out of scope for MVP.
 
 ## 11. Related Use Cases
@@ -214,6 +241,7 @@ User registers a new account in RepeatWise system using email and password.
 ## 12. Business Rules References
 
 - **BR-1.1:** Email Validation
+- **BR-1.1a:** Username Validation
 - **BR-1.2:** Password Policy
 - **BR-1.4:** User Profile defaults
 
@@ -236,6 +264,7 @@ POST /api/auth/register
 ```json
 {
   "email": "user@example.com",
+  "username": "john_doe123", // optional
   "password": "Password123",
   "confirmPassword": "Password123",
   "name": "John Doe" // optional

@@ -10,19 +10,24 @@ This document summarizes the functional and non-functional requirements for the 
 
 **FR-1.1: User Registration**
 
-- Users can register with email and password.
-- Validation: email must be unique; password length >= 8 characters.
+- Users can register with email, username (optional), and password.
+- Validation:
+  - Email must be unique; password length >= 8 characters.
+  - Username is optional but **must be unique** if provided (3-30 characters, alphanumeric + underscore/hyphen).
+  - Username uniqueness is enforced at database level with unique constraint.
 - Do not auto‑login after successful registration.
 
 **FR-1.2: User Authentication**
 
-- Login with email + password.
+- Login with username or email + password.
+- System determines if input is username or email (email format check).
 - JWT access token (15 minutes) and refresh token (7 days).
 - Refresh token stored in HTTP‑only cookie and rotated on refresh.
 
 **FR-1.3: User Profile**
 
-- Update profile: name, timezone, language (VI/EN), theme (Light/Dark/System).
+- Update profile: name, username (if not set during registration), timezone, language (VI/EN), theme (Light/Dark/System).
+- When setting username in profile, it must be unique (validated at database level).
 - Change password.
 - Logout (current device) and Logout all devices.
 
@@ -130,15 +135,36 @@ This document summarizes the functional and non-functional requirements for the 
 - Fetch due cards by due_date <= today; order by due_date ASC, current_box ASC (configurable).
 - Batch size capped (e.g., 200 per request) with client prefetching.
 - Respect daily limits: new_cards_per_day, max_reviews_per_day.
-- Rating options (AGAIN/HARD/GOOD/EASY) update SRS state.
+- Rating options (AGAIN/HARD/GOOD/EASY) update SRS state:
+  - AGAIN: Action based on forgotten_card_action setting:
+    - MOVE_TO_BOX_1: Reset to Box 1
+    - MOVE_DOWN_N_BOXES: Move down N boxes (1-3 configurable), minimum Box 1
+    - REPEAT_IN_SESSION: Keep current box, show again in session
+  - HARD: Stay in same box, reduce interval
+  - GOOD: Move to next box (increment by 1)
+  - EASY: Skip boxes (increment by 2)
+
+**FR-5.3: SRS Configuration**
+
+- Users can configure SRS settings:
+  - Total boxes (3-10, default: 7)
+  - Review order (DUE_DATE_ASC, RANDOM, CURRENT_BOX_ASC)
+  - Daily limits (new cards per day, max reviews per day)
+  - Forgotten card action (MOVE_TO_BOX_1, MOVE_DOWN_N_BOXES, REPEAT_IN_SESSION)
+  - Move down boxes (1-3, required if forgotten_card_action = MOVE_DOWN_N_BOXES)
+  - Notification preferences
 
 ## Non‑Functional Requirements
 
 ### NFR-1: Performance
 
-- P95 API response time < 300 ms for typical requests.
-- Folder tree load < 300 ms for common depths.
+- API response time:
+  - Average: < 200ms (CRUD operations)
+  - P95 percentile: < 300ms (typical requests)
+- Folder tree load: < 300ms (even with 1,000+ folders)
+- Review session load: < 500ms (with 100+ due cards)
 - Async operations for large copies/imports/exports.
+- Scalability: Support 10,000+ cards/deck, 1,000+ folders/user.
 
 ### NFR-2: Security
 
@@ -191,7 +217,7 @@ This document summarizes the functional and non-functional requirements for the 
 
 - Plain text cards only; no images/audio in MVP.
 - No social features; no offline mode.
-- Email/password only (no OAuth) in MVP.
+- Email/username + password only (no OAuth) in MVP.
 
 ## Assumptions
 
@@ -212,7 +238,7 @@ This document summarizes the functional and non-functional requirements for the 
 ### MVP Launch
 
 - All core features functional; zero critical bugs.
-- P95 response time < 500 ms.
+- API response time: Average < 200ms, P95 < 300ms.
 - Optional mobile builds available for beta (TestFlight/Play Store).
 
 ### Post‑Launch (1 month)

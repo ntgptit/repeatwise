@@ -40,8 +40,7 @@ import lombok.experimental.SuperBuilder;
  */
 @Entity
 @Table(name = "cards", indexes = {
-        @Index(name = "idx_cards_deck", columnList = "deck_id"),
-        @Index(name = "idx_cards_user", columnList = "user_id")
+        @Index(name = "idx_cards_deck", columnList = "deck_id")
 })
 @EntityListeners(org.springframework.data.jpa.domain.support.AuditingEntityListener.class)
 @SQLRestriction("deleted_at IS NULL")
