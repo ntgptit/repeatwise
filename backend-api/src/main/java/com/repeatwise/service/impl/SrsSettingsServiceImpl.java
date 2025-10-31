@@ -17,6 +17,7 @@ import com.repeatwise.exception.ResourceNotFoundException;
 import com.repeatwise.exception.ValidationException;
 import com.repeatwise.log.LogEvent;
 import com.repeatwise.repository.SrsSettingsRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.ISrsSettingsService;
 
 import lombok.RequiredArgsConstructor;

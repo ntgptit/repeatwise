@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * Request DTO for moving folder to new parent
  *
  * Requirements:
- * - UC-007: Move Folder
+ * - UC-009: Move Folder
  * - BR-017: Move validation (no circular ref, max depth, unique name)
  * - BR-018: Path recalculation for folder and all descendants
  * - BR-019: Depth recalculation with delta propagation
@@ -32,7 +32,7 @@ public class MoveFolderRequest {
 
     /**
      * Target parent folder ID
-     * - If null: Move to root level (parentFolderId = null, depth = 0)
+     * - If null: Move to root level (parentFolderId = null, depth = 1)
      * - If not null: Move under specified parent folder
      *
      * Validation:
@@ -41,7 +41,7 @@ public class MoveFolderRequest {
      * - Target parent must not be a descendant of the folder
      * - Resulting max depth must not exceed 10
      *
-     * NOTE: Nullable to allow moving to root level (BR-017, UC-007 A4)
+     * NOTE: Nullable to allow moving to root level (BR-017, UC-009)
      */
     private UUID newParentFolderId;
 

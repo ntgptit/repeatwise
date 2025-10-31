@@ -23,6 +23,7 @@ import com.repeatwise.repository.CardBoxPositionRepository;
 import com.repeatwise.repository.CardRepository;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.ICardService;
 
 import lombok.RequiredArgsConstructor;
@@ -91,7 +92,7 @@ public class CardServiceImpl extends BaseService implements ICardService {
     @Override
     public CardResponse createCard(final UUID deckId, final CreateCardRequest request, final UUID userId) {
         // Guard clause: Validate parameters
-        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(deckId, MSG_DECK_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "CreateCardRequest cannot be null");
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
@@ -143,7 +144,7 @@ public class CardServiceImpl extends BaseService implements ICardService {
     @Override
     public CardResponse updateCard(final UUID cardId, final UpdateCardRequest request, final UUID userId) {
         // Guard clause: Validate parameters
-        Objects.requireNonNull(cardId, "Card ID cannot be null");
+        Objects.requireNonNull(cardId, MSG_CARD_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "UpdateCardRequest cannot be null");
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
@@ -191,7 +192,7 @@ public class CardServiceImpl extends BaseService implements ICardService {
     @Override
     public void deleteCard(final UUID cardId, final UUID userId) {
         // Guard clause: Validate parameters
-        Objects.requireNonNull(cardId, "Card ID cannot be null");
+        Objects.requireNonNull(cardId, MSG_CARD_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Deleting card: cardId={}, userId={}", LogEvent.START, cardId, userId);
@@ -220,7 +221,7 @@ public class CardServiceImpl extends BaseService implements ICardService {
 
     @Override
     public CardResponse getCard(final UUID cardId, final UUID userId) {
-        Objects.requireNonNull(cardId, "Card ID cannot be null");
+        Objects.requireNonNull(cardId, MSG_CARD_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting card: cardId={}, userId={}", LogEvent.START, cardId, userId);
@@ -232,7 +233,7 @@ public class CardServiceImpl extends BaseService implements ICardService {
 
     @Override
     public Page<CardResponse> getCardsByDeck(final UUID deckId, final UUID userId, final Pageable pageable) {
-        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(deckId, MSG_DECK_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(pageable, "Pageable cannot be null");
 

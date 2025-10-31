@@ -82,13 +82,13 @@ public class FolderController {
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
-    // ==================== UC-006: Rename Folder ====================
+    // ==================== UC-008: Rename Folder ====================
 
     /**
-     * Update folder (rename and update description) (UC-006)
+     * Update folder (rename and update description) (UC-008)
      *
      * Requirements:
-     * - UC-006: Rename Folder
+     * - UC-008: Rename Folder
      * - BR-014: Rename validation (unique name within parent)
      * - BR-015: Only name and description can be changed
      *
@@ -96,27 +96,27 @@ public class FolderController {
      * @param request Update folder request
      * @return Updated folder response
      */
-    @PutMapping("/{folderId}")
+    @PatchMapping("/{folderId}")
     public ResponseEntity<FolderResponse> updateFolder(
             @PathVariable final UUID folderId,
             @Valid @RequestBody final UpdateFolderRequest request) {
 
         final UUID userId = SecurityUtils.getCurrentUserId();
 
-        log.info("event={} PUT /api/folders/{} - Updating folder: userId={}", LogEvent.FOLDER_UPDATE_START, folderId, userId);
+        log.info("event={} PATCH /api/folders/{} - Updating folder: userId={}", LogEvent.FOLDER_UPDATE_START, folderId, userId);
 
         final FolderResponse response = folderService.updateFolder(folderId, request, userId);
 
         return ResponseEntity.ok(response);
     }
 
-    // ==================== UC-007: Move Folder ====================
+    // ==================== UC-009: Move Folder ====================
 
     /**
-     * Move folder to new parent (UC-007)
+     * Move folder to new parent (UC-009)
      *
      * Requirements:
-     * - UC-007: Move Folder
+     * - UC-009: Move Folder
      * - BR-017: Move validation (circular ref, depth, uniqueness)
      * - BR-018: Path recalculation for all descendants
      * - BR-019: Depth recalculation with delta
@@ -139,15 +139,15 @@ public class FolderController {
         return ResponseEntity.ok(response);
     }
 
-    // ==================== UC-008: Copy Folder ====================
+    // ==================== UC-010: Copy Folder ====================
 
     /**
-     * Copy folder (UC-008)
+     * Copy folder (UC-010)
      *
      * Requirements:
-     * - UC-008: Copy Folder
+     * - UC-010: Copy Folder
      * - BR-021: Copy scope (folders, decks, cards)
-     * - BR-023: Async threshold (>50 items)
+     * - BR-023: Async threshold (<=50 items sync, 51-500 async, >500 reject)
      * - BR-024: Auto-naming (Copy, Copy 2, Copy 3)
      * - BR-025: Depth validation
      *
@@ -170,7 +170,7 @@ public class FolderController {
     }
 
     /**
-     * Get copy job status (UC-008 - Async copy)
+     * Get copy job status (UC-010 - Async copy)
      *
      * @param jobId Copy job ID
      * @return Copy job status response

@@ -22,6 +22,7 @@ import com.repeatwise.log.LogEvent;
 import com.repeatwise.mapper.UserMapper;
 import com.repeatwise.repository.RefreshTokenRepository;
 import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.IUserService;
 
 import lombok.RequiredArgsConstructor;

@@ -41,6 +41,7 @@ import com.repeatwise.repository.CardBoxPositionRepository;
 import com.repeatwise.repository.CardRepository;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.ICardService;
 import com.repeatwise.service.IImportExportService;
 
@@ -83,7 +84,7 @@ public class ImportExportServiceImpl extends BaseService implements IImportExpor
     @Transactional
     public ImportResultResponse importCards(final UUID deckId, final MultipartFile file,
             final ImportCardsRequest request, final UUID userId) {
-        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(deckId, MSG_DECK_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(file, "File cannot be null");
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
@@ -138,7 +139,7 @@ public class ImportExportServiceImpl extends BaseService implements IImportExpor
 
     @Override
     public Resource exportCards(final UUID deckId, final String format, final String scope, final UUID userId) {
-        Objects.requireNonNull(deckId, "Deck ID cannot be null");
+        Objects.requireNonNull(deckId, MSG_DECK_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(format, "Format cannot be null");
         Objects.requireNonNull(scope, "Scope cannot be null");
 

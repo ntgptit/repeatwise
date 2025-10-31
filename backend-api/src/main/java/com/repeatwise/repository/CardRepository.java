@@ -103,4 +103,75 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
     @Query("UPDATE Card c SET c.deletedAt = NULL " +
            "WHERE c.deck.id = :deckId AND c.deletedAt IS NOT NULL")
     void restoreByDeckId(@Param("deckId") UUID deckId);
+
+    /**
+     * Soft delete all cards in decks within folder and descendants
+     * UC-009: Delete Folder - Cascade soft delete to cards
+     *
+     * @param userId User UUID
+     * @param folderPath Folder path prefix
+     */
+    @Modifying
+    @Query("UPDATE Card c SET c.deletedAt = CURRENT_TIMESTAMP " +
+           "WHERE c.deck.user.id = :userId " +
+           "AND c.deck.folder.path LIKE CONCAT(:folderPath, '/%') " +
+           "AND c.deletedAt IS NULL")
+    void softDeleteByFolderPathPrefix(
+        @Param("userId") UUID userId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Restore all soft-deleted cards in decks within folder and descendants
+     * UC-009: Restore Folder - Restore cards along with folder
+     *
+     * @param userId User UUID
+     * @param folderPath Folder path prefix
+     */
+    @Modifying
+    @Query("UPDATE Card c SET c.deletedAt = NULL " +
+           "WHERE c.deck.user.id = :userId " +
+           "AND c.deck.folder.path LIKE CONCAT(:folderPath, '/%') " +
+           "AND c.deletedAt IS NOT NULL")
+    void restoreByFolderPathPrefix(
+        @Param("userId") UUID userId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Hard delete all cards in decks within folder and descendants (permanent delete)
+     * UC-009: Permanent Delete Folder - Hard delete cards
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     */
+    @Modifying
+    @Query("DELETE FROM Card c " +
+           "WHERE c.deck.user.id = :userId " +
+           "AND (c.deck.folder.id = :folderId OR c.deck.folder.path LIKE CONCAT(:folderPath, '/%'))")
+    void hardDeleteByFolderId(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Count total cards in decks within folder and descendants (recursive)
+     * UC-010: View Folder Statistics - Count cards in folder tree
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     * @return Number of cards
+     */
+    @Query("SELECT COUNT(c) FROM Card c " +
+           "WHERE c.deck.user.id = :userId " +
+           "AND (c.deck.folder.id = :folderId OR c.deck.folder.path LIKE CONCAT(:folderPath, '/%')) " +
+           "AND c.deletedAt IS NULL")
+    Long countByFolderIdRecursive(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath
+    );
 }

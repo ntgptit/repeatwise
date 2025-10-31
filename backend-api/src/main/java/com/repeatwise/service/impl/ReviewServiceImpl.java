@@ -34,6 +34,7 @@ import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.ReviewLogRepository;
 import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.IReviewService;
 import com.repeatwise.util.SrsBoxIntervalUtil;
 
@@ -362,8 +363,8 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
 
     @Override
     public ReviewSessionResponse.CardInfo skipCard(final UUID sessionId, final UUID cardId, final UUID userId) {
-        Objects.requireNonNull(sessionId, "Session ID cannot be null");
-        Objects.requireNonNull(cardId, "Card ID cannot be null");
+        Objects.requireNonNull(sessionId, MSG_SESSION_ID_CANNOT_BE_NULL);
+        Objects.requireNonNull(cardId, MSG_CARD_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Skipping card: sessionId={}, cardId={}, userId={}",

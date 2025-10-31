@@ -32,7 +32,7 @@ public class FolderTooLargeException extends BusinessException {
                         itemCount, threshold));
     }
 
-    public FolderTooLargeException(final String folderName, final Integer itemCount) {
+    public FolderTooLargeException(final String folderName, final Long itemCount) {
         super(ERROR_CODE,
                 String.format("Folder '%s' is too large (%d items). Use async copy endpoint.",
                         folderName, itemCount));

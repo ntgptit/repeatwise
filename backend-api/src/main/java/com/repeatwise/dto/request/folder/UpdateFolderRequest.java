@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
  * Request DTO for updating folder (rename and update description)
  *
  * Requirements:
- * - UC-006: Rename Folder
+ * - UC-008: Rename Folder
  * - BR-014: Rename validation (unique name within parent)
  * - BR-015: Only name and description can be changed via update
  *

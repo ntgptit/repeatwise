@@ -13,10 +13,10 @@ import java.util.UUID;
  * Request DTO for copying folder (with all contents)
  *
  * Requirements:
- * - UC-008: Copy Folder
+ * - UC-010: Copy Folder
  * - BR-021: Copy scope (folders, decks, cards)
  * - BR-022: SRS state reset (all cards to Box 1)
- * - BR-023: Async threshold (>50 items or >1000 cards)
+ * - BR-023: Async threshold (<=50 items sync, 51-500 async, >500 reject)
  * - BR-024: Auto-naming (Copy, Copy 2, Copy 3...)
  *
  * Validation:
@@ -24,8 +24,9 @@ import java.util.UUID;
  * - Name must be unique in target parent
  *
  * Copy Behavior:
- * - Small folder (<50 items): Synchronous copy (< 5 seconds)
- * - Large folder (>50 items): Asynchronous job
+ * - Small folder (<=50 items): Synchronous copy (< 5 seconds)
+ * - Large folder (51-500 items): Asynchronous job (not implemented yet)
+ * - Too large (>500 items): Rejected with error
  * - All cards reset to Box 1 (fresh SRS state)
  *
  * @author RepeatWise Team

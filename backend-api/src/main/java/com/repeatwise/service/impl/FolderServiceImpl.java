@@ -1,5 +1,6 @@
 package com.repeatwise.service.impl;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +19,8 @@ import com.repeatwise.dto.response.folder.CopyJobResponse;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.dto.response.folder.FolderStatsResponse;
 import com.repeatwise.dto.response.folder.FolderTreeResponse;
+import com.repeatwise.entity.Card;
+import com.repeatwise.entity.Deck;
 import com.repeatwise.entity.Folder;
 import com.repeatwise.entity.FolderStats;
 import com.repeatwise.entity.User;
@@ -28,9 +31,13 @@ import com.repeatwise.exception.MaxDepthExceededException;
 import com.repeatwise.exception.ResourceNotFoundException;
 import com.repeatwise.exception.ValidationException;
 import com.repeatwise.mapper.FolderMapper;
+import com.repeatwise.repository.CardBoxPositionRepository;
+import com.repeatwise.repository.CardRepository;
+import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.FolderStatsRepository;
 import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.IFolderService;
 
 import lombok.RequiredArgsConstructor;
@@ -78,6 +85,9 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
     private final FolderRepository folderRepository;
     private final FolderStatsRepository folderStatsRepository;
     private final UserRepository userRepository;
+    private final DeckRepository deckRepository;
+    private final CardRepository cardRepository;
+    private final CardBoxPositionRepository cardBoxPositionRepository;
     private final FolderMapper folderMapper;
 
     // ==================== UC-005: Create Folder Hierarchy ====================
@@ -89,21 +99,19 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         final var trimmedName = StringUtils.trim(request.getName());
         final var trimmedDescription = StringUtils.trim(request.getDescription());
 
-        final var depth = parentFolder == null ? 0 : parentFolder.getDepth() + 1;
+        // UC-007: Root folder depth = 1, nested folder depth = parent.depth + 1
+        final var depth = parentFolder == null ? 1 : parentFolder.getDepth() + 1;
 
-        final Folder folder = Folder.builder()
+        // Path will be calculated in calculatePath() after save when ID is available
+        // Depth is already set correctly above and will be preserved by calculatePath()
+
+        return Folder.builder()
                 .name(trimmedName)
                 .description(trimmedDescription)
                 .user(user)
                 .parentFolder(parentFolder)
                 .depth(depth)
                 .build();
-
-        // Calculate path (called after save to get ID, but we need to set a temporary path)
-        // Note: Path will be updated after save via @PrePersist hook or manual update
-        folder.calculatePath();
-
-        return folder;
     }
 
     // ==================== Helper Methods (Private) ====================
@@ -135,8 +143,11 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
     /**
      * Calculate and cache folder statistics
      *
-     * For MVP: Only count folders (no decks/cards yet)
-     * TODO: Add deck/card counting when entities ready
+     * Calculates statistics recursively for folder and all descendants:
+     * - Total cards (from CardBoxPosition)
+     * - Due cards (dueDate <= today)
+     * - New cards (reviewCount = 0)
+     * - Mature cards (currentBox >= 5)
      */
     private FolderStats calculateAndCacheStats(
             final Folder folder,
@@ -144,12 +155,23 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
 
         log.debug("Calculating stats for folder: folderId={}", folder.getId());
 
-        // For MVP: Return zero stats (no decks/cards implemented yet)
-        // TODO: Calculate actual stats when Deck and Card entities are ready
-        final var totalCards = 0;
-        final var dueCards = 0;
-        final var newCards = 0;
-        final var matureCards = 0;
+        final var userId = folder.getUser().getId();
+        final var folderId = folder.getId();
+        final var folderPath = folder.getPath();
+        final var today = LocalDate.now();
+
+        // Count cards using CardBoxPosition (includes SRS state)
+        final var totalCards = this.cardBoxPositionRepository.countTotalCardsByFolderIdRecursive(
+                userId, folderId, folderPath).intValue();
+        final var dueCards = this.cardBoxPositionRepository.countDueCardsByFolderIdRecursive(
+                userId, folderId, folderPath, today).intValue();
+        final var newCards = this.cardBoxPositionRepository.countNewCardsByFolderIdRecursive(
+                userId, folderId, folderPath).intValue();
+        final var matureCards = this.cardBoxPositionRepository.countMatureCardsByFolderIdRecursive(
+                userId, folderId, folderPath).intValue();
+
+        log.debug("Stats calculated for folder {}: total={}, due={}, new={}, mature={}",
+                folderId, totalCards, dueCards, newCards, matureCards);
 
         // Create or update stats entity
         final var stats = existingStats.orElseGet(() -> FolderStats.builder()
@@ -167,23 +189,23 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Copy folder synchronously (for small folders)
      *
      * Requirements:
-     * - UC-008: Copy Folder
+     * - UC-010: Copy Folder
      * - BR-021: Copy scope (folders, decks, cards)
      * - BR-022: SRS state reset (all cards to Box 1)
-     * - BR-023: Async threshold (>50 items)
+     * - BR-023: Async threshold (<=50 items sync, 51-500 async, >500 reject)
      * - BR-024: Auto-naming (Copy, Copy 2, Copy 3)
      * - BR-025: Depth validation
      *
      * Steps:
      * 1. Validate request and get source folder
      * 2. Get target parent folder
-     * 3. Validate copy constraints (depth)
+     * 3. Validate copy constraints (depth, size)
      * 4. Generate unique name (auto-rename if duplicate)
-     * 5. Perform recursive copy
+     * 5. Perform recursive copy (folders, decks, cards)
      * 6. Return copied folder
      *
-     * Note: For MVP, only copy folder structure (no decks/cards yet)
-     * TODO: Add deck/card copying when entities are ready
+     * Note: Copies folders, decks, and cards recursively
+     * TODO: Implement async copy for 51-500 items
      *
      * @param folderId Source folder ID to copy
      * @param request  Copy request with target parent and options
@@ -191,7 +213,7 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * @return Copied folder response
      * @throws ResourceNotFoundException if source folder not found
      * @throws MaxDepthExceededException if copy would exceed max depth
-     * @throws FolderTooLargeException   if folder too large for sync copy
+     * @throws FolderTooLargeException   if folder too large (>500 items)
      */
     @Transactional
     @Override
@@ -269,14 +291,99 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
     }
 
     /**
+     * Copy all decks and cards from source folder to target folder
+     *
+     * UC-010: Copy Folder - Copy decks and cards
+     * BR-021: Copy scope includes decks and cards
+     * BR-022: SRS state reset (all cards to Box 1) if resetSrsProgress = true
+     *
+     * Note: Cards are copied without SRS state initially. SRS state will be created
+     * when cards are first reviewed (CardBoxPosition created on first access).
+     */
+    private void copyDecksAndCards(
+            final Folder sourceFolder,
+            final Folder targetFolder,
+            final CopyFolderRequest request) {
+
+        // Get all decks in source folder
+        final var sourceDecks = this.deckRepository.findByFolderId(sourceFolder.getId());
+
+        if (sourceDecks.isEmpty()) {
+            log.debug("No decks to copy for folder: {}", sourceFolder.getId());
+            return;
+        }
+
+        log.debug("Copying {} decks from folder {} to folder {}",
+                sourceDecks.size(), sourceFolder.getId(), targetFolder.getId());
+
+        // Copy each deck
+        for (final Deck sourceDeck : sourceDecks) {
+            // Create new deck with same name in target folder
+            final Deck newDeck = Deck.builder()
+                    .name(sourceDeck.getName())
+                    .description(sourceDeck.getDescription())
+                    .user(sourceDeck.getUser())
+                    .folder(targetFolder)
+                    .build();
+
+            // Save deck first to get ID
+            final var savedDeck = this.deckRepository.save(newDeck);
+
+            // Copy all cards from source deck to new deck
+            copyCardsToNewDeck(sourceDeck, savedDeck);
+
+            log.debug("Copied deck: sourceDeckId={}, newDeckId={}, cardCount={}",
+                    sourceDeck.getId(), savedDeck.getId(), savedDeck.getCardCount());
+        }
+
+        log.debug("Completed copying {} decks", sourceDecks.size());
+    }
+
+    /**
+     * Copy all cards from source deck to new deck
+     *
+     * UC-010: Copy Folder - Copy cards
+     * BR-022: Cards are copied without SRS state (CardBoxPosition created on first review)
+     */
+    private void copyCardsToNewDeck(final Deck sourceDeck, final Deck newDeck) {
+        // Get all cards from source deck
+        final var sourceCards = this.cardRepository.findByDeckIdAndDeletedAtIsNull(sourceDeck.getId());
+
+        if (sourceCards.isEmpty()) {
+            log.debug("No cards to copy for deck: {}", sourceDeck.getId());
+            return;
+        }
+
+        // Copy each card
+        for (final Card sourceCard : sourceCards) {
+            final Card newCard = Card.builder()
+                    .front(sourceCard.getFront())
+                    .back(sourceCard.getBack())
+                    .deck(newDeck)
+                    .build();
+
+            newDeck.addCard(newCard);
+        }
+
+        // Save deck with cards (cascade save)
+        this.deckRepository.save(newDeck);
+
+        log.debug("Copied {} cards from deck {} to deck {}",
+                sourceCards.size(), sourceDeck.getId(), newDeck.getId());
+    }
+
+    /**
      * Create copied folder entity with new ID
+     *
+     * UC-010: Root folder depth = 1 (not 0)
      */
     private Folder createCopiedFolder(
             final Folder sourceFolder,
             final Folder targetParentFolder,
             final String newName) {
 
-        final var newDepth = targetParentFolder == null ? 0 : targetParentFolder.getDepth() + 1;
+        // UC-010: Root folder depth = 1, nested folder depth = parent.depth + 1
+        final var newDepth = targetParentFolder == null ? 1 : targetParentFolder.getDepth() + 1;
 
         final Folder copiedFolder = Folder.builder()
                 .name(newName)
@@ -296,7 +403,7 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Create a new folder
      *
      * Requirements:
-     * - UC-005: Create Folder Hierarchy
+     * - UC-007: Create Folder
      * - BR-010: Folder naming
      * - BR-011: Max depth = 10
      * - BR-013: Unique name within parent
@@ -339,13 +446,20 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         // Build folder
         final var folder = buildFolder(request, user, parentFolder);
 
-        // Save folder
+        // Save folder first to get ID
         final var savedFolder = this.folderRepository.save(folder);
 
-        log.info("Folder created successfully: folderId={}, name={}, userId={}",
-                savedFolder.getId(), savedFolder.getName(), userId);
+        // UC-007: Calculate path after save (when ID is available)
+        // Depth is already set correctly in buildFolder()
+        savedFolder.calculatePath();
 
-        return this.folderMapper.toResponse(savedFolder);
+        // Save again to persist path
+        final var finalFolder = this.folderRepository.save(savedFolder);
+
+        log.info("Folder created successfully: folderId={}, name={}, userId={}",
+                finalFolder.getId(), finalFolder.getName(), userId);
+
+        return this.folderMapper.toResponse(finalFolder);
     }
 
     /**
@@ -662,8 +776,7 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
                 .stream()
                 .collect(java.util.stream.Collectors.toMap(
                         fs -> fs.getFolder().getId(),
-                        fs -> fs
-                ));
+                        fs -> fs));
 
         // Build tree structure
         return buildFolderTree(folders, statsMap);
@@ -732,7 +845,6 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         treeResponse.setNewCards(stats.getNewCardsCount());
         treeResponse.setMatureCards(stats.getMatureCardsCount());
     }
-
 
     /**
      * Get parent folder by ID (if not null)
@@ -891,7 +1003,7 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Move folder to new parent (and optionally rename)
      *
      * Requirements:
-     * - UC-007: Move Folder
+     * - UC-009: Move Folder
      * - BR-017: Move validation (circular ref, depth, uniqueness)
      * - BR-018: Path recalculation for all descendants
      * - BR-019: Depth recalculation with delta
@@ -975,10 +1087,10 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
             copySubFolders(sourceFolder, savedFolder, request);
         }
 
-        // TODO: Copy decks when Deck entity is ready
-        // if (Boolean.TRUE.equals(request.getIncludeCards())) {
-        // copyDecksAndCards(sourceFolder, savedFolder, request);
-        // }
+        // Copy decks and cards if requested
+        if (Boolean.TRUE.equals(request.getIncludeCards())) {
+            copyDecksAndCards(sourceFolder, savedFolder, request);
+        }
 
         return savedFolder;
     }
@@ -989,26 +1101,30 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * WARNING: This is irreversible!
      *
      * Steps:
-     * 1. Hard-delete all descendants (bottom-up to avoid FK issues)
-     * 2. Hard-delete the folder itself
-     *
-     * Note: For MVP, only delete folders
-     * TODO: Delete decks, cards, stats when entities ready
+     * 1. Hard-delete all cards in decks (must be done before decks)
+     * 2. Hard-delete all decks in folder and descendants
+     * 3. Hard-delete folder_stats (when implemented)
+     * 4. Hard-delete all descendants (bottom-up to avoid FK issues)
+     * 5. Hard-delete the folder itself
      */
     private void performHardDelete(final Folder folder) {
-        // Get all descendants (including deleted ones)
-        final var descendants = this.folderRepository.findAllDescendants(
-                folder.getUser().getId(),
-                folder.getPath());
+        final var userId = folder.getUser().getId();
+        final var folderId = folder.getId();
+        final var folderPath = folder.getPath();
 
-        // TODO: Hard-delete cards when Card entity is ready
-        // hardDeleteCardsInDecks(folder, descendants);
+        // Hard-delete all cards in decks within folder and descendants
+        this.cardRepository.hardDeleteByFolderId(userId, folderId, folderPath);
 
-        // TODO: Hard-delete decks when Deck entity is ready
-        // hardDeleteDecksInFolders(folder, descendants);
+        // Hard-delete all decks in folder and descendants
+        this.deckRepository.hardDeleteByFolderId(userId, folderId, folderPath);
 
         // TODO: Hard-delete folder_stats when implemented
         // hardDeleteStatsForFolders(folder, descendants);
+
+        // Get all descendants (including deleted ones) for folder deletion
+        final var descendants = this.folderRepository.findAllDescendants(
+                userId,
+                folderPath);
 
         // Hard-delete descendants (reverse order to avoid issues)
         hardDeleteFolderDescendants(descendants);
@@ -1065,8 +1181,9 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      *
      * Steps:
      * 1. Restore folder and all descendants (set deleted_at = NULL)
-     * 2. Restore decks and cards (when entities ready)
-     * 3. Update folder_stats (when implemented)
+     * 2. Restore decks in folder and descendants
+     * 3. Restore cards in decks
+     * 4. Update folder_stats (when implemented)
      */
     private void performRestore(final Folder folder) {
         // Restore the folder itself
@@ -1076,11 +1193,15 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         // Restore all descendants
         restoreDescendants(folder);
 
-        // TODO: Restore decks when Deck entity is ready
-        // restoreDecksInFolder(folder);
+        // Restore all decks in folder and descendants
+        this.deckRepository.restoreByFolderPathPrefix(
+                folder.getUser().getId(),
+                folder.getPath());
 
-        // TODO: Restore cards when Card entity is ready
-        // restoreCardsInDecks(folder);
+        // Restore all cards in decks within folder and descendants
+        this.cardRepository.restoreByFolderPathPrefix(
+                folder.getUser().getId(),
+                folder.getPath());
 
         // TODO: Update folder_stats when implemented
         // updateStatsAfterRestore(folder);
@@ -1094,7 +1215,9 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      *
      * Steps:
      * 1. Soft-delete folder and all descendants
-     * 2. Update folder_stats (when implemented)
+     * 2. Soft-delete all decks in folder and descendants
+     * 3. Soft-delete all cards in decks
+     * 4. Update folder_stats (when implemented)
      */
     private void performSoftDelete(final Folder folder) {
         // Soft-delete the folder itself
@@ -1104,11 +1227,16 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         // Soft-delete all descendants using materialized path
         softDeleteDescendants(folder);
 
-        // TODO: Soft-delete decks when Deck entity is ready
-        // softDeleteDecksInFolder(folder);
+        // Soft-delete all decks in folder and descendants
+        this.deckRepository.softDeleteByFolderId(folder.getId());
+        this.deckRepository.softDeleteByFolderPathPrefix(
+                folder.getUser().getId(),
+                folder.getPath());
 
-        // TODO: Soft-delete cards when Card entity is ready
-        // softDeleteCardsInDecks(folder);
+        // Soft-delete all cards in decks within folder and descendants
+        this.cardRepository.softDeleteByFolderPathPrefix(
+                folder.getUser().getId(),
+                folder.getPath());
 
         // TODO: Update folder_stats when implemented
         // updateStatsAfterDelete(folder);
@@ -1285,7 +1413,7 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Update folder (rename and update description)
      *
      * Requirements:
-     * - UC-006: Rename Folder
+     * - UC-008: Rename Folder
      * - BR-014: Rename validation (unique name within parent)
      * - BR-015: Only name and description can be changed
      *
@@ -1359,10 +1487,13 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Validate copy depth constraint (BR-025)
      *
      * Same logic as move: Ensure resulting max depth ≤ 10
+     *
+     * UC-010: Root folder depth = 1 (not 0)
      */
     private void validateCopyDepth(final Folder sourceFolder, final Folder targetParentFolder) {
-        // Calculate new depth for copied folder
-        final var newDepth = targetParentFolder == null ? 0 : targetParentFolder.getDepth() + 1;
+        // UC-010: Calculate new depth for copied folder
+        // Root folder depth = 1, nested folder depth = parent.depth + 1
+        final var newDepth = targetParentFolder == null ? 1 : targetParentFolder.getDepth() + 1;
 
         // Get max descendant depth from source folder
         final var maxSourceDepth = this.folderRepository.findMaxDescendantDepth(
@@ -1393,7 +1524,12 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      *
      * Checks:
      * 1. Max depth constraint
-     * 2. Folder size threshold (sync vs async)
+     * 2. Folder size threshold (sync vs async vs reject)
+     *
+     * UC-010:
+     * - <= 50 items: sync copy
+     * - 51-500 items: async copy (not implemented yet)
+     * - > 500 items: reject
      */
     private void validateCopyOperation(
             final Folder sourceFolder,
@@ -1402,17 +1538,45 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
         // Validate max depth constraint
         validateCopyDepth(sourceFolder, targetParentFolder);
 
-        // For MVP: Skip size validation (async not implemented yet)
-        // TODO: Add size validation when async copy is implemented
-        // validateCopySize(sourceFolder, request);
+        // UC-010: Validate folder size
+        // Count total items (folders + decks) in source subtree
+        final var folderCount = this.folderRepository.countDescendants(
+                sourceFolder.getUser().getId(),
+                sourceFolder.getPath()) + 1; // +1 for source folder itself
+
+        // Count decks in folder and descendants
+        final var deckCount = this.deckRepository.countByFolderIdRecursive(
+                sourceFolder.getUser().getId(),
+                sourceFolder.getId(),
+                sourceFolder.getPath());
+
+        final var totalItems = folderCount + deckCount.intValue();
+
+        // UC-010: Reject if > 500 items
+        if (totalItems > 500) {
+            log.warn("Folder too large to copy: folderId={}, totalItems={} (folders={}, decks={}), maxAllowed=500",
+                    sourceFolder.getId(), totalItems, folderCount, deckCount);
+            throw new FolderTooLargeException(sourceFolder.getName(), totalItems);
+        }
+
+        // UC-010: Note: For 51-500 items, should use async copy
+        // Currently not implemented, so we allow sync copy for all sizes <= 500
+        // TODO: Implement async copy and return 202 Accepted for 51-500 items
+        if (totalItems > 50) {
+            log.info("Large folder copy ({} items: {} folders, {} decks): Using sync copy (async not implemented yet)",
+                    totalItems, folderCount, deckCount);
+        }
     }
 
     /**
      * Validate depth does not exceed maximum
+     *
+     * UC-007: Root folder depth = 1, max depth = 10
      */
     private void validateDepth(final Folder parentFolder) {
+        // UC-007: If root folder, depth = 1 (already validated in buildFolder)
         if (parentFolder == null) {
-            return; // Root folder, depth = 0
+            return; // Root folder, depth = 1 (valid)
         }
 
         final var newDepth = parentFolder.getDepth() + 1;
@@ -1441,10 +1605,13 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
      * Validate move depth constraint (BR-017, BR-011)
      *
      * Calculates if move would cause any descendant to exceed max depth
+     *
+     * UC-009: Root folder depth = 1 (not 0)
      */
     private void validateMoveDepth(final Folder sourceFolder, final Folder targetParentFolder) {
-        // Calculate new depth for source folder
-        final var newDepth = targetParentFolder == null ? 0 : targetParentFolder.getDepth() + 1;
+        // UC-009: Calculate new depth for source folder
+        // Root folder depth = 1, nested folder depth = parent.depth + 1
+        final var newDepth = targetParentFolder == null ? 1 : targetParentFolder.getDepth() + 1;
 
         // Calculate depth delta
         final var depthDelta = newDepth - sourceFolder.getDepth();

@@ -2,6 +2,7 @@ package com.repeatwise.repository;
 
 import com.repeatwise.entity.Deck;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -165,6 +166,7 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
      * Soft delete all decks in folder
      * UC-009: Delete Folder - Cascade soft delete
      */
+    @Modifying
     @Query("UPDATE Deck d " +
            "SET d.deletedAt = CURRENT_TIMESTAMP " +
            "WHERE d.folder.id = :folderId " +
@@ -175,6 +177,7 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
      * Soft delete all decks in folder and descendants
      * UC-009: Delete Folder - Cascade soft delete to descendants
      */
+    @Modifying
     @Query("UPDATE Deck d " +
            "SET d.deletedAt = CURRENT_TIMESTAMP " +
            "WHERE d.user.id = :userId " +
@@ -182,6 +185,35 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
            "AND d.deletedAt IS NULL")
     void softDeleteByFolderPathPrefix(
         @Param("userId") UUID userId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Restore all soft-deleted decks in folder and descendants
+     * UC-009: Restore Folder - Restore decks along with folder
+     */
+    @Modifying
+    @Query("UPDATE Deck d " +
+           "SET d.deletedAt = NULL " +
+           "WHERE d.user.id = :userId " +
+           "AND d.folder.path LIKE CONCAT(:folderPath, '/%') " +
+           "AND d.deletedAt IS NOT NULL")
+    void restoreByFolderPathPrefix(
+        @Param("userId") UUID userId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Hard delete all decks in folder and descendants (permanent delete)
+     * UC-009: Permanent Delete Folder - Hard delete decks
+     */
+    @Modifying
+    @Query("DELETE FROM Deck d " +
+           "WHERE d.user.id = :userId " +
+           "AND (d.folder.id = :folderId OR d.folder.path LIKE CONCAT(:folderPath, '/%'))")
+    void hardDeleteByFolderId(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
         @Param("folderPath") String folderPath
     );
 

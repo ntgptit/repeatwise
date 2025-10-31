@@ -30,6 +30,7 @@ import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.repository.UserStatsRepository;
 import com.repeatwise.security.JwtTokenProvider;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.IAuthService;
 
 import lombok.RequiredArgsConstructor;

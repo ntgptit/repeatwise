@@ -289,5 +289,98 @@ public interface CardBoxPositionRepository extends JpaRepository<CardBoxPosition
         @Param("userId") UUID userId,
         @Param("deckIds") List<UUID> deckIds
     );
+
+    /**
+     * Count due cards in decks within folder and descendants (recursive)
+     * UC-010: View Folder Statistics - Count due cards in folder tree
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     * @param today Today's date
+     * @return Number of due cards
+     */
+    @Query("SELECT COUNT(cbp) FROM CardBoxPosition cbp " +
+           "JOIN cbp.card c " +
+           "JOIN c.deck d " +
+           "WHERE cbp.user.id = :userId " +
+           "AND (d.folder.id = :folderId OR d.folder.path LIKE CONCAT(:folderPath, '/%')) " +
+           "AND cbp.dueDate <= :today " +
+           "AND cbp.deletedAt IS NULL " +
+           "AND c.deletedAt IS NULL")
+    Long countDueCardsByFolderIdRecursive(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath,
+        @Param("today") LocalDate today
+    );
+
+    /**
+     * Count new cards (reviewCount = 0) in decks within folder and descendants (recursive)
+     * UC-010: View Folder Statistics - Count new cards in folder tree
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     * @return Number of new cards
+     */
+    @Query("SELECT COUNT(cbp) FROM CardBoxPosition cbp " +
+           "JOIN cbp.card c " +
+           "JOIN c.deck d " +
+           "WHERE cbp.user.id = :userId " +
+           "AND (d.folder.id = :folderId OR d.folder.path LIKE CONCAT(:folderPath, '/%')) " +
+           "AND cbp.reviewCount = 0 " +
+           "AND cbp.deletedAt IS NULL " +
+           "AND c.deletedAt IS NULL")
+    Long countNewCardsByFolderIdRecursive(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Count mature cards (currentBox >= 5) in decks within folder and descendants (recursive)
+     * UC-010: View Folder Statistics - Count mature cards in folder tree
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     * @return Number of mature cards
+     */
+    @Query("SELECT COUNT(cbp) FROM CardBoxPosition cbp " +
+           "JOIN cbp.card c " +
+           "JOIN c.deck d " +
+           "WHERE cbp.user.id = :userId " +
+           "AND (d.folder.id = :folderId OR d.folder.path LIKE CONCAT(:folderPath, '/%')) " +
+           "AND cbp.currentBox >= 5 " +
+           "AND cbp.deletedAt IS NULL " +
+           "AND c.deletedAt IS NULL")
+    Long countMatureCardsByFolderIdRecursive(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath
+    );
+
+    /**
+     * Count total cards with CardBoxPosition in decks within folder and descendants (recursive)
+     * UC-010: View Folder Statistics - Count total cards in folder tree
+     *
+     * @param userId User UUID
+     * @param folderId Folder UUID
+     * @param folderPath Folder path prefix
+     * @return Number of cards
+     */
+    @Query("SELECT COUNT(cbp) FROM CardBoxPosition cbp " +
+           "JOIN cbp.card c " +
+           "JOIN c.deck d " +
+           "WHERE cbp.user.id = :userId " +
+           "AND (d.folder.id = :folderId OR d.folder.path LIKE CONCAT(:folderPath, '/%')) " +
+           "AND cbp.deletedAt IS NULL " +
+           "AND c.deletedAt IS NULL")
+    Long countTotalCardsByFolderIdRecursive(
+        @Param("userId") UUID userId,
+        @Param("folderId") UUID folderId,
+        @Param("folderPath") String folderPath
+    );
 }
 

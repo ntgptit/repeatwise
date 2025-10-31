@@ -148,15 +148,22 @@ public class Folder extends SoftDeletableEntity {
     /**
      * Calculate path for this folder
      * Called when creating or moving folder
+     * 
+     * UC-007: Root folder depth = 1 (not 0)
      */
     public void calculatePath() {
         if (this.parentFolder == null) {
             // Root folder: /folder_id
             this.path = "/" + getId();
-            this.depth = 0;
+            // UC-007: Root folder depth = 1 (not 0)
+            // Only set depth if not already set correctly
+            if (this.depth == null || this.depth == 0) {
+                this.depth = 1;
+            }
         } else {
             // Child folder: parent_path/folder_id
             this.path = this.parentFolder.getPath() + "/" + getId();
+            // UC-007: Nested folder depth = parent.depth + 1
             this.depth = this.parentFolder.getDepth() + 1;
         }
     }

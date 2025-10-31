@@ -13,16 +13,17 @@ import java.util.UUID;
  * Response DTO for async folder copy job status
  *
  * Requirements:
- * - UC-008: Copy Folder (Async for large folders)
- * - BR-023: Async threshold (>50 items)
+ * - UC-010: Copy Folder (Async for large folders)
+ * - BR-023: Async threshold (51-500 items)
  * - API Endpoints: POST /api/folders/{id}/copy (returns job for large folders)
- *                  GET /api/folders/copy-jobs/{jobId} (check job status)
+ *                  GET /api/folders/copy-status/{jobId} (check job status)
  *
  * Job Status Flow:
- * 1. PENDING - Job created, waiting to start
+ * 1. QUEUED - Job created, waiting to start
  * 2. RUNNING - Job in progress
  * 3. COMPLETED - Job finished successfully
  * 4. FAILED - Job failed with error
+ * 5. CANCELLED - Job cancelled by user
  *
  * @author RepeatWise Team
  */

@@ -27,6 +27,7 @@ import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.ReviewLogRepository;
 import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.repository.UserStatsRepository;
+import com.repeatwise.service.BaseService;
 import com.repeatwise.service.IStatsService;
 
 import lombok.RequiredArgsConstructor;
