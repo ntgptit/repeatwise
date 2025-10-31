@@ -1,25 +1,28 @@
 package com.repeatwise.controller;
 
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CookieValue;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
 import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.LogoutResponse;
 import com.repeatwise.dto.response.auth.RegisterResponse;
-import com.repeatwise.dto.response.auth.UserResponse;
+import com.repeatwise.log.LogEvent;
 import com.repeatwise.security.SecurityUtils;
 import com.repeatwise.service.IAuthService;
+
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 /**
  * Authentication Controller
@@ -68,12 +71,12 @@ public class AuthController {
             @Valid @RequestBody final RegisterRequest request) {
 
         log.info("event={} Received registration request: username={}, email={}",
-            LogEvent.AUTH_REGISTER_START, request.getUsername(), request.getEmail());
+                LogEvent.AUTH_REGISTER_START, request.getUsername(), request.getEmail());
 
-        final RegisterResponse response = authService.register(request);
+        final var response = this.authService.register(request);
 
         log.info("event={} User registered successfully: userId={}, username={}, email={}",
-            LogEvent.AUTH_REGISTER_SUCCESS, response.getUserId(), request.getUsername(), request.getEmail());
+                LogEvent.AUTH_REGISTER_SUCCESS, response.getUserId(), request.getUsername(), request.getEmail());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -103,7 +106,7 @@ public class AuthController {
      * - 400 BAD_REQUEST: Validation error
      * - 401 UNAUTHORIZED: Invalid credentials
      *
-     * @param request LoginRequest
+     * @param request  LoginRequest
      * @param response HttpServletResponse for setting cookie
      * @return ResponseEntity with LoginResponse
      */
@@ -113,13 +116,13 @@ public class AuthController {
             final HttpServletResponse response) {
 
         log.info("event={} Received login request: usernameOrEmail={}",
-            LogEvent.AUTH_LOGIN_START, request.getUsernameOrEmail());
+                LogEvent.AUTH_LOGIN_START, request.getUsernameOrEmail());
 
-        final LoginResponse loginResponse = authService.login(request);
+        final LoginResponse loginResponse = this.authService.login(request);
 
         // Set refresh token in HttpOnly cookie
         // UC-002: Cookie configuration (HttpOnly, Secure, SameSite=Strict, Max-Age=604800, Path=/api/auth)
-        final ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", loginResponse.getRefreshToken())
+        final var refreshTokenCookie = ResponseCookie.from("refresh_token", loginResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(true) // HTTPS only in production
                 .sameSite("Strict")
@@ -128,8 +131,8 @@ public class AuthController {
                 .build();
 
         log.info("event={} Login successful: accessToken generated, expiresIn={} seconds, userId={}",
-            LogEvent.AUTH_LOGIN_SUCCESS, loginResponse.getExpiresIn(), 
-            loginResponse.getUser() != null ? loginResponse.getUser().getId() : null);
+                LogEvent.AUTH_LOGIN_SUCCESS, loginResponse.getExpiresIn(),
+                loginResponse.getUser() != null ? loginResponse.getUser().getId() : null);
 
         // Remove refreshToken from response body (security - only in cookie)
         loginResponse.setRefreshToken(null);
@@ -171,11 +174,11 @@ public class AuthController {
 
         log.info("event={} Received refresh token request", LogEvent.AUTH_TOKEN_REFRESH);
 
-        final LoginResponse loginResponse = authService.refreshToken(refreshToken);
+        final LoginResponse loginResponse = this.authService.refreshToken(refreshToken);
 
         // Set new refresh token in HttpOnly cookie (token rotation)
         // UC-002: Cookie configuration (HttpOnly, Secure, SameSite=Strict, Max-Age=604800, Path=/api/auth)
-        final ResponseCookie refreshTokenCookie = ResponseCookie.from("refresh_token", loginResponse.getRefreshToken())
+        final var refreshTokenCookie = ResponseCookie.from("refresh_token", loginResponse.getRefreshToken())
                 .httpOnly(true)
                 .secure(true) // HTTPS only in production
                 .sameSite("Strict")
@@ -223,11 +226,11 @@ public class AuthController {
 
         log.info("event={} Received logout request", LogEvent.AUTH_TOKEN_REVOKE);
 
-        final UUID userId = SecurityUtils.getCurrentUserId();
-        final LogoutResponse logoutResponse = authService.logout(refreshToken, userId);
+        final var userId = SecurityUtils.getCurrentUserId();
+        final var logoutResponse = this.authService.logout(refreshToken, userId);
 
         // UC-004: Clear refresh token cookie (Max-Age=0)
-        final ResponseCookie clearCookie = ResponseCookie.from("refresh_token", "")
+        final var clearCookie = ResponseCookie.from("refresh_token", "")
                 .httpOnly(true)
                 .secure(true)
                 .sameSite("Strict")

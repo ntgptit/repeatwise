@@ -1,10 +1,9 @@
 package com.repeatwise.exception;
 
-import com.repeatwise.dto.response.ErrorResponse;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
@@ -14,11 +13,12 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import java.time.Instant;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.Map;
-import java.util.HashMap;
+import com.repeatwise.dto.response.ErrorResponse;
+import com.repeatwise.log.LogEvent;
+
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Global Exception Handler
@@ -41,7 +41,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle ResourceNotFoundException (404)
      *
-     * @param ex ResourceNotFoundException
+     * @param ex      ResourceNotFoundException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -51,16 +51,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Resource not found: errorCode={}, message={}, path={}",
-            LogEvent.EX_RESOURCE_NOT_FOUND, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_RESOURCE_NOT_FOUND, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.NOT_FOUND.value())
-            .error("NOT_FOUND")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.NOT_FOUND.value())
+                .error("NOT_FOUND")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
     }
@@ -68,7 +68,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle ValidationException (400)
      *
-     * @param ex ValidationException
+     * @param ex      ValidationException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -78,16 +78,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Validation error: errorCode={}, message={}, path={}",
-            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("VALIDATION_ERROR")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("VALIDATION_ERROR")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -96,7 +96,7 @@ public class GlobalExceptionHandler {
      * Handle DuplicateResourceException (409)
      * Note: DuplicateEmailException and DuplicateUsernameException return 400 for UC-001 compliance
      *
-     * @param ex DuplicateResourceException
+     * @param ex      DuplicateResourceException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -106,16 +106,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Duplicate resource: errorCode={}, message={}, path={}",
-            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.CONFLICT.value())
-            .error("DUPLICATE_RESOURCE")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.CONFLICT.value())
+                .error("DUPLICATE_RESOURCE")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
@@ -124,7 +124,7 @@ public class GlobalExceptionHandler {
      * Handle DuplicateEmailException (400)
      * UC-001: Email already exists returns 400 Bad Request
      *
-     * @param ex DuplicateEmailException
+     * @param ex      DuplicateEmailException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -134,16 +134,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Duplicate email: errorCode={}, message={}, path={}",
-            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("Email already exists")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Email already exists")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -152,7 +152,7 @@ public class GlobalExceptionHandler {
      * Handle DuplicateUsernameException (400)
      * UC-001: Username already exists returns 400 Bad Request
      *
-     * @param ex DuplicateUsernameException
+     * @param ex      DuplicateUsernameException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -162,16 +162,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Duplicate username: errorCode={}, message={}, path={}",
-            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("Username already exists")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Username already exists")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -181,7 +181,7 @@ public class GlobalExceptionHandler {
      * UC-002: Invalid credentials returns generic error message for login
      * UC-006: Invalid password returns 400 Bad Request for password change
      *
-     * @param ex InvalidCredentialsException
+     * @param ex      InvalidCredentialsException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -191,23 +191,23 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Invalid credentials: errorCode={}, message={}, path={}",
-            LogEvent.EX_INVALID_CREDENTIALS, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_INVALID_CREDENTIALS, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         // UC-006: Password change errors return 400 with "Invalid password"
-        final boolean isPasswordChange = request.getRequestURI() != null 
+        final var isPasswordChange = (request.getRequestURI() != null)
                 && request.getRequestURI().contains("/change-password");
-        
-        final HttpStatus status = isPasswordChange ? HttpStatus.BAD_REQUEST : HttpStatus.UNAUTHORIZED;
-        final String errorType = isPasswordChange ? "Invalid password" : "Invalid credentials";
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(status.value())
-            .error(errorType)
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var status = isPasswordChange ? HttpStatus.BAD_REQUEST : HttpStatus.UNAUTHORIZED;
+        final var errorType = isPasswordChange ? "Invalid password" : "Invalid credentials";
+
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(status.value())
+                .error(errorType)
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(status).body(error);
     }
@@ -216,7 +216,7 @@ public class GlobalExceptionHandler {
      * Handle InvalidTokenException (401)
      * UC-003: Different error codes for different token errors
      *
-     * @param ex InvalidTokenException
+     * @param ex      InvalidTokenException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -226,10 +226,10 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Invalid token: errorCode={}, message={}, path={}",
-            LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
         // UC-003: Map error codes to specific error types
-        String errorType = "INVALID_TOKEN";
+        var errorType = "INVALID_TOKEN";
         if ("AUTH_007".equals(ex.getErrorCode())) {
             errorType = "REFRESH_TOKEN_MISSING";
         } else if ("AUTH_009".equals(ex.getErrorCode())) {
@@ -238,14 +238,14 @@ public class GlobalExceptionHandler {
             errorType = "REFRESH_TOKEN_REVOKED";
         }
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.UNAUTHORIZED.value())
-            .error(errorType)
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error(errorType)
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
@@ -254,7 +254,7 @@ public class GlobalExceptionHandler {
      * Handle TokenReuseException (401)
      * UC-003: Token reuse detected - security issue
      *
-     * @param ex TokenReuseException
+     * @param ex      TokenReuseException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -264,16 +264,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.error("event={} Token reuse detected: errorCode={}, message={}, path={}",
-            LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.UNAUTHORIZED.value())
-            .error("TOKEN_REUSE_DETECTED")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.UNAUTHORIZED.value())
+                .error("TOKEN_REUSE_DETECTED")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
@@ -281,7 +281,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle ForbiddenException (403)
      *
-     * @param ex ForbiddenException
+     * @param ex      ForbiddenException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -291,16 +291,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Forbidden: errorCode={}, message={}, path={}",
-            LogEvent.EX_FORBIDDEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_FORBIDDEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.FORBIDDEN.value())
-            .error("FORBIDDEN")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.FORBIDDEN.value())
+                .error("FORBIDDEN")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
@@ -308,7 +308,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle MaxDepthExceededException (400)
      *
-     * @param ex MaxDepthExceededException
+     * @param ex      MaxDepthExceededException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -318,16 +318,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Max depth exceeded: errorCode={}, message={}, path={}",
-            LogEvent.FOLDER_MAX_DEPTH_EXCEEDED, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.FOLDER_MAX_DEPTH_EXCEEDED, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("MAX_DEPTH_EXCEEDED")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("MAX_DEPTH_EXCEEDED")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -335,7 +335,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle CircularReferenceException (400)
      *
-     * @param ex CircularReferenceException
+     * @param ex      CircularReferenceException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -345,16 +345,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Circular reference: errorCode={}, message={}, path={}",
-            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("CIRCULAR_REFERENCE")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("CIRCULAR_REFERENCE")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -362,7 +362,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle FolderTooLargeException (400)
      *
-     * @param ex FolderTooLargeException
+     * @param ex      FolderTooLargeException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -372,16 +372,16 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Folder too large: errorCode={}, message={}, path={}",
-            LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_VALIDATION, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("FOLDER_TOO_LARGE")
-            .errorCode(ex.getErrorCode())
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("FOLDER_TOO_LARGE")
+                .errorCode(ex.getErrorCode())
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -390,7 +390,7 @@ public class GlobalExceptionHandler {
      * Handle MethodArgumentNotValidException (400) - Bean Validation
      * UC-001: Validation error format with details array
      *
-     * @param ex MethodArgumentNotValidException
+     * @param ex      MethodArgumentNotValidException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -402,21 +402,21 @@ public class GlobalExceptionHandler {
         log.warn("event={} Bean validation error: path={}", LogEvent.EX_VALIDATION, request.getRequestURI());
 
         // UC-001: Format validation errors as array of objects with field and message
-        final List<Map<String, String>> errors = ex.getBindingResult()
-            .getFieldErrors()
-            .stream()
-            .map(this::formatFieldErrorAsMap)
-            .collect(Collectors.toList());
+        final var errors = ex.getBindingResult()
+                .getFieldErrors()
+                .stream()
+                .map(this::formatFieldErrorAsMap)
+                .toList();
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error("Validation failed")
-            .errorCode("VALIDATION_001")
-            .message("Validation failed")
-            .path(request.getRequestURI())
-            .details(errors)
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error("Validation failed")
+                .errorCode("VALIDATION_001")
+                .message("Validation failed")
+                .path(request.getRequestURI())
+                .details(errors)
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -425,7 +425,7 @@ public class GlobalExceptionHandler {
      * Handle IllegalArgumentException (400)
      * UC-006: Password change errors return "Invalid password" error type
      *
-     * @param ex IllegalArgumentException
+     * @param ex      IllegalArgumentException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -435,26 +435,26 @@ public class GlobalExceptionHandler {
             final HttpServletRequest request) {
 
         log.warn("event={} Illegal argument: message={}, path={}",
-            LogEvent.EX_ILLEGAL_ARGUMENT, ex.getMessage(), request.getRequestURI());
+                LogEvent.EX_ILLEGAL_ARGUMENT, ex.getMessage(), request.getRequestURI());
 
         // UC-006: Password change validation errors return "Invalid password"
-        final boolean isPasswordChange = request.getRequestURI() != null 
+        final var isPasswordChange = (request.getRequestURI() != null)
                 && request.getRequestURI().contains("/change-password");
-        final boolean isPasswordError = ex.getMessage() != null 
+        final var isPasswordError = (ex.getMessage() != null)
                 && (ex.getMessage().contains("password") || ex.getMessage().contains("Password"));
-        
-        final String errorType = (isPasswordChange && isPasswordError) 
-                ? "Invalid password" 
+
+        final var errorType = (isPasswordChange && isPasswordError)
+                ? "Invalid password"
                 : "INVALID_ARGUMENT";
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.BAD_REQUEST.value())
-            .error(errorType)
-            .errorCode("VALIDATION_002")
-            .message(ex.getMessage())
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.BAD_REQUEST.value())
+                .error(errorType)
+                .errorCode("VALIDATION_002")
+                .message(ex.getMessage())
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.badRequest().body(error);
     }
@@ -462,7 +462,7 @@ public class GlobalExceptionHandler {
     /**
      * Handle all other exceptions (500)
      *
-     * @param ex Exception
+     * @param ex      Exception
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
@@ -473,22 +473,18 @@ public class GlobalExceptionHandler {
 
         log.error("event={} Unexpected error: path={}", LogEvent.EX_INTERNAL_SERVER, request.getRequestURI(), ex);
 
-        final String message = getMessage("error.internal.server");
+        final var message = getMessage("error.internal.server");
 
-        final ErrorResponse error = ErrorResponse.builder()
-            .timestamp(Instant.now())
-            .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
-            .error("INTERNAL_SERVER_ERROR")
-            .errorCode("INTERNAL_001")
-            .message(message)
-            .path(request.getRequestURI())
-            .build();
+        final var error = ErrorResponse.builder()
+                .timestamp(Instant.now())
+                .status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+                .error("INTERNAL_SERVER_ERROR")
+                .errorCode("INTERNAL_001")
+                .message(message)
+                .path(request.getRequestURI())
+                .build();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
-    }
-
-    private String formatFieldError(final FieldError fieldError) {
-        return String.format("%s: %s", fieldError.getField(), fieldError.getDefaultMessage());
     }
 
     /**
@@ -503,6 +499,6 @@ public class GlobalExceptionHandler {
     }
 
     private String getMessage(final String code, final Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
+        return this.messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
     }
 }

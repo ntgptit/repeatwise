@@ -4,6 +4,8 @@ import java.util.UUID;
 
 import com.repeatwise.dto.request.user.UpdateProfileRequest;
 import com.repeatwise.dto.response.user.ChangePasswordResponse;
+import com.repeatwise.dto.response.user.UpdateProfileResponse;
+import com.repeatwise.dto.response.user.UserProfileResponse;
 
 /**
  * User Service Interface - Manages user operations

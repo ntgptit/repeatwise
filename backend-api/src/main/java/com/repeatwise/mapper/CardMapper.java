@@ -30,15 +30,29 @@ public interface CardMapper {
      * Convert Card entity to CardResponse DTO
      * Used for card CRUD operations
      *
+     * Note: SRS fields (currentBox, dueDate, lapseCount, lastReviewedAt, reviewCount) are ignored
+     * as they come from CardBoxPosition entity, not Card entity.
+     * Use toResponseWithSrs() for review session responses.
+     *
      * @param card Card entity
      * @return CardResponse DTO
      */
     @Mapping(target = "deckId", source = "deck.id")
+    @Mapping(target = "currentBox", ignore = true)
+    @Mapping(target = "dueDate", ignore = true)
+    @Mapping(target = "lapseCount", ignore = true)
+    @Mapping(target = "lastReviewedAt", ignore = true)
+    @Mapping(target = "reviewCount", ignore = true)
     CardResponse toResponse(Card card);
 
     /**
      * Convert Card entity to CardResponse DTO with SRS fields
      * Used for review session responses
+     *
+     * Note: Only currentBox and dueDate are mapped from parameters.
+     * Other SRS fields (lapseCount, lastReviewedAt, reviewCount) are ignored
+     * as they are not provided in this method signature.
+     * Use CardBoxPosition entity directly for full SRS data mapping.
      *
      * @param card Card entity
      * @param currentBox Current box from CardBoxPosition
@@ -48,6 +62,9 @@ public interface CardMapper {
     @Mapping(target = "deckId", source = "card.deck.id")
     @Mapping(target = "currentBox", source = "currentBox")
     @Mapping(target = "dueDate", source = "dueDate")
+    @Mapping(target = "lapseCount", ignore = true)
+    @Mapping(target = "lastReviewedAt", ignore = true)
+    @Mapping(target = "reviewCount", ignore = true)
     CardResponse toResponseWithSrs(Card card, Integer currentBox, java.time.LocalDate dueDate);
 
     /**

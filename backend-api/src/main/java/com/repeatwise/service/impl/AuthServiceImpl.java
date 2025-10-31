@@ -5,24 +5,23 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
+import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.LogoutResponse;
 import com.repeatwise.dto.response.auth.RegisterResponse;
-import com.repeatwise.dto.response.auth.UserResponse;
 import com.repeatwise.entity.RefreshToken;
 import com.repeatwise.entity.SrsSettings;
 import com.repeatwise.entity.User;
 import com.repeatwise.entity.UserStats;
 import com.repeatwise.exception.DuplicateEmailException;
 import com.repeatwise.exception.DuplicateUsernameException;
-import com.repeatwise.exception.ForbiddenException;
 import com.repeatwise.exception.InvalidCredentialsException;
+import com.repeatwise.exception.InvalidTokenException;
 import com.repeatwise.exception.TokenReuseException;
 import com.repeatwise.log.LogEvent;
 import com.repeatwise.mapper.UserMapper;
@@ -33,6 +32,7 @@ import com.repeatwise.repository.UserStatsRepository;
 import com.repeatwise.security.JwtTokenProvider;
 import com.repeatwise.service.IAuthService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -46,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class AuthServiceImpl extends BaseService implements IAuthService {
 
@@ -56,25 +57,6 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
-
-    public AuthServiceImpl(
-            final UserRepository userRepository,
-            final SrsSettingsRepository srsSettingsRepository,
-            final UserStatsRepository userStatsRepository,
-            final RefreshTokenRepository refreshTokenRepository,
-            final UserMapper userMapper,
-            final PasswordEncoder passwordEncoder,
-            final MessageSource messageSource,
-            final JwtTokenProvider jwtTokenProvider) {
-        super(messageSource);
-        this.userRepository = userRepository;
-        this.srsSettingsRepository = srsSettingsRepository;
-        this.userStatsRepository = userStatsRepository;
-        this.refreshTokenRepository = refreshTokenRepository;
-        this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-    }
 
     private void checkEmailAvailability(final String email) {
         final var normalizedEmail = normalizeEmail(email);
@@ -89,7 +71,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Check username availability (case-sensitive)
-     * 
+     *
      * UC-001: Username check is case-sensitive
      */
     private void checkUsernameAvailability(final String username) {
@@ -167,7 +149,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Find user by username or email
-     * 
+     *
      * UC-002: Username is case-sensitive, email is case-insensitive
      * - If email: normalize to lowercase and query case-insensitive
      * - If username: keep as provided and query case-sensitive
@@ -193,7 +175,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Generate access token for user
-     * 
+     *
      * UC-002: JWT payload includes userId, email, username
      */
     private String generateAccessToken(final User user) {
@@ -210,9 +192,9 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Create and save refresh token for user
-     * 
+     *
      * UC-002: Generate refresh token with 7-day expiry
-     * 
+     *
      * @param user User entity
      * @return Refresh token string (plain text, will be set in cookie)
      */
@@ -240,7 +222,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Login user with username or email
-     * 
+     *
      * UC-002: User Login
      * - Generate access token (15 minutes)
      * - Generate refresh token (7 days)
@@ -277,7 +259,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
     /**
      * Logout user from current device (revoke single refresh token)
      * UC-004: User Logout - Idempotent operation, graceful degradation
-     * 
+     *
      * Business Logic:
      * - If refresh token is blank → return success (nothing to revoke)
      * - If token not found → return success (idempotent)
@@ -300,7 +282,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
         // UC-004: Try to find token - if not found, logout still succeeds (idempotent)
         final var tokenOptional = this.refreshTokenRepository.findByToken(refreshToken);
         if (tokenOptional.isEmpty()) {
-            log.info("event={} Logout - token not found (already logged out?): userId={}", 
+            log.info("event={} Logout - token not found (already logged out?): userId={}",
                     LogEvent.SUCCESS, userId);
             return LogoutResponse.builder()
                     .message(getMessage(MSG_SUCCESS_LOGOUT))
@@ -311,7 +293,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
         // UC-004: Verify token ownership - if doesn't belong to user, still succeed (graceful)
         if (!token.getUser().getId().equals(userId)) {
-            log.warn("event={} Logout - token doesn't belong to user: userId={}, tokenUserId={}", 
+            log.warn("event={} Logout - token doesn't belong to user: userId={}, tokenUserId={}",
                     LogEvent.EX_INVALID_TOKEN, userId, token.getUser().getId());
             return LogoutResponse.builder()
                     .message(getMessage(MSG_SUCCESS_LOGOUT))
@@ -320,7 +302,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
         // UC-004: If already revoked, logout still succeeds (idempotent)
         if (Boolean.TRUE.equals(token.getIsRevoked())) {
-            log.info("event={} Logout - token already revoked: userId={}, tokenId={}", 
+            log.info("event={} Logout - token already revoked: userId={}, tokenId={}",
                     LogEvent.SUCCESS, userId, token.getId());
             return LogoutResponse.builder()
                     .message(getMessage(MSG_SUCCESS_LOGOUT))
@@ -340,7 +322,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Trim username (keep case, only trim whitespace)
-     * 
+     *
      * UC-001: Username is case-sensitive, only trim leading/trailing whitespace
      */
     private String trimUsername(final String username) {
@@ -359,7 +341,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Register new user account
-     * 
+     *
      * UC-001: User Registration
      * - Username is optional (case-sensitive if provided)
      * - Email is case-insensitive
@@ -421,7 +403,7 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Validate registration request
-     * 
+     *
      * UC-001: Validate email, password, confirmPassword
      * Username is optional (validated by @Pattern if provided)
      */
@@ -499,11 +481,11 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
 
     /**
      * Rotate refresh token (revoke old, create new)
-     * 
+     *
      * UC-003: Token rotation for security
-     * 
+     *
      * @param oldToken Old refresh token to revoke
-     * @param user User entity
+     * @param user     User entity
      * @return New refresh token string (plain text)
      */
     private String rotateRefreshToken(final RefreshToken oldToken, final User user) {
@@ -536,17 +518,17 @@ public class AuthServiceImpl extends BaseService implements IAuthService {
     private void validateRefreshToken(final RefreshToken token) {
         // UC-003: Token reuse detection - if token is already revoked, this is a reuse attempt
         if (Boolean.TRUE.equals(token.getIsRevoked())) {
-            log.warn("event={} Token reuse detected: tokenId={}, userId={}", 
+            log.warn("event={} Token reuse detected: tokenId={}, userId={}",
                     LogEvent.EX_INVALID_TOKEN, token.getId(), token.getUser().getId());
-            
+
             // UC-003: Security measure - revoke ALL tokens for this user
             final var revokedAt = Instant.now();
             final var revokedCount = this.refreshTokenRepository.revokeAllByUserId(
                     token.getUser().getId(), revokedAt);
-            
+
             log.error("event={} Token reuse detected - revoked all tokens for user: userId={}, tokensRevoked={}",
                     LogEvent.EX_INVALID_TOKEN, token.getUser().getId(), revokedCount);
-            
+
             throw new TokenReuseException(
                     "AUTH_010",
                     getMessage("error.auth.token.reuse.detected"));

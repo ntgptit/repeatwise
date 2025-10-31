@@ -4,7 +4,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +25,7 @@ import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.ICardService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -55,6 +55,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class CardServiceImpl extends BaseService implements ICardService {
 
@@ -65,21 +66,6 @@ public class CardServiceImpl extends BaseService implements ICardService {
     private final UserRepository userRepository;
     private final CardBoxPositionRepository cardBoxPositionRepository;
     private final CardMapper cardMapper;
-
-    public CardServiceImpl(
-            final CardRepository cardRepository,
-            final DeckRepository deckRepository,
-            final UserRepository userRepository,
-            final CardBoxPositionRepository cardBoxPositionRepository,
-            final CardMapper cardMapper,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.cardRepository = cardRepository;
-        this.deckRepository = deckRepository;
-        this.userRepository = userRepository;
-        this.cardBoxPositionRepository = cardBoxPositionRepository;
-        this.cardMapper = cardMapper;
-    }
 
     // ==================== UC-018: Create Card ====================
 

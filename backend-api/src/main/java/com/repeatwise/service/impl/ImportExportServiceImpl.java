@@ -18,7 +18,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.context.MessageSource;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -45,6 +44,7 @@ import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.ICardService;
 import com.repeatwise.service.IImportExportService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -64,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class ImportExportServiceImpl extends BaseService implements IImportExportService {
 
@@ -75,21 +76,6 @@ public class ImportExportServiceImpl extends BaseService implements IImportExpor
     private final DeckRepository deckRepository;
     private final UserRepository userRepository;
     private final ICardService cardService;
-
-    public ImportExportServiceImpl(
-            final CardRepository cardRepository,
-            final CardBoxPositionRepository cardBoxPositionRepository,
-            final DeckRepository deckRepository,
-            final UserRepository userRepository,
-            final ICardService cardService,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.cardRepository = cardRepository;
-        this.cardBoxPositionRepository = cardBoxPositionRepository;
-        this.deckRepository = deckRepository;
-        this.userRepository = userRepository;
-        this.cardService = cardService;
-    }
 
     // ==================== UC-021: Import Cards ====================
 
@@ -375,7 +361,7 @@ public class ImportExportServiceImpl extends BaseService implements IImportExpor
 
             return allCards.stream()
                     .filter(card -> dueCardIds.contains(card.getId()))
-                    .collect(Collectors.toList());
+                    .toList();
         }
 
         return allCards; // ALL scope

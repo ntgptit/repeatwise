@@ -9,9 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -31,6 +29,7 @@ import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.repository.UserStatsRepository;
 import com.repeatwise.service.IStatsService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -44,6 +43,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class StatsServiceImpl extends BaseService implements IStatsService {
 
@@ -53,23 +53,6 @@ public class StatsServiceImpl extends BaseService implements IStatsService {
     private final SrsSettingsRepository srsSettingsRepository;
     private final DeckRepository deckRepository;
     private final FolderRepository folderRepository;
-
-    public StatsServiceImpl(
-            final UserStatsRepository userStatsRepository,
-            final ReviewLogRepository reviewLogRepository,
-            final CardBoxPositionRepository cardBoxPositionRepository,
-            final SrsSettingsRepository srsSettingsRepository,
-            final DeckRepository deckRepository,
-            final FolderRepository folderRepository,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.userStatsRepository = userStatsRepository;
-        this.reviewLogRepository = reviewLogRepository;
-        this.cardBoxPositionRepository = cardBoxPositionRepository;
-        this.srsSettingsRepository = srsSettingsRepository;
-        this.deckRepository = deckRepository;
-        this.folderRepository = folderRepository;
-    }
 
     // ==================== UC-031: Get User Statistics ====================
 
@@ -193,9 +176,9 @@ public class StatsServiceImpl extends BaseService implements IStatsService {
             }
             final var folder = getFolderWithOwnershipCheck(scopeId, userId);
             final var decks = getDecksInFolderRecursive(folder, userId);
-            final List<UUID> deckIds = decks.stream()
+            final var deckIds = decks.stream()
                     .map(Deck::getId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             if (deckIds.isEmpty()) {
                 return Collections.emptyList();

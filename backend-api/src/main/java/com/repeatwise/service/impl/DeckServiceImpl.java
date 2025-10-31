@@ -18,10 +18,10 @@ import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IDeckService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,6 +57,7 @@ import java.time.Instant;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class DeckServiceImpl extends BaseService implements IDeckService {
 
@@ -67,21 +68,6 @@ public class DeckServiceImpl extends BaseService implements IDeckService {
     private final UserRepository userRepository;
     private final CardRepository cardRepository;
     private final DeckMapper deckMapper;
-
-    public DeckServiceImpl(
-            final DeckRepository deckRepository,
-            final FolderRepository folderRepository,
-            final UserRepository userRepository,
-            final CardRepository cardRepository,
-            final DeckMapper deckMapper,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.deckRepository = deckRepository;
-        this.folderRepository = folderRepository;
-        this.userRepository = userRepository;
-        this.cardRepository = cardRepository;
-        this.deckMapper = deckMapper;
-    }
 
     // ==================== UC-011: Create Deck ====================
 

@@ -1,11 +1,10 @@
 package com.repeatwise.dto.response.user;
 
-import com.repeatwise.entity.enums.Language;
-import com.repeatwise.entity.enums.Theme;
-import lombok.*;
-
-import java.time.Instant;
-import java.util.UUID;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Update Profile Response DTO
@@ -16,17 +15,17 @@ import java.util.UUID;
  *
  * Response Format:
  * {
- *   "message": "Profile updated successfully",
- *   "user": {
- *     "id": "uuid",
- *     "email": "user@example.com",
- *     "name": "John Smith",
- *     "timezone": "Asia/Ho_Chi_Minh",
- *     "language": "VI",
- *     "theme": "DARK",
- *     "created_at": "2025-01-15T10:30:00Z",
- *     "updated_at": "2025-01-28T14:45:00Z"
- *   }
+ * "message": "Profile updated successfully",
+ * "user": {
+ * "id": "uuid",
+ * "email": "user@example.com",
+ * "name": "John Smith",
+ * "timezone": "Asia/Ho_Chi_Minh",
+ * "language": "VI",
+ * "theme": "DARK",
+ * "created_at": "2025-01-15T10:30:00Z",
+ * "updated_at": "2025-01-28T14:45:00Z"
+ * }
  * }
  *
  * @author RepeatWise Team
@@ -49,4 +48,3 @@ public class UpdateProfileResponse {
      */
     private UserProfileResponse user;
 }
-

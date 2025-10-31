@@ -7,9 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
-import org.springframework.context.MessageSource;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -39,6 +37,7 @@ import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IReviewService;
 import com.repeatwise.util.SrsBoxIntervalUtil;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,6 +64,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class ReviewServiceImpl extends BaseService implements IReviewService {
 
@@ -78,23 +78,6 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
     private final ReviewLogRepository reviewLogRepository;
     private final SrsSettingsRepository srsSettingsRepository;
     private final UserRepository userRepository;
-
-    public ReviewServiceImpl(
-            final CardBoxPositionRepository cardBoxPositionRepository,
-            final DeckRepository deckRepository,
-            final FolderRepository folderRepository,
-            final ReviewLogRepository reviewLogRepository,
-            final SrsSettingsRepository srsSettingsRepository,
-            final UserRepository userRepository,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.cardBoxPositionRepository = cardBoxPositionRepository;
-        this.deckRepository = deckRepository;
-        this.folderRepository = folderRepository;
-        this.reviewLogRepository = reviewLogRepository;
-        this.srsSettingsRepository = srsSettingsRepository;
-        this.userRepository = userRepository;
-    }
 
     // ==================== UC-023: Start Review Session ====================
 
@@ -170,9 +153,9 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
         final var filteredCards = applyCramFilters(cards, request.getFilters());
 
         // Step 5: Limit to CRAM_LIMIT
-        final List<CardBoxPosition> limitedCards = filteredCards.stream()
+        final var limitedCards = filteredCards.stream()
                 .limit(CRAM_LIMIT)
-                .collect(Collectors.toList());
+                .toList();
 
         // Step 6: Check if there are cards
         if (limitedCards.isEmpty()) {
@@ -432,9 +415,9 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
                 return Collections.emptyList();
             }
 
-            final List<UUID> deckIds = decks.stream()
+            final var deckIds = decks.stream()
                     .map(Deck::getId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             positions = this.cardBoxPositionRepository.findDueCardsByUserIdAndDeckIds(
                     userId, deckIds, today, pageable);
@@ -467,9 +450,9 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
                 return Collections.emptyList();
             }
 
-            final List<UUID> deckIds = decks.stream()
+            final var deckIds = decks.stream()
                     .map(Deck::getId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             positions = this.cardBoxPositionRepository.findAllCardsByUserIdAndDeckIds(
                     userId, deckIds, pageable);
@@ -506,7 +489,7 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
 
                     return true;
                 })
-                .collect(Collectors.toList());
+                .toList();
     }
 
     private List<CardBoxPosition> queryDueCardsRandom(
@@ -532,9 +515,9 @@ public class ReviewServiceImpl extends BaseService implements IReviewService {
                 return Collections.emptyList();
             }
 
-            final List<UUID> deckIds = decks.stream()
+            final var deckIds = decks.stream()
                     .map(Deck::getId)
-                    .collect(Collectors.toList());
+                    .toList();
 
             positions = this.cardBoxPositionRepository.findDueCardsByUserIdAndDeckIdsRandom(
                     userId, deckIds, today, pageable);

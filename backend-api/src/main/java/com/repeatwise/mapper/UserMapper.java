@@ -40,12 +40,14 @@ public interface UserMapper {
     /**
      * Convert RegisterRequest to User entity
      * Note: password_hash must be set separately after bcrypt hashing
+     * Note: timezone should be set separately (auto-detect or default)
      *
      * @param request RegisterRequest DTO
-     * @return User entity (without password hash)
+     * @return User entity (without password hash and timezone)
      */
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "passwordHash", ignore = true)
+    @Mapping(target = "timezone", ignore = true)
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)

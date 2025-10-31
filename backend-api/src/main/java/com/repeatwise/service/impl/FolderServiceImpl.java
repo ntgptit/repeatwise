@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +33,7 @@ import com.repeatwise.repository.FolderStatsRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IFolderService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -65,6 +65,7 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class FolderServiceImpl extends BaseService implements IFolderService {
 
@@ -78,19 +79,6 @@ public class FolderServiceImpl extends BaseService implements IFolderService {
     private final FolderStatsRepository folderStatsRepository;
     private final UserRepository userRepository;
     private final FolderMapper folderMapper;
-
-    public FolderServiceImpl(
-            final FolderRepository folderRepository,
-            final FolderStatsRepository folderStatsRepository,
-            final UserRepository userRepository,
-            final FolderMapper folderMapper,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.folderRepository = folderRepository;
-        this.folderStatsRepository = folderStatsRepository;
-        this.userRepository = userRepository;
-        this.folderMapper = folderMapper;
-    }
 
     // ==================== UC-005: Create Folder Hierarchy ====================
 

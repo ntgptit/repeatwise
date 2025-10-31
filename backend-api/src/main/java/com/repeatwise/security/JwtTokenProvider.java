@@ -13,11 +13,9 @@ import org.springframework.stereotype.Component;
 
 import com.repeatwise.log.LogEvent;
 
-import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.MalformedJwtException;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
@@ -79,8 +77,8 @@ public class JwtTokenProvider {
      * 6. Set issuer and audience
      * 7. Sign with HS256 algorithm
      *
-     * @param userId User UUID
-     * @param email User email
+     * @param userId   User UUID
+     * @param email    User email
      * @param username User username (can be null)
      * @return JWT access token string
      */
@@ -101,8 +99,9 @@ public class JwtTokenProvider {
             tokenBuilder.claim("username", username);
         }
 
+        // Use signWith(SecretKey) - automatically detects HS256 algorithm from key type
         final var token = tokenBuilder
-                .signWith(this.secretKey, SignatureAlgorithm.HS256)
+                .signWith(this.secretKey)
                 .compact();
 
         log.debug("event={} Generated access token: userId={}, email={}, username={}, expiresAt={}",

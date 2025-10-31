@@ -6,7 +6,6 @@ import java.util.Objects;
 import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +19,7 @@ import com.repeatwise.log.LogEvent;
 import com.repeatwise.repository.SrsSettingsRepository;
 import com.repeatwise.service.ISrsSettingsService;
 
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -38,17 +38,11 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class SrsSettingsServiceImpl extends BaseService implements ISrsSettingsService {
 
     private final SrsSettingsRepository srsSettingsRepository;
-
-    public SrsSettingsServiceImpl(
-            final SrsSettingsRepository srsSettingsRepository,
-            final MessageSource messageSource) {
-        super(messageSource);
-        this.srsSettingsRepository = srsSettingsRepository;
-    }
 
     // ==================== UC-028: Get SRS Settings ====================
 

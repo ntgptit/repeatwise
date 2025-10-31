@@ -1,5 +1,6 @@
 package com.repeatwise.service.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -14,53 +15,20 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * - MessageSource integration for i18n
  *
  * Usage:
- * All service implementations should extend this class and pass MessageSource
- * to the constructor. Since services use @RequiredArgsConstructor from Lombok,
- * you need to exclude MessageSource from @RequiredArgsConstructor and inject it
- * separately, or manually write constructor to call super(messageSource).
+ * All service implementations should extend this class.
+ * MessageSource is injected via field injection to allow @RequiredArgsConstructor
+ * in service implementations without needing to call super(messageSource).
  *
- * Example with manual constructor:
- *
- * <pre>
- * {
- *     &#64;code
- *     &#64;Service
- *     @Slf4j
- *     public class MyServiceImpl extends BaseService implements IMyService {
- *         private final MyRepository repository;
- * 
- *         public MyServiceImpl(MyRepository repository, MessageSource messageSource) {
- *             super(messageSource);
- *             this.repository = repository;
- *         }
- *     }
- * }
- * </pre>
- *
- * Example with @RequiredArgsConstructor (excluding MessageSource):
- *
- * <pre>
- * {
- *     &#64;code
- *     &#64;Service
- *     &#64;RequiredArgsConstructor
- *     @Slf4j
- *     public class MyServiceImpl extends BaseService implements IMyService {
- *         private final MyRepository repository;
- * 
- *         public MyServiceImpl(MyRepository repository, MessageSource messageSource) {
- *             super(messageSource);
- *             this.repository = repository;
- *         }
- *     }
- * }
- * </pre>
+ * Note: Field injection is used here for MessageSource to enable @RequiredArgsConstructor
+ * in subclasses. This is acceptable for this base class as MessageSource is a framework
+ * infrastructure dependency that doesn't change.
  *
  * @author RepeatWise Team
  */
 public abstract class BaseService {
 
-    protected final MessageSource messageSource;
+    @Autowired
+    protected MessageSource messageSource;
 
     // ==================== Validation Constants ====================
 
@@ -73,15 +41,6 @@ public abstract class BaseService {
     protected static final String MSG_FOLDER_ID_CANNOT_BE_NULL = "Folder ID cannot be null";
     protected static final String MSG_REQUEST_CANNOT_BE_NULL = "Request cannot be null";
     protected static final String MSG_SESSION_ID_CANNOT_BE_NULL = "Session ID cannot be null";
-
-    /**
-     * Constructor for BaseService
-     *
-     * @param messageSource MessageSource bean for internationalization
-     */
-    protected BaseService(final MessageSource messageSource) {
-        this.messageSource = messageSource;
-    }
 
     /**
      * Get internationalized message

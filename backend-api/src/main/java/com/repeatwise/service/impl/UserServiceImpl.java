@@ -1,27 +1,31 @@
 package com.repeatwise.service.impl;
 
-import com.repeatwise.dto.request.user.ChangePasswordRequest;
-import com.repeatwise.dto.request.user.UpdateProfileRequest;
-import com.repeatwise.dto.response.user.ChangePasswordResponse;
-import com.repeatwise.entity.User;
-import com.repeatwise.exception.InvalidCredentialsException;
-import com.repeatwise.exception.ResourceNotFoundException;
-import com.repeatwise.mapper.UserMapper;
-import com.repeatwise.repository.RefreshTokenRepository;
-import com.repeatwise.repository.UserRepository;
-import com.repeatwise.service.IUserService;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
+import java.time.Instant;
+import java.time.ZoneId;
+import java.util.Objects;
+import java.util.UUID;
+
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.ZoneId;
-import java.time.Instant;
-import java.util.Objects;
-import java.util.UUID;
+import com.repeatwise.dto.request.user.ChangePasswordRequest;
+import com.repeatwise.dto.request.user.UpdateProfileRequest;
+import com.repeatwise.dto.response.user.ChangePasswordResponse;
+import com.repeatwise.dto.response.user.UpdateProfileResponse;
+import com.repeatwise.dto.response.user.UserProfileResponse;
+import com.repeatwise.entity.User;
+import com.repeatwise.exception.InvalidCredentialsException;
+import com.repeatwise.exception.ResourceNotFoundException;
+import com.repeatwise.log.LogEvent;
+import com.repeatwise.mapper.UserMapper;
+import com.repeatwise.repository.RefreshTokenRepository;
+import com.repeatwise.repository.UserRepository;
+import com.repeatwise.service.IUserService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * User Service Implementation - Manages user operations
@@ -41,6 +45,7 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
+@RequiredArgsConstructor
 @Slf4j
 public class UserServiceImpl extends BaseService implements IUserService {
 
@@ -49,29 +54,16 @@ public class UserServiceImpl extends BaseService implements IUserService {
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
 
-    public UserServiceImpl(
-            final UserRepository userRepository,
-            final UserMapper userMapper,
-            final MessageSource messageSource,
-            final PasswordEncoder passwordEncoder,
-            final RefreshTokenRepository refreshTokenRepository) {
-        super(messageSource);
-        this.userRepository = userRepository;
-        this.userMapper = userMapper;
-        this.passwordEncoder = passwordEncoder;
-        this.refreshTokenRepository = refreshTokenRepository;
-    }
-
     @Override
     public UserProfileResponse getCurrentUserProfile(final UUID userId) {
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting profile for user: {}", LogEvent.USER_GET_PROFILE, userId);
 
-        final User user = getUserById(userId);
+        final var user = getUserById(userId);
 
         log.info("event={} Profile retrieved successfully for user: {}", LogEvent.SUCCESS, userId);
-        return userMapper.toProfileResponse(user);
+        return this.userMapper.toProfileResponse(user);
     }
 
     private static final String MSG_SUCCESS_PROFILE_UPDATE = "success.user.profile.updated";
@@ -86,19 +78,20 @@ public class UserServiceImpl extends BaseService implements IUserService {
         validateTimezone(request.getTimezone());
 
         log.info("event={} Updating profile for user: {}, name={}, timezone={}, language={}, theme={}",
-                LogEvent.USER_UPDATE_PROFILE, userId, request.getName(), request.getTimezone(), request.getLanguage(), request.getTheme());
+                LogEvent.USER_UPDATE_PROFILE, userId, request.getName(), request.getTimezone(), request.getLanguage(),
+                request.getTheme());
 
-        final User user = getUserById(userId);
+        final var user = getUserById(userId);
 
         updateUserFields(user, request);
 
-        final User savedUser = userRepository.save(user);
+        final var savedUser = this.userRepository.save(user);
 
         log.info("event={} Profile updated successfully for user: {}", LogEvent.SUCCESS, userId);
-        
+
         return UpdateProfileResponse.builder()
                 .message(getMessage(MSG_SUCCESS_PROFILE_UPDATE))
-                .user(userMapper.toProfileResponse(savedUser))
+                .user(this.userMapper.toProfileResponse(savedUser))
                 .build();
     }
 
@@ -140,13 +133,12 @@ public class UserServiceImpl extends BaseService implements IUserService {
     }
 
     private User getUserById(final UUID userId) {
-        return userRepository.findById(userId)
+        return this.userRepository.findById(userId)
                 .orElseThrow(() -> {
                     log.error("event={} User not found: {}", LogEvent.USER_NOT_FOUND, userId);
                     return new ResourceNotFoundException(
                             "USER_001",
-                            getMessage("error.user.not.found", userId)
-                    );
+                            getMessage("error.user.not.found", userId));
                 });
     }
 
@@ -172,7 +164,7 @@ public class UserServiceImpl extends BaseService implements IUserService {
         final var user = getUserById(userId);
 
         // Verify current password
-        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
+        if (!this.passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash())) {
             log.warn("event={} Password change failed: incorrect current password for user: {}",
                     LogEvent.EX_INVALID_CREDENTIALS, userId);
             throw new InvalidCredentialsException(
@@ -181,7 +173,7 @@ public class UserServiceImpl extends BaseService implements IUserService {
         }
 
         // Verify new password is different from current password
-        if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
+        if (this.passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash())) {
             log.warn("event={} Password change failed: new password same as current for user: {}",
                     LogEvent.EX_INVALID_CREDENTIALS, userId);
             throw new IllegalArgumentException(
@@ -189,12 +181,12 @@ public class UserServiceImpl extends BaseService implements IUserService {
         }
 
         // Update password
-        final var newPasswordHash = passwordEncoder.encode(request.getNewPassword());
+        final var newPasswordHash = this.passwordEncoder.encode(request.getNewPassword());
         user.setPasswordHash(newPasswordHash);
-        userRepository.save(user);
+        this.userRepository.save(user);
 
         // Revoke all refresh tokens (logout from all devices)
-        final var revokedCount = refreshTokenRepository.revokeAllByUserId(userId, Instant.now());
+        final var revokedCount = this.refreshTokenRepository.revokeAllByUserId(userId, Instant.now());
 
         log.info("event={} Password changed successfully: userId={}, tokensRevoked={}",
                 LogEvent.SUCCESS, userId, revokedCount);
@@ -205,15 +197,8 @@ public class UserServiceImpl extends BaseService implements IUserService {
     }
 
     private void validateChangePasswordRequest(final ChangePasswordRequest request) {
-        if (StringUtils.isBlank(request.getCurrentPassword())) {
-            throw new IllegalArgumentException(getMessage("error.user.password.required"));
-        }
-
-        if (StringUtils.isBlank(request.getNewPassword())) {
-            throw new IllegalArgumentException(getMessage("error.user.password.required"));
-        }
-
-        if (StringUtils.isBlank(request.getConfirmNewPassword())) {
+        if (StringUtils.isBlank(request.getCurrentPassword()) || StringUtils.isBlank(request.getNewPassword())
+                || StringUtils.isBlank(request.getConfirmNewPassword())) {
             throw new IllegalArgumentException(getMessage("error.user.password.required"));
         }
 

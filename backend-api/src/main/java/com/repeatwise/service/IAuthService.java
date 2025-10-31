@@ -4,12 +4,11 @@ import java.util.UUID;
 
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
+import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.LogoutResponse;
 import com.repeatwise.dto.response.auth.RegisterResponse;
-import com.repeatwise.dto.response.auth.UserResponse;
 import com.repeatwise.exception.DuplicateEmailException;
 import com.repeatwise.exception.DuplicateUsernameException;
-import com.repeatwise.exception.ForbiddenException;
 import com.repeatwise.exception.InvalidCredentialsException;
 import com.repeatwise.exception.InvalidTokenException;
 
