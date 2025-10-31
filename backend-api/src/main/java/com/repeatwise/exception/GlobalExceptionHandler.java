@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Global Exception Handler
@@ -92,14 +94,13 @@ public class GlobalExceptionHandler {
 
     /**
      * Handle DuplicateResourceException (409)
+     * Note: DuplicateEmailException and DuplicateUsernameException return 400 for UC-001 compliance
      *
      * @param ex DuplicateResourceException
      * @param request HttpServletRequest
      * @return ResponseEntity with ErrorResponse
      */
-    @ExceptionHandler({DuplicateResourceException.class,
-                       DuplicateUsernameException.class,
-                       DuplicateEmailException.class})
+    @ExceptionHandler(DuplicateResourceException.class)
     public ResponseEntity<ErrorResponse> handleDuplicateResource(
             final BusinessException ex,
             final HttpServletRequest request) {
@@ -120,7 +121,65 @@ public class GlobalExceptionHandler {
     }
 
     /**
-     * Handle InvalidCredentialsException (401)
+     * Handle DuplicateEmailException (400)
+     * UC-001: Email already exists returns 400 Bad Request
+     *
+     * @param ex DuplicateEmailException
+     * @param request HttpServletRequest
+     * @return ResponseEntity with ErrorResponse
+     */
+    @ExceptionHandler(DuplicateEmailException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateEmail(
+            final DuplicateEmailException ex,
+            final HttpServletRequest request) {
+
+        log.warn("event={} Duplicate email: errorCode={}, message={}, path={}",
+            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+
+        final ErrorResponse error = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Email already exists")
+            .errorCode(ex.getErrorCode())
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Handle DuplicateUsernameException (400)
+     * UC-001: Username already exists returns 400 Bad Request
+     *
+     * @param ex DuplicateUsernameException
+     * @param request HttpServletRequest
+     * @return ResponseEntity with ErrorResponse
+     */
+    @ExceptionHandler(DuplicateUsernameException.class)
+    public ResponseEntity<ErrorResponse> handleDuplicateUsername(
+            final DuplicateUsernameException ex,
+            final HttpServletRequest request) {
+
+        log.warn("event={} Duplicate username: errorCode={}, message={}, path={}",
+            LogEvent.EX_DUPLICATE_RESOURCE, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+
+        final ErrorResponse error = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.BAD_REQUEST.value())
+            .error("Username already exists")
+            .errorCode(ex.getErrorCode())
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    /**
+     * Handle InvalidCredentialsException (400 for password change, 401 for login)
+     * UC-002: Invalid credentials returns generic error message for login
+     * UC-006: Invalid password returns 400 Bad Request for password change
      *
      * @param ex InvalidCredentialsException
      * @param request HttpServletRequest
@@ -134,20 +193,28 @@ public class GlobalExceptionHandler {
         log.warn("event={} Invalid credentials: errorCode={}, message={}, path={}",
             LogEvent.EX_INVALID_CREDENTIALS, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
+        // UC-006: Password change errors return 400 with "Invalid password"
+        final boolean isPasswordChange = request.getRequestURI() != null 
+                && request.getRequestURI().contains("/change-password");
+        
+        final HttpStatus status = isPasswordChange ? HttpStatus.BAD_REQUEST : HttpStatus.UNAUTHORIZED;
+        final String errorType = isPasswordChange ? "Invalid password" : "Invalid credentials";
+
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
-            .status(HttpStatus.UNAUTHORIZED.value())
-            .error("INVALID_CREDENTIALS")
+            .status(status.value())
+            .error(errorType)
             .errorCode(ex.getErrorCode())
             .message(ex.getMessage())
             .path(request.getRequestURI())
             .build();
 
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+        return ResponseEntity.status(status).body(error);
     }
 
     /**
      * Handle InvalidTokenException (401)
+     * UC-003: Different error codes for different token errors
      *
      * @param ex InvalidTokenException
      * @param request HttpServletRequest
@@ -161,10 +228,48 @@ public class GlobalExceptionHandler {
         log.warn("event={} Invalid token: errorCode={}, message={}, path={}",
             LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
 
+        // UC-003: Map error codes to specific error types
+        String errorType = "INVALID_TOKEN";
+        if ("AUTH_007".equals(ex.getErrorCode())) {
+            errorType = "REFRESH_TOKEN_MISSING";
+        } else if ("AUTH_009".equals(ex.getErrorCode())) {
+            errorType = "REFRESH_TOKEN_EXPIRED";
+        } else if ("AUTH_008".equals(ex.getErrorCode())) {
+            errorType = "REFRESH_TOKEN_REVOKED";
+        }
+
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.UNAUTHORIZED.value())
-            .error("INVALID_TOKEN")
+            .error(errorType)
+            .errorCode(ex.getErrorCode())
+            .message(ex.getMessage())
+            .path(request.getRequestURI())
+            .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    /**
+     * Handle TokenReuseException (401)
+     * UC-003: Token reuse detected - security issue
+     *
+     * @param ex TokenReuseException
+     * @param request HttpServletRequest
+     * @return ResponseEntity with ErrorResponse
+     */
+    @ExceptionHandler(TokenReuseException.class)
+    public ResponseEntity<ErrorResponse> handleTokenReuse(
+            final TokenReuseException ex,
+            final HttpServletRequest request) {
+
+        log.error("event={} Token reuse detected: errorCode={}, message={}, path={}",
+            LogEvent.EX_INVALID_TOKEN, ex.getErrorCode(), ex.getMessage(), request.getRequestURI());
+
+        final ErrorResponse error = ErrorResponse.builder()
+            .timestamp(Instant.now())
+            .status(HttpStatus.UNAUTHORIZED.value())
+            .error("TOKEN_REUSE_DETECTED")
             .errorCode(ex.getErrorCode())
             .message(ex.getMessage())
             .path(request.getRequestURI())
@@ -283,6 +388,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Handle MethodArgumentNotValidException (400) - Bean Validation
+     * UC-001: Validation error format with details array
      *
      * @param ex MethodArgumentNotValidException
      * @param request HttpServletRequest
@@ -295,16 +401,17 @@ public class GlobalExceptionHandler {
 
         log.warn("event={} Bean validation error: path={}", LogEvent.EX_VALIDATION, request.getRequestURI());
 
-        final List<String> errors = ex.getBindingResult()
+        // UC-001: Format validation errors as array of objects with field and message
+        final List<Map<String, String>> errors = ex.getBindingResult()
             .getFieldErrors()
             .stream()
-            .map(this::formatFieldError)
+            .map(this::formatFieldErrorAsMap)
             .collect(Collectors.toList());
 
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.BAD_REQUEST.value())
-            .error("VALIDATION_ERROR")
+            .error("Validation failed")
             .errorCode("VALIDATION_001")
             .message("Validation failed")
             .path(request.getRequestURI())
@@ -316,6 +423,7 @@ public class GlobalExceptionHandler {
 
     /**
      * Handle IllegalArgumentException (400)
+     * UC-006: Password change errors return "Invalid password" error type
      *
      * @param ex IllegalArgumentException
      * @param request HttpServletRequest
@@ -329,10 +437,20 @@ public class GlobalExceptionHandler {
         log.warn("event={} Illegal argument: message={}, path={}",
             LogEvent.EX_ILLEGAL_ARGUMENT, ex.getMessage(), request.getRequestURI());
 
+        // UC-006: Password change validation errors return "Invalid password"
+        final boolean isPasswordChange = request.getRequestURI() != null 
+                && request.getRequestURI().contains("/change-password");
+        final boolean isPasswordError = ex.getMessage() != null 
+                && (ex.getMessage().contains("password") || ex.getMessage().contains("Password"));
+        
+        final String errorType = (isPasswordChange && isPasswordError) 
+                ? "Invalid password" 
+                : "INVALID_ARGUMENT";
+
         final ErrorResponse error = ErrorResponse.builder()
             .timestamp(Instant.now())
             .status(HttpStatus.BAD_REQUEST.value())
-            .error("INVALID_ARGUMENT")
+            .error(errorType)
             .errorCode("VALIDATION_002")
             .message(ex.getMessage())
             .path(request.getRequestURI())
@@ -371,6 +489,17 @@ public class GlobalExceptionHandler {
 
     private String formatFieldError(final FieldError fieldError) {
         return String.format("%s: %s", fieldError.getField(), fieldError.getDefaultMessage());
+    }
+
+    /**
+     * Format field error as Map for UC-001 compliance
+     * Returns Map with "field" and "message" keys
+     */
+    private Map<String, String> formatFieldErrorAsMap(final FieldError fieldError) {
+        final Map<String, String> errorMap = new HashMap<>();
+        errorMap.put("field", fieldError.getField());
+        errorMap.put("message", fieldError.getDefaultMessage());
+        return errorMap;
     }
 
     private String getMessage(final String code, final Object... args) {

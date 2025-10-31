@@ -3,7 +3,7 @@ package com.repeatwise.service;
 import java.util.UUID;
 
 import com.repeatwise.dto.request.user.UpdateProfileRequest;
-import com.repeatwise.dto.response.user.UserProfileResponse;
+import com.repeatwise.dto.response.user.ChangePasswordResponse;
 
 /**
  * User Service Interface - Manages user operations
@@ -28,6 +28,7 @@ public interface IUserService {
     /**
      * Update current user profile
      * Used by: PUT /api/users/me
+     * UC-005: Update User Profile
      *
      * Business Rules (BR-009):
      * - name: Required, 1-100 characters
@@ -38,13 +39,14 @@ public interface IUserService {
      *
      * @param userId  authenticated user ID from JWT token
      * @param request UpdateProfileRequest with updated profile data
-     * @return UserProfileResponse with updated profile
+     * @return UpdateProfileResponse with message and updated user profile
      */
-    UserProfileResponse updateProfile(UUID userId, UpdateProfileRequest request);
+    UpdateProfileResponse updateProfile(UUID userId, UpdateProfileRequest request);
 
     /**
      * Change user password
      * Used by: POST /api/users/change-password
+     * UC-006: Change Password
      *
      * Business Rules:
      * - Current password must be verified
@@ -52,11 +54,10 @@ public interface IUserService {
      * - New password must be at least 8 characters
      * - All refresh tokens for user are revoked (logout from all devices)
      *
-     * Use Case: UC-006 - Change Password
-     *
      * @param userId Current authenticated user ID
      * @param request ChangePasswordRequest with currentPassword, newPassword, confirmNewPassword
+     * @return ChangePasswordResponse with success message
      * @throws InvalidCredentialsException if current password is incorrect
      */
-    void changePassword(UUID userId, com.repeatwise.dto.request.user.ChangePasswordRequest request);
+    ChangePasswordResponse changePassword(UUID userId, com.repeatwise.dto.request.user.ChangePasswordRequest request);
 }

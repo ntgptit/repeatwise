@@ -21,6 +21,17 @@ import java.util.UUID;
 public interface UserRepository extends JpaRepository<User, UUID> {
 
     /**
+     * Find user by username (case-sensitive)
+     *
+     * UC-002: Username is case-sensitive for login
+     * - Case-sensitive comparison
+     *
+     * @param username User username
+     * @return Optional of User
+     */
+    Optional<User> findByUsername(String username);
+
+    /**
      * Find user by username (case-insensitive)
      *
      * Business Rule BR-001: Username uniqueness

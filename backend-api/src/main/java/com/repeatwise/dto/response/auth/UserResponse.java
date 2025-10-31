@@ -12,7 +12,7 @@ import java.util.UUID;
  *
  * Requirements:
  * - UC-001: User Registration
- * - UC-002: User Login
+ * - UC-002: User Login - Response includes id, email, username, name, language, theme, timezone
  * - API Response Specs
  *
  * @author RepeatWise Team
@@ -30,5 +30,10 @@ public class UserResponse {
     private String name;
     private Language language;
     private Theme theme;
+    /**
+     * User timezone
+     * UC-002: Timezone included in login response
+     */
+    private String timezone;
     private Instant createdAt;
 }

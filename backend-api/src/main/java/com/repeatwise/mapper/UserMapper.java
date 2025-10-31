@@ -49,7 +49,7 @@ public interface UserMapper {
     @Mapping(target = "createdAt", ignore = true)
     @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "deletedAt", ignore = true)
-    @Mapping(target = "language", constant = "EN")
+    @Mapping(target = "language", constant = "VI")
     @Mapping(target = "theme", constant = "SYSTEM")
     User toEntity(RegisterRequest request);
 }

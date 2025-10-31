@@ -68,34 +68,45 @@ public class JwtTokenProvider {
     /**
      * Generate JWT access token for user
      *
+     * UC-002: JWT payload includes userId, email, username
+     *
      * Business Logic:
      * 1. Create JWT with user ID as subject
      * 2. Add email claim
-     * 3. Set issued at timestamp (now)
-     * 4. Set expiration (now + 15 minutes)
-     * 5. Set issuer and audience
-     * 6. Sign with HS256 algorithm
+     * 3. Add username claim (if provided)
+     * 4. Set issued at timestamp (now)
+     * 5. Set expiration (now + 15 minutes)
+     * 6. Set issuer and audience
+     * 7. Sign with HS256 algorithm
      *
      * @param userId User UUID
-     * @param email  User email
+     * @param email User email
+     * @param username User username (can be null)
      * @return JWT access token string
      */
-    public String generateAccessToken(final UUID userId, final String email) {
+    public String generateAccessToken(final UUID userId, final String email, final String username) {
         final var now = Instant.now();
         final var expiration = now.plus(this.accessTokenExpirationMinutes, ChronoUnit.MINUTES);
 
-        final var token = Jwts.builder()
+        final var tokenBuilder = Jwts.builder()
                 .subject(userId.toString())
                 .claim("email", email)
                 .issuedAt(Date.from(now))
                 .expiration(Date.from(expiration))
                 .claim("iss", this.issuer)
-                .claim("aud", this.audience)
+                .claim("aud", this.audience);
+
+        // Add username claim if provided
+        if (username != null) {
+            tokenBuilder.claim("username", username);
+        }
+
+        final var token = tokenBuilder
                 .signWith(this.secretKey, SignatureAlgorithm.HS256)
                 .compact();
 
-        log.debug("event={} Generated access token: userId={}, email={}, expiresAt={}",
-                LogEvent.AUTH_LOGIN_SUCCESS, userId, email, expiration);
+        log.debug("event={} Generated access token: userId={}, email={}, username={}, expiresAt={}",
+                LogEvent.AUTH_LOGIN_SUCCESS, userId, email, username, expiration);
 
         return token;
     }

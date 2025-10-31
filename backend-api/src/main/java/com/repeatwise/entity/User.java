@@ -52,9 +52,13 @@ import lombok.experimental.SuperBuilder;
 @SuperBuilder
 public class User extends SoftDeletableEntity {
 
-    @NotBlank(message = "{error.user.username.required}")
+    /**
+     * Username (optional)
+     * UC-001: Username is optional during registration
+     * Case-sensitive, unique if provided
+     */
     @Size(min = 3, max = 30, message = "{error.user.username.length}")
-    @Column(name = "username", nullable = false, unique = true, length = 30)
+    @Column(name = "username", nullable = true, unique = true, length = 30)
     private String username;
 
     @NotBlank(message = "{error.user.name.required}")

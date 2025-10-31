@@ -2,7 +2,7 @@ package com.repeatwise.service.impl;
 
 import com.repeatwise.dto.request.user.ChangePasswordRequest;
 import com.repeatwise.dto.request.user.UpdateProfileRequest;
-import com.repeatwise.dto.response.user.UserProfileResponse;
+import com.repeatwise.dto.response.user.ChangePasswordResponse;
 import com.repeatwise.entity.User;
 import com.repeatwise.exception.InvalidCredentialsException;
 import com.repeatwise.exception.ResourceNotFoundException;
@@ -18,6 +18,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.ZoneId;
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
@@ -73,13 +74,16 @@ public class UserServiceImpl extends BaseService implements IUserService {
         return userMapper.toProfileResponse(user);
     }
 
+    private static final String MSG_SUCCESS_PROFILE_UPDATE = "success.user.profile.updated";
+
     @Transactional
     @Override
-    public UserProfileResponse updateProfile(final UUID userId, final UpdateProfileRequest request) {
+    public UpdateProfileResponse updateProfile(final UUID userId, final UpdateProfileRequest request) {
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "UpdateProfileRequest cannot be null");
 
         validateRequest(request);
+        validateTimezone(request.getTimezone());
 
         log.info("event={} Updating profile for user: {}, name={}, timezone={}, language={}, theme={}",
                 LogEvent.USER_UPDATE_PROFILE, userId, request.getName(), request.getTimezone(), request.getLanguage(), request.getTheme());
@@ -91,7 +95,30 @@ public class UserServiceImpl extends BaseService implements IUserService {
         final User savedUser = userRepository.save(user);
 
         log.info("event={} Profile updated successfully for user: {}", LogEvent.SUCCESS, userId);
-        return userMapper.toProfileResponse(savedUser);
+        
+        return UpdateProfileResponse.builder()
+                .message(getMessage(MSG_SUCCESS_PROFILE_UPDATE))
+                .user(userMapper.toProfileResponse(savedUser))
+                .build();
+    }
+
+    /**
+     * Validate timezone is a valid IANA timezone identifier
+     * UC-005: Timezone must be valid IANA timezone
+     */
+    private void validateTimezone(final String timezone) {
+        if (StringUtils.isBlank(timezone)) {
+            return; // Already validated by @NotBlank
+        }
+
+        try {
+            // Validate timezone using ZoneId - throws exception if invalid
+            ZoneId.of(timezone.trim());
+        } catch (final Exception ex) {
+            log.warn("event={} Invalid timezone: {}", LogEvent.EX_VALIDATION, timezone);
+            throw new IllegalArgumentException(
+                    getMessage("error.user.timezone.invalid"));
+        }
     }
 
     private void validateRequest(final UpdateProfileRequest request) {
@@ -130,9 +157,11 @@ public class UserServiceImpl extends BaseService implements IUserService {
         user.setTheme(request.getTheme());
     }
 
+    private static final String MSG_SUCCESS_PASSWORD_CHANGE = "success.user.password.changed";
+
     @Transactional
     @Override
-    public void changePassword(final UUID userId, final ChangePasswordRequest request) {
+    public ChangePasswordResponse changePassword(final UUID userId, final ChangePasswordRequest request) {
         Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "ChangePasswordRequest cannot be null");
 
@@ -169,6 +198,10 @@ public class UserServiceImpl extends BaseService implements IUserService {
 
         log.info("event={} Password changed successfully: userId={}, tokensRevoked={}",
                 LogEvent.SUCCESS, userId, revokedCount);
+
+        return ChangePasswordResponse.builder()
+                .message(getMessage(MSG_SUCCESS_PASSWORD_CHANGE))
+                .build();
     }
 
     private void validateChangePasswordRequest(final ChangePasswordRequest request) {
