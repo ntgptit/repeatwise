@@ -10,6 +10,8 @@ package com.repeatwise.exception;
  */
 public class DuplicateUsernameException extends BusinessException {
 
+    private static final long serialVersionUID = -2898291186354862356L;
+
     public DuplicateUsernameException(final String errorCode, final String message) {
         super(errorCode, message);
     }

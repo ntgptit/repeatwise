@@ -1,17 +1,19 @@
 package com.repeatwise.log.util;
 
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.repeatwise.log.LogEvent;
 import com.repeatwise.log.LogLevel;
 import com.repeatwise.log.context.LogContext;
-import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.time.Instant;
-import java.util.HashMap;
-import java.util.Map;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Structured logging utility for outputting JSON-formatted logs.
@@ -24,21 +26,21 @@ import java.util.Map;
  * - Integration with ELK, Splunk, CloudWatch, etc.
  *
  * Usage:
+ *
  * <pre>
  * StructuredLogger.builder()
- *     .event(LogEvent.USER_GET_PROFILE)
- *     .level(LogLevel.INFO)
- *     .message("User profile retrieved")
- *     .field("userId", userId)
- *     .field("duration", durationMs)
- *     .log();
+ *         .event(LogEvent.USER_GET_PROFILE)
+ *         .level(LogLevel.INFO)
+ *         .message("User profile retrieved")
+ *         .field("userId", userId)
+ *         .field("duration", durationMs)
+ *         .log();
  * </pre>
  */
 @Slf4j
 public class StructuredLogger {
 
     private static final ObjectMapper objectMapper = new ObjectMapper();
-    private static final String LOG_FORMAT_JSON = "json";
     private static boolean enableJsonLogging = true;
 
     /**
@@ -74,28 +76,28 @@ public class StructuredLogger {
      */
     public static void logEvent(LogEvent event, String message) {
         builder()
-            .event(event)
-            .level(event.getSuggestedLevel())
-            .message(message)
-            .log();
+                .event(event)
+                .level(event.getSuggestedLevel())
+                .message(message)
+                .log();
     }
 
     public static void logEvent(LogEvent event, String message, Map<String, Object> fields) {
-        Builder b = builder()
-            .event(event)
-            .level(event.getSuggestedLevel())
-            .message(message);
+        final var b = builder()
+                .event(event)
+                .level(event.getSuggestedLevel())
+                .message(message);
         fields.forEach(b::field);
         b.log();
     }
 
     public static void logError(LogEvent event, String message, Throwable throwable) {
         builder()
-            .event(event)
-            .level(LogLevel.ERROR)
-            .message(message)
-            .exception(throwable)
-            .log();
+                .event(event)
+                .level(LogLevel.ERROR)
+                .message(message)
+                .exception(throwable)
+                .log();
     }
 
     /**
@@ -116,31 +118,31 @@ public class StructuredLogger {
         Builder(Logger logger) {
             this.logger = logger;
             // Add timestamp
-            fields.put("@timestamp", Instant.now().toString());
+            this.fields.put("@timestamp", Instant.now().toString());
         }
 
         public Builder level(LogLevel level) {
             this.level = level;
-            fields.put("level", level.name());
+            this.fields.put("level", level.name());
             return this;
         }
 
         public Builder event(LogEvent event) {
             this.event = event;
-            fields.put("event", event.name());
-            fields.put("eventCategory", event.getCategory());
+            this.fields.put("event", event.name());
+            this.fields.put("eventCategory", event.getCategory());
             return this;
         }
 
         public Builder message(String message) {
             this.message = message;
-            fields.put("message", message);
+            this.fields.put("message", message);
             return this;
         }
 
         public Builder field(String key, Object value) {
             if (value != null) {
-                fields.put(key, value);
+                this.fields.put(key, value);
             }
             return this;
         }
@@ -155,11 +157,10 @@ public class StructuredLogger {
         public Builder exception(Throwable throwable) {
             this.exception = throwable;
             if (throwable != null) {
-                fields.put("exception", Map.of(
-                    "type", throwable.getClass().getName(),
-                    "message", throwable.getMessage() != null ? throwable.getMessage() : "",
-                    "stackTrace", getStackTraceAsString(throwable)
-                ));
+                this.fields.put("exception", Map.of(
+                        "type", throwable.getClass().getName(),
+                        "message", throwable.getMessage() != null ? throwable.getMessage() : "",
+                        "stackTrace", getStackTraceAsString(throwable)));
             }
             return this;
         }
@@ -192,9 +193,9 @@ public class StructuredLogger {
          * Include MDC context in the log.
          */
         public Builder withContext() {
-            Map<String, String> mdcContext = LogContext.getAll();
-            if (mdcContext != null && !mdcContext.isEmpty()) {
-                fields.put("context", mdcContext);
+            final var mdcContext = LogContext.getAll();
+            if ((mdcContext != null) && !mdcContext.isEmpty()) {
+                this.fields.put("context", mdcContext);
             }
             return this;
         }
@@ -218,10 +219,10 @@ public class StructuredLogger {
          */
         private void logJson() {
             try {
-                String jsonLog = objectMapper.writeValueAsString(fields);
-                logAtLevel(jsonLog, exception);
-            } catch (JsonProcessingException e) {
-                logger.error("Failed to serialize log to JSON: {}", fields, e);
+                final var jsonLog = objectMapper.writeValueAsString(this.fields);
+                logAtLevel(jsonLog, this.exception);
+            } catch (final JsonProcessingException e) {
+                this.logger.error("Failed to serialize log to JSON: {}", this.fields, e);
                 logPlain();
             }
         }
@@ -230,51 +231,66 @@ public class StructuredLogger {
          * Log as plain text format.
          */
         private void logPlain() {
-            StringBuilder sb = new StringBuilder();
-            if (event != null) {
-                sb.append("[").append(event).append("] ");
+            final var sb = new StringBuilder();
+            if (this.event != null) {
+                sb.append("[").append(this.event).append("] ");
             }
-            if (message != null) {
-                sb.append(message);
+            if (this.message != null) {
+                sb.append(this.message);
             }
-            if (!fields.isEmpty()) {
+            if (!this.fields.isEmpty()) {
                 sb.append(" | ");
-                fields.forEach((k, v) -> {
+                this.fields.forEach((k, v) -> {
                     if (!"@timestamp".equals(k) && !"event".equals(k) &&
-                        !"eventCategory".equals(k) && !"level".equals(k) &&
-                        !"message".equals(k) && !"context".equals(k)) {
+                            !"eventCategory".equals(k) && !"level".equals(k) &&
+                            !"message".equals(k) && !"context".equals(k)) {
                         sb.append(k).append("=").append(v).append(" ");
                     }
                 });
             }
-            logAtLevel(sb.toString().trim(), exception);
+            logAtLevel(sb.toString().trim(), this.exception);
         }
 
         /**
          * Log at the specified level.
          */
         private void logAtLevel(String message, Throwable throwable) {
-            switch (level) {
-                case TRACE -> {
-                    if (throwable != null) logger.trace(message, throwable);
-                    else logger.trace(message);
+            switch (this.level) {
+            case TRACE -> {
+                if (throwable != null) {
+                    this.logger.trace(message, throwable);
+                } else {
+                    this.logger.trace(message);
                 }
-                case DEBUG -> {
-                    if (throwable != null) logger.debug(message, throwable);
-                    else logger.debug(message);
+            }
+            case DEBUG -> {
+                if (throwable != null) {
+                    this.logger.debug(message, throwable);
+                } else {
+                    this.logger.debug(message);
                 }
-                case INFO -> {
-                    if (throwable != null) logger.info(message, throwable);
-                    else logger.info(message);
+            }
+            case INFO -> {
+                if (throwable != null) {
+                    this.logger.info(message, throwable);
+                } else {
+                    this.logger.info(message);
                 }
-                case WARN -> {
-                    if (throwable != null) logger.warn(message, throwable);
-                    else logger.warn(message);
+            }
+            case WARN -> {
+                if (throwable != null) {
+                    this.logger.warn(message, throwable);
+                } else {
+                    this.logger.warn(message);
                 }
-                case ERROR -> {
-                    if (throwable != null) logger.error(message, throwable);
-                    else logger.error(message);
+            }
+            case ERROR -> {
+                if (throwable != null) {
+                    this.logger.error(message, throwable);
+                } else {
+                    this.logger.error(message);
                 }
+            }
             }
         }
 
@@ -285,10 +301,10 @@ public class StructuredLogger {
             if (throwable == null) {
                 return "";
             }
-            StackTraceElement[] elements = throwable.getStackTrace();
-            int limit = Math.min(elements.length, 10);  // Limit to 10 frames
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < limit; i++) {
+            final var elements = throwable.getStackTrace();
+            final var limit = Math.min(elements.length, 10); // Limit to 10 frames
+            final var sb = new StringBuilder();
+            for (var i = 0; i < limit; i++) {
                 sb.append(elements[i].toString()).append("\n");
             }
             if (elements.length > limit) {

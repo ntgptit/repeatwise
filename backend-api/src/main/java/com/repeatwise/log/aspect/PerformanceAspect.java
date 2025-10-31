@@ -51,7 +51,7 @@ public class PerformanceAspect {
         }
 
         String methodName = signature.getName();
-        String className = signature.getDeclaringClass().getSimpleName();
+        String className = signature.getMethod().getDeclaringClass().getSimpleName();
         String operation = perfLog.operation().isEmpty()
             ? className + "." + methodName
             : perfLog.operation();
@@ -121,7 +121,8 @@ public class PerformanceAspect {
     @Around("execution(* com.repeatwise.repository..*(..))")
     public Object monitorRepositoryPerformance(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getSignature().getDeclaringClass().getSimpleName();
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        className = className.substring(className.lastIndexOf('.') + 1);
 
         long startTime = System.nanoTime();
 
@@ -146,7 +147,8 @@ public class PerformanceAspect {
     @Around("execution(public * com.repeatwise.controller..*(..))")
     public Object monitorControllerPerformance(ProceedingJoinPoint joinPoint) throws Throwable {
         String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getSignature().getDeclaringClass().getSimpleName();
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        className = className.substring(className.lastIndexOf('.') + 1);
 
         long startTime = System.nanoTime();
         boolean success = true;

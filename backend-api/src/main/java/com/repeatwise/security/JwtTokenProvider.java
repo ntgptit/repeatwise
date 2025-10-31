@@ -1,19 +1,27 @@
 package com.repeatwise.security;
 
-import io.jsonwebtoken.*;
-import io.jsonwebtoken.security.Keys;
-import io.jsonwebtoken.security.SignatureException;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.Date;
 import java.util.UUID;
+
+import javax.crypto.SecretKey;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
+import com.repeatwise.log.LogEvent;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.UnsupportedJwtException;
+import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * JWT Token Provider
@@ -54,7 +62,7 @@ public class JwtTokenProvider {
         this.audience = audience;
 
         log.info("event={} JwtTokenProvider initialized: issuer={}, audience={}, expirationMinutes={}",
-            LogEvent.START, issuer, audience, accessTokenExpirationMinutes);
+                LogEvent.START, issuer, audience, accessTokenExpirationMinutes);
     }
 
     /**
@@ -69,25 +77,25 @@ public class JwtTokenProvider {
      * 6. Sign with HS256 algorithm
      *
      * @param userId User UUID
-     * @param email User email
+     * @param email  User email
      * @return JWT access token string
      */
     public String generateAccessToken(final UUID userId, final String email) {
-        final Instant now = Instant.now();
-        final Instant expiration = now.plus(accessTokenExpirationMinutes, ChronoUnit.MINUTES);
+        final var now = Instant.now();
+        final var expiration = now.plus(this.accessTokenExpirationMinutes, ChronoUnit.MINUTES);
 
-        final String token = Jwts.builder()
-            .setSubject(userId.toString())
-            .claim("email", email)
-            .setIssuedAt(Date.from(now))
-            .setExpiration(Date.from(expiration))
-            .setIssuer(issuer)
-            .setAudience(audience)
-            .signWith(secretKey, SignatureAlgorithm.HS256)
-            .compact();
+        final var token = Jwts.builder()
+                .subject(userId.toString())
+                .claim("email", email)
+                .issuedAt(Date.from(now))
+                .expiration(Date.from(expiration))
+                .claim("iss", this.issuer)
+                .claim("aud", this.audience)
+                .signWith(this.secretKey, SignatureAlgorithm.HS256)
+                .compact();
 
         log.debug("event={} Generated access token: userId={}, email={}, expiresAt={}",
-            LogEvent.AUTH_LOGIN_SUCCESS, userId, email, expiration);
+                LogEvent.AUTH_LOGIN_SUCCESS, userId, email, expiration);
 
         return token;
     }
@@ -107,22 +115,22 @@ public class JwtTokenProvider {
     public boolean validateToken(final String token) {
         try {
             Jwts.parser()
-                .verifyWith(secretKey)
-                .build()
-                .parseSignedClaims(token);
+                    .verifyWith(this.secretKey)
+                    .build()
+                    .parseSignedClaims(token);
 
             log.debug("event={} Token validation successful", LogEvent.START);
             return true;
 
-        } catch (SignatureException ex) {
+        } catch (final SignatureException ex) {
             log.error("event={} Invalid JWT signature: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
-        } catch (MalformedJwtException ex) {
+        } catch (final MalformedJwtException ex) {
             log.error("event={} Invalid JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
-        } catch (ExpiredJwtException ex) {
+        } catch (final ExpiredJwtException ex) {
             log.error("event={} Expired JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
-        } catch (UnsupportedJwtException ex) {
+        } catch (final UnsupportedJwtException ex) {
             log.error("event={} Unsupported JWT token: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
-        } catch (IllegalArgumentException ex) {
+        } catch (final IllegalArgumentException ex) {
             log.error("event={} JWT claims string is empty: {}", LogEvent.EX_INVALID_TOKEN, ex.getMessage());
         }
 
@@ -136,13 +144,13 @@ public class JwtTokenProvider {
      * @return User UUID
      */
     public UUID getUserIdFromToken(final String token) {
-        final Claims claims = Jwts.parser()
-            .verifyWith(secretKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+        final var claims = Jwts.parser()
+                .verifyWith(this.secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
 
-        final String userIdString = claims.getSubject();
+        final var userIdString = claims.getSubject();
         return UUID.fromString(userIdString);
     }
 
@@ -153,11 +161,11 @@ public class JwtTokenProvider {
      * @return User email
      */
     public String getEmailFromToken(final String token) {
-        final Claims claims = Jwts.parser()
-            .verifyWith(secretKey)
-            .build()
-            .parseSignedClaims(token)
-            .getPayload();
+        final var claims = Jwts.parser()
+                .verifyWith(this.secretKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
 
         return claims.get("email", String.class);
     }
@@ -168,6 +176,6 @@ public class JwtTokenProvider {
      * @return Expiration time in seconds (900 for 15 minutes)
      */
     public long getAccessTokenExpirationSeconds() {
-        return accessTokenExpirationMinutes * 60;
+        return this.accessTokenExpirationMinutes * 60;
     }
 }

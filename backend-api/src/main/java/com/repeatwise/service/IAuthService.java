@@ -61,20 +61,6 @@ public interface IAuthService {
     void logout(String refreshToken, UUID userId);
 
     /**
-     * Logout user from all devices (revoke all refresh tokens)
-     *
-     * Business Logic:
-     * 1. Find all valid refresh tokens for user
-     * 2. Revoke all tokens (bulk update)
-     * 3. Log logout-all event
-     *
-     * Use Case: User suspects account compromise, wants to logout everywhere
-     *
-     * @param userId Current authenticated user ID
-     */
-    void logoutAll(UUID userId);
-
-    /**
      * Refresh access token using refresh token (token rotation)
      *
      * Business Logic:

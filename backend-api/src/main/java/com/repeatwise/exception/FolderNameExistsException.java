@@ -21,11 +21,13 @@ package com.repeatwise.exception;
  */
 public class FolderNameExistsException extends BusinessException {
 
+    private static final long serialVersionUID = 3869043314332104018L;
+
     /**
      * Constructor with error code and message
      *
      * @param errorCode Error code (e.g., "FOLDER_004")
-     * @param message Error message from MessageSource
+     * @param message   Error message from MessageSource
      */
     public FolderNameExistsException(final String errorCode, final String message) {
         super(errorCode, message);

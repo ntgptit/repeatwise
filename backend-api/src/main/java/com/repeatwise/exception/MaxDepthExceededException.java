@@ -20,6 +20,7 @@ package com.repeatwise.exception;
  */
 public class MaxDepthExceededException extends BusinessException {
 
+    private static final long serialVersionUID = -1230553216309323214L;
     private static final String ERROR_CODE = "FOLDER_MAX_DEPTH_EXCEEDED";
     private static final int MAX_DEPTH = 10;
 
@@ -29,15 +30,15 @@ public class MaxDepthExceededException extends BusinessException {
 
     public MaxDepthExceededException(final Integer resultingDepth) {
         super(ERROR_CODE,
-            String.format("Cannot perform operation: Would result in depth %d (max is %d)",
-                resultingDepth, MAX_DEPTH));
+                String.format("Cannot perform operation: Would result in depth %d (max is %d)",
+                        resultingDepth, MAX_DEPTH));
     }
 
     public MaxDepthExceededException(final String folderName, final Integer currentDepth,
-                                    final Integer maxDescendantDepth, final Integer targetDepth) {
+            final Integer maxDescendantDepth, final Integer targetDepth) {
         super(ERROR_CODE,
-            String.format("Cannot move folder '%s': Would exceed maximum depth. " +
-                    "Current depth: %d, Deepest descendant: %d, Target depth: %d, Max allowed: %d",
-                folderName, currentDepth, maxDescendantDepth, targetDepth, MAX_DEPTH));
+                String.format("Cannot move folder '%s': Would exceed maximum depth. " +
+                        "Current depth: %d, Deepest descendant: %d, Target depth: %d, Max allowed: %d",
+                        folderName, currentDepth, maxDescendantDepth, targetDepth, MAX_DEPTH));
     }
 }

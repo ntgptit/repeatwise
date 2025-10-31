@@ -1,5 +1,15 @@
 package com.repeatwise.service.impl;
 
+import java.util.Objects;
+import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.repeatwise.dto.request.card.CreateCardRequest;
 import com.repeatwise.dto.request.card.UpdateCardRequest;
 import com.repeatwise.dto.response.card.CardResponse;
@@ -7,27 +17,16 @@ import com.repeatwise.entity.Card;
 import com.repeatwise.entity.CardBoxPosition;
 import com.repeatwise.entity.Deck;
 import com.repeatwise.entity.User;
-import com.repeatwise.exception.ForbiddenException;
 import com.repeatwise.exception.ResourceNotFoundException;
+import com.repeatwise.log.LogEvent;
 import com.repeatwise.mapper.CardMapper;
 import com.repeatwise.repository.CardBoxPositionRepository;
 import com.repeatwise.repository.CardRepository;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.ICardService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Objects;
-import java.util.UUID;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of Card Service
@@ -56,9 +55,8 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class CardServiceImpl implements ICardService {
+public class CardServiceImpl extends BaseService implements ICardService {
 
     // ==================== Dependencies ====================
 
@@ -67,7 +65,21 @@ public class CardServiceImpl implements ICardService {
     private final UserRepository userRepository;
     private final CardBoxPositionRepository cardBoxPositionRepository;
     private final CardMapper cardMapper;
-    private final MessageSource messageSource;
+
+    public CardServiceImpl(
+            final CardRepository cardRepository,
+            final DeckRepository deckRepository,
+            final UserRepository userRepository,
+            final CardBoxPositionRepository cardBoxPositionRepository,
+            final CardMapper cardMapper,
+            final MessageSource messageSource) {
+        super(messageSource);
+        this.cardRepository = cardRepository;
+        this.deckRepository = deckRepository;
+        this.userRepository = userRepository;
+        this.cardBoxPositionRepository = cardBoxPositionRepository;
+        this.cardMapper = cardMapper;
+    }
 
     // ==================== UC-018: Create Card ====================
 
@@ -95,32 +107,32 @@ public class CardServiceImpl implements ICardService {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
         Objects.requireNonNull(request, "CreateCardRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Creating card: deckId={}, userId={}", LogEvent.START, deckId, userId);
 
         // Step 1: Get deck with ownership check
-        final Deck deck = getDeckWithOwnershipCheck(deckId, userId);
+        final var deck = getDeckWithOwnershipCheck(deckId, userId);
 
         // Step 2: Get user
-        final User user = getUser(userId);
+        final var user = getUser(userId);
 
         // Step 3: Validate card content
         validateCardContent(request.getFront(), request.getBack());
 
         // Step 4: Build card entity
-        final Card card = buildCard(request, deck);
+        final var card = buildCard(request, deck);
 
         // Step 5: Save card
-        final Card savedCard = cardRepository.save(card);
+        final var savedCard = this.cardRepository.save(card);
 
         // Step 6: Initialize CardBoxPosition (Box 1, due today)
         initializeCardBoxPosition(savedCard, user);
 
         log.info("event={} Card created successfully: cardId={}, deckId={}, userId={}",
-            LogEvent.SUCCESS, savedCard.getId(), deckId, userId);
+                LogEvent.SUCCESS, savedCard.getId(), deckId, userId);
 
-        return cardMapper.toResponse(savedCard);
+        return this.cardMapper.toResponse(savedCard);
     }
 
     // ==================== UC-019: Update Card ====================
@@ -147,12 +159,12 @@ public class CardServiceImpl implements ICardService {
         // Guard clause: Validate parameters
         Objects.requireNonNull(cardId, "Card ID cannot be null");
         Objects.requireNonNull(request, "UpdateCardRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Updating card: cardId={}, userId={}", LogEvent.START, cardId, userId);
 
         // Step 1: Get card with ownership check
-        final Card card = getCardWithOwnershipCheck(cardId, userId);
+        final var card = getCardWithOwnershipCheck(cardId, userId);
 
         // Step 2: Validate card content
         validateCardContent(request.getFront(), request.getBack());
@@ -162,10 +174,10 @@ public class CardServiceImpl implements ICardService {
         updateCardFields(card, request);
 
         // Step 4: Save card
-        final Card savedCard = cardRepository.save(card);
+        final var savedCard = this.cardRepository.save(card);
 
         // Step 5: Build response with SRS fields if available
-        final CardResponse response = buildCardResponseWithSrs(savedCard, userId);
+        final var response = buildCardResponseWithSrs(savedCard, userId);
 
         log.info("event={} Card updated successfully: cardId={}, userId={}", LogEvent.SUCCESS, cardId, userId);
 
@@ -194,27 +206,26 @@ public class CardServiceImpl implements ICardService {
     public void deleteCard(final UUID cardId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(cardId, "Card ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Deleting card: cardId={}, userId={}", LogEvent.START, cardId, userId);
 
         // Step 1: Get card with ownership check
-        final Card card = getCardWithOwnershipCheck(cardId, userId);
+        final var card = getCardWithOwnershipCheck(cardId, userId);
 
         // Step 2: Validate card is not already deleted
         if (card.isDeleted()) {
             log.warn("event={} Card already deleted: cardId={}, userId={}", LogEvent.EX_VALIDATION, cardId, userId);
             throw new ResourceNotFoundException(
-                "CARD_010",
-                getMessage("error.card.delete.already.deleted")
-            );
+                    "CARD_010",
+                    getMessage("error.card.delete.already.deleted"));
         }
 
         // Step 3: Soft delete card
         card.softDelete();
 
         // Step 4: Save card
-        cardRepository.save(card);
+        this.cardRepository.save(card);
 
         log.info("event={} Card deleted successfully: cardId={}, userId={}", LogEvent.SUCCESS, cardId, userId);
     }
@@ -224,19 +235,19 @@ public class CardServiceImpl implements ICardService {
     @Override
     public CardResponse getCard(final UUID cardId, final UUID userId) {
         Objects.requireNonNull(cardId, "Card ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting card: cardId={}, userId={}", LogEvent.START, cardId, userId);
 
-        final Card card = getCardWithOwnershipCheck(cardId, userId);
+        final var card = getCardWithOwnershipCheck(cardId, userId);
 
-        return cardMapper.toResponse(card);
+        return this.cardMapper.toResponse(card);
     }
 
     @Override
     public Page<CardResponse> getCardsByDeck(final UUID deckId, final UUID userId, final Pageable pageable) {
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(pageable, "Pageable cannot be null");
 
         log.info("event={} Getting cards by deck: deckId={}, userId={}", LogEvent.START, deckId, userId);
@@ -245,111 +256,100 @@ public class CardServiceImpl implements ICardService {
         getDeckWithOwnershipCheck(deckId, userId);
 
         // Get cards
-        final Page<Card> cards = cardRepository.findByDeckIdAndDeletedAtIsNull(deckId, pageable);
+        final var cards = this.cardRepository.findByDeckIdAndDeletedAtIsNull(deckId, pageable);
 
-        return cards.map(cardMapper::toResponse);
+        return cards.map(this.cardMapper::toResponse);
     }
 
     // ==================== Helper Methods ====================
 
     private Deck getDeckWithOwnershipCheck(final UUID deckId, final UUID userId) {
-        return deckRepository.findByIdAndUserId(deckId, userId)
-            .orElseThrow(() -> {
-                log.warn("event={} Deck not found or access denied: deckId={}, userId={}",
-                    LogEvent.EX_RESOURCE_NOT_FOUND, deckId, userId);
-                return new ResourceNotFoundException(
-                    "DECK_002",
-                    getMessage("error.deck.not.found", deckId)
-                );
-            });
+        return this.deckRepository.findByIdAndUserId(deckId, userId)
+                .orElseThrow(() -> {
+                    log.warn("event={} Deck not found or access denied: deckId={}, userId={}",
+                            LogEvent.EX_RESOURCE_NOT_FOUND, deckId, userId);
+                    return new ResourceNotFoundException(
+                            "DECK_002",
+                            getMessage("error.deck.not.found", deckId));
+                });
     }
 
     private Card getCardWithOwnershipCheck(final UUID cardId, final UUID userId) {
-        return cardRepository.findById(cardId)
-            .filter(card -> !card.isDeleted())
-            .filter(card -> card.getDeck() != null && card.getDeck().getUser() != null
-                && card.getDeck().getUser().getId().equals(userId))
-            .orElseThrow(() -> {
-                log.warn("event={} Card not found or access denied: cardId={}, userId={}",
-                    LogEvent.EX_RESOURCE_NOT_FOUND, cardId, userId);
-                return new ResourceNotFoundException(
-                    "CARD_001",
-                    getMessage("error.card.not.found", cardId)
-                );
-            });
+        return this.cardRepository.findById(cardId)
+                .filter(card -> !card.isDeleted())
+                .filter(card -> (card.getDeck() != null) && (card.getDeck().getUser() != null)
+                        && card.getDeck().getUser().getId().equals(userId))
+                .orElseThrow(() -> {
+                    log.warn("event={} Card not found or access denied: cardId={}, userId={}",
+                            LogEvent.EX_RESOURCE_NOT_FOUND, cardId, userId);
+                    return new ResourceNotFoundException(
+                            "CARD_001",
+                            getMessage("error.card.not.found", cardId));
+                });
     }
 
     private User getUser(final UUID userId) {
-        return userRepository.findById(userId)
-            .orElseThrow(() -> {
-                log.warn("event={} User not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
-                return new ResourceNotFoundException(
-                    "USER_001",
-                    getMessage("error.user.not.found", userId)
-                );
-            });
+        return this.userRepository.findById(userId)
+                .orElseThrow(() -> {
+                    log.warn("event={} User not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
+                    return new ResourceNotFoundException(
+                            "USER_001",
+                            getMessage("error.user.not.found", userId));
+                });
     }
 
     private void validateCardContent(final String front, final String back) {
         if (StringUtils.isBlank(front)) {
             throw new com.repeatwise.exception.ValidationException(
-                "CARD_002",
-                getMessage("error.card.front.required")
-            );
+                    "CARD_002",
+                    getMessage("error.card.front.required"));
         }
         if (StringUtils.isBlank(back)) {
             throw new com.repeatwise.exception.ValidationException(
-                "CARD_003",
-                getMessage("error.card.back.required")
-            );
+                    "CARD_003",
+                    getMessage("error.card.back.required"));
         }
         if (front.length() > 5000) {
             throw new com.repeatwise.exception.ValidationException(
-                "CARD_004",
-                getMessage("error.card.front.size")
-            );
+                    "CARD_004",
+                    getMessage("error.card.front.size"));
         }
         if (back.length() > 5000) {
             throw new com.repeatwise.exception.ValidationException(
-                "CARD_005",
-                getMessage("error.card.back.size")
-            );
+                    "CARD_005",
+                    getMessage("error.card.back.size"));
         }
     }
 
     private Card buildCard(final CreateCardRequest request, final Deck deck) {
-        final Card card = cardMapper.toEntity(request);
+        final var card = this.cardMapper.toEntity(request);
         card.setDeck(deck);
         return card;
     }
 
     private void updateCardFields(final Card card, final UpdateCardRequest request) {
-        cardMapper.updateEntity(request, card);
+        this.cardMapper.updateEntity(request, card);
     }
 
     private void initializeCardBoxPosition(final Card card, final User user) {
-        final CardBoxPosition position = CardBoxPosition.createDefault(card, user);
-        cardBoxPositionRepository.save(position);
+        final var position = CardBoxPosition.createDefault(card, user);
+        this.cardBoxPositionRepository.save(position);
     }
 
     private CardResponse buildCardResponseWithSrs(final Card card, final UUID userId) {
-        final CardResponse response = cardMapper.toResponse(card);
+        final var response = this.cardMapper.toResponse(card);
 
         // Try to include SRS fields if CardBoxPosition exists
-        cardBoxPositionRepository.findByUserIdAndCardId(userId, card.getId())
-            .ifPresent(position -> {
-                response.setCurrentBox(position.getCurrentBox());
-                response.setDueDate(position.getDueDate());
-                response.setReviewCount(position.getReviewCount());
-                response.setLapseCount(position.getLapseCount());
-                response.setLastReviewedAt(position.getLastReviewedAt());
-            });
+        this.cardBoxPositionRepository.findByUserIdAndCardId(userId, card.getId())
+                .ifPresent(position -> {
+                    response.setCurrentBox(position.getCurrentBox());
+                    response.setDueDate(position.getDueDate());
+                    response.setReviewCount(position.getReviewCount());
+                    response.setLapseCount(position.getLapseCount());
+                    response.setLastReviewedAt(position.getLastReviewedAt());
+                });
 
         return response;
     }
 
-    private String getMessage(final String code, final Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
 }
-

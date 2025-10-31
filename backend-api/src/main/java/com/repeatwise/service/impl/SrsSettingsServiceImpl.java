@@ -1,28 +1,26 @@
 package com.repeatwise.service.impl;
 
-import com.repeatwise.dto.request.srs.UpdateSrsSettingsRequest;
-import com.repeatwise.dto.response.srs.SrsSettingsResponse;
-import com.repeatwise.entity.SrsSettings;
-import com.repeatwise.entity.User;
-import com.repeatwise.entity.enums.ForgottenCardAction;
-import com.repeatwise.exception.ResourceNotFoundException;
-import com.repeatwise.exception.ValidationException;
-import com.repeatwise.repository.SrsSettingsRepository;
-import com.repeatwise.repository.UserRepository;
-import com.repeatwise.service.ISrsSettingsService;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Objects;
 import java.util.UUID;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.context.MessageSource;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.repeatwise.dto.request.srs.UpdateSrsSettingsRequest;
+import com.repeatwise.dto.response.srs.SrsSettingsResponse;
+import com.repeatwise.entity.SrsSettings;
+import com.repeatwise.entity.enums.ForgottenCardAction;
+import com.repeatwise.exception.ResourceNotFoundException;
+import com.repeatwise.exception.ValidationException;
+import com.repeatwise.log.LogEvent;
+import com.repeatwise.repository.SrsSettingsRepository;
+import com.repeatwise.service.ISrsSettingsService;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Implementation of SRS Settings Service
@@ -40,25 +38,29 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class SrsSettingsServiceImpl implements ISrsSettingsService {
+public class SrsSettingsServiceImpl extends BaseService implements ISrsSettingsService {
 
     private final SrsSettingsRepository srsSettingsRepository;
-    private final UserRepository userRepository;
-    private final MessageSource messageSource;
+
+    public SrsSettingsServiceImpl(
+            final SrsSettingsRepository srsSettingsRepository,
+            final MessageSource messageSource) {
+        super(messageSource);
+        this.srsSettingsRepository = srsSettingsRepository;
+    }
 
     // ==================== UC-028: Get SRS Settings ====================
 
     @Override
     public SrsSettingsResponse getSettings(final UUID userId) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting SRS settings: userId={}", LogEvent.START, userId);
 
-        final SrsSettings settings = getSrsSettings(userId);
+        final var settings = getSrsSettings(userId);
 
-        final SrsSettingsResponse response = buildResponse(settings);
+        final var response = buildResponse(settings);
 
         log.info("event={} SRS settings retrieved: userId={}", LogEvent.SUCCESS, userId);
 
@@ -71,21 +73,19 @@ public class SrsSettingsServiceImpl implements ISrsSettingsService {
     @Transactional
     public SrsSettingsResponse updateSettings(final UpdateSrsSettingsRequest request, final UUID userId) {
         Objects.requireNonNull(request, "UpdateSrsSettingsRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Updating SRS settings: userId={}", LogEvent.START, userId);
 
         // Step 1: Get existing settings
-        final SrsSettings settings = getSrsSettings(userId);
+        final var settings = getSrsSettings(userId);
 
         // Step 2: Validate moveDownBoxes when forgottenCardAction is MOVE_DOWN_N_BOXES
-        if (request.getForgottenCardAction() == ForgottenCardAction.MOVE_DOWN_N_BOXES) {
-            if (request.getMoveDownBoxes() == null) {
-                throw new ValidationException(
+        if ((request.getForgottenCardAction() == ForgottenCardAction.MOVE_DOWN_N_BOXES) && (request
+                .getMoveDownBoxes() == null)) {
+            throw new ValidationException(
                     "SRS_002",
-                    getMessage("error.srs.movedown.required.when.action")
-                );
-            }
+                    getMessage("error.srs.movedown.required.when.action"));
         }
 
         // Step 3: Validate notification time format if provided
@@ -97,7 +97,7 @@ public class SrsSettingsServiceImpl implements ISrsSettingsService {
         updateSettingsFields(settings, request);
 
         // Step 5: Save settings
-        final SrsSettings savedSettings = srsSettingsRepository.save(settings);
+        final var savedSettings = this.srsSettingsRepository.save(settings);
 
         log.info("event={} SRS settings updated successfully: userId={}", LogEvent.SUCCESS, userId);
 
@@ -107,14 +107,13 @@ public class SrsSettingsServiceImpl implements ISrsSettingsService {
     // ==================== Helper Methods ====================
 
     private SrsSettings getSrsSettings(final UUID userId) {
-        return srsSettingsRepository.findByUserId(userId)
-            .orElseThrow(() -> {
-                log.warn("event={} SRS settings not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
-                return new ResourceNotFoundException(
-                    "SRS_001",
-                    getMessage("error.srs.settings.not.found")
-                );
-            });
+        return this.srsSettingsRepository.findByUserId(userId)
+                .orElseThrow(() -> {
+                    log.warn("event={} SRS settings not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
+                    return new ResourceNotFoundException(
+                            "SRS_001",
+                            getMessage("error.srs.settings.not.found"));
+                });
     }
 
     private void validateNotificationTime(final String timeStr) {
@@ -123,19 +122,17 @@ public class SrsSettingsServiceImpl implements ISrsSettingsService {
         }
 
         try {
-            final LocalTime time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
+            final var time = LocalTime.parse(timeStr, DateTimeFormatter.ofPattern("HH:mm"));
             // Additional validation: ensure time is within valid range
             if (time.isBefore(LocalTime.MIN) || time.isAfter(LocalTime.MAX)) {
                 throw new ValidationException(
-                    "SRS_003",
-                    getMessage("error.notification.time.format")
-                );
+                        "SRS_003",
+                        getMessage("error.srs.notification.time.format"));
             }
-        } catch (Exception e) {
+        } catch (final Exception e) {
             throw new ValidationException(
-                "SRS_003",
-                getMessage("error.notification.time.format")
-            );
+                    "SRS_003",
+                    getMessage("error.notification.time.format"));
         }
     }
 
@@ -162,27 +159,23 @@ public class SrsSettingsServiceImpl implements ISrsSettingsService {
             settings.setNotificationEnabled(request.getNotificationEnabled());
         }
         if (request.getNotificationTime() != null) {
-            final LocalTime time = LocalTime.parse(request.getNotificationTime(), DateTimeFormatter.ofPattern("HH:mm"));
+            final var time = LocalTime.parse(request.getNotificationTime(), DateTimeFormatter.ofPattern("HH:mm"));
             settings.setNotificationTime(time);
         }
     }
 
     private SrsSettingsResponse buildResponse(final SrsSettings settings) {
         return SrsSettingsResponse.builder()
-            .totalBoxes(settings.getTotalBoxes())
-            .reviewOrder(settings.getReviewOrder())
-            .newCardsPerDay(settings.getNewCardsPerDay())
-            .maxReviewsPerDay(settings.getMaxReviewsPerDay())
-            .forgottenCardAction(settings.getForgottenCardAction())
-            .moveDownBoxes(settings.getMoveDownBoxes())
-            .notificationEnabled(settings.getNotificationEnabled())
-            .notificationTime(settings.getNotificationTime())
-            .updatedAt(settings.getUpdatedAt() != null ? settings.getUpdatedAt() : null)
-            .build();
+                .totalBoxes(settings.getTotalBoxes())
+                .reviewOrder(settings.getReviewOrder())
+                .newCardsPerDay(settings.getNewCardsPerDay())
+                .maxReviewsPerDay(settings.getMaxReviewsPerDay())
+                .forgottenCardAction(settings.getForgottenCardAction())
+                .moveDownBoxes(settings.getMoveDownBoxes())
+                .notificationEnabled(settings.getNotificationEnabled())
+                .notificationTime(settings.getNotificationTime())
+                .updatedAt(settings.getUpdatedAt() != null ? settings.getUpdatedAt() : null)
+                .build();
     }
 
-    private String getMessage(final String code, final Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
 }
-

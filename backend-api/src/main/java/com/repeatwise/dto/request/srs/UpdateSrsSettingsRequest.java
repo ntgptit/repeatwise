@@ -2,13 +2,14 @@ package com.repeatwise.dto.request.srs;
 
 import com.repeatwise.entity.enums.ForgottenCardAction;
 import com.repeatwise.entity.enums.ReviewOrder;
-import jakarta.validation.constraints.*;
+
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalTime;
 
 /**
  * Request DTO for updating SRS settings
@@ -18,14 +19,14 @@ import java.time.LocalTime;
  *
  * Request Body:
  * {
- *   "totalBoxes": 7,
- *   "reviewOrder": "RANDOM",
- *   "newCardsPerDay": 20,
- *   "maxReviewsPerDay": 200,
- *   "forgottenCardAction": "MOVE_TO_BOX_1",
- *   "moveDownBoxes": 1,
- *   "notificationEnabled": true,
- *   "notificationTime": "09:00"
+ * "totalBoxes": 7,
+ * "reviewOrder": "RANDOM",
+ * "newCardsPerDay": 20,
+ * "maxReviewsPerDay": 200,
+ * "forgottenCardAction": "MOVE_TO_BOX_1",
+ * "moveDownBoxes": 1,
+ * "notificationEnabled": true,
+ * "notificationTime": "09:00"
  * }
  *
  * @author RepeatWise Team
@@ -58,7 +59,6 @@ public class UpdateSrsSettingsRequest {
 
     private Boolean notificationEnabled;
 
-    @Pattern(regexp = "^([01]\\d|2[0-3]):([0-5]\\d)$", message = "{error.notification.time.format}")
+    @Pattern(regexp = "^([01]\\d|2[0-3]):([0-5]\\d)$", message = "{error.srs.notification.time.format}")
     private String notificationTime;
 }
-

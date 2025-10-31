@@ -10,6 +10,8 @@ package com.repeatwise.exception;
  */
 public class InvalidCredentialsException extends BusinessException {
 
+    private static final long serialVersionUID = -6374710214166155467L;
+
     public InvalidCredentialsException(final String errorCode, final String message) {
         super(errorCode, message);
     }

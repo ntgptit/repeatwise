@@ -13,6 +13,8 @@ package com.repeatwise.exception;
  */
 public class ForbiddenException extends BusinessException {
 
+    private static final long serialVersionUID = 2938999204360553273L;
+
     public ForbiddenException(final String errorCode, final String message) {
         super(errorCode, message);
     }

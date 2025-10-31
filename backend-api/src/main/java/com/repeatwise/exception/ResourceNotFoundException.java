@@ -17,11 +17,13 @@ package com.repeatwise.exception;
  */
 public class ResourceNotFoundException extends BusinessException {
 
+    private static final long serialVersionUID = -1797246511422743160L;
+
     /**
      * Constructor with error code and message
      *
      * @param errorCode Error code (e.g., "FOLDER_002", "USER_001")
-     * @param message Error message from MessageSource
+     * @param message   Error message from MessageSource
      */
     public ResourceNotFoundException(final String errorCode, final String message) {
         super(errorCode, message);
@@ -31,8 +33,8 @@ public class ResourceNotFoundException extends BusinessException {
      * Constructor with error code, message, and cause
      *
      * @param errorCode Error code
-     * @param message Error message
-     * @param cause Root cause
+     * @param message   Error message
+     * @param cause     Root cause
      */
     public ResourceNotFoundException(final String errorCode, final String message, final Throwable cause) {
         super(errorCode, message, cause);

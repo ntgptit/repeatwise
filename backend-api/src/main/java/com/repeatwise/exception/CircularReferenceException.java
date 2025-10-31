@@ -17,6 +17,7 @@ package com.repeatwise.exception;
  */
 public class CircularReferenceException extends BusinessException {
 
+    private static final long serialVersionUID = -1851791404081036730L;
     private static final String ERROR_CODE = "FOLDER_CIRCULAR_REFERENCE";
 
     public CircularReferenceException(final String message) {
@@ -25,7 +26,7 @@ public class CircularReferenceException extends BusinessException {
 
     public CircularReferenceException(final String folderName, final String targetName) {
         super(ERROR_CODE,
-            String.format("Cannot move folder '%s' into '%s': This would create a circular reference",
-                folderName, targetName));
+                String.format("Cannot move folder '%s' into '%s': This would create a circular reference",
+                        folderName, targetName));
     }
 }

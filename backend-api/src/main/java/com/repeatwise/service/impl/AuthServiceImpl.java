@@ -6,7 +6,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,7 +23,7 @@ import com.repeatwise.exception.DuplicateUsernameException;
 import com.repeatwise.exception.ForbiddenException;
 import com.repeatwise.exception.InvalidCredentialsException;
 import com.repeatwise.exception.InvalidTokenException;
-import com.repeatwise.exception.ResourceNotFoundException;
+import com.repeatwise.log.LogEvent;
 import com.repeatwise.mapper.UserMapper;
 import com.repeatwise.repository.RefreshTokenRepository;
 import com.repeatwise.repository.SrsSettingsRepository;
@@ -33,9 +32,7 @@ import com.repeatwise.repository.UserStatsRepository;
 import com.repeatwise.security.JwtTokenProvider;
 import com.repeatwise.service.IAuthService;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
 
 /**
  * Authentication Service Implementation
@@ -48,9 +45,8 @@ import com.repeatwise.log.LogEvent;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class AuthServiceImpl implements IAuthService {
+public class AuthServiceImpl extends BaseService implements IAuthService {
 
     private final UserRepository userRepository;
     private final SrsSettingsRepository srsSettingsRepository;
@@ -58,8 +54,26 @@ public class AuthServiceImpl implements IAuthService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final UserMapper userMapper;
     private final PasswordEncoder passwordEncoder;
-    private final MessageSource messageSource;
     private final JwtTokenProvider jwtTokenProvider;
+
+    public AuthServiceImpl(
+            final UserRepository userRepository,
+            final SrsSettingsRepository srsSettingsRepository,
+            final UserStatsRepository userStatsRepository,
+            final RefreshTokenRepository refreshTokenRepository,
+            final UserMapper userMapper,
+            final PasswordEncoder passwordEncoder,
+            final MessageSource messageSource,
+            final JwtTokenProvider jwtTokenProvider) {
+        super(messageSource);
+        this.userRepository = userRepository;
+        this.srsSettingsRepository = srsSettingsRepository;
+        this.userStatsRepository = userStatsRepository;
+        this.refreshTokenRepository = refreshTokenRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
+    }
 
     private void checkEmailAvailability(final String email) {
         final var normalizedEmail = normalizeEmail(email);
@@ -166,10 +180,6 @@ public class AuthServiceImpl implements IAuthService {
         return accessToken;
     }
 
-    private String getMessage(final String code, final Object... args) {
-        return this.messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
-
     private boolean isEmail(final String input) {
         return StringUtils.contains(input, '@');
     }
@@ -210,27 +220,6 @@ public class AuthServiceImpl implements IAuthService {
 
         log.info("event={} User logged out: userId={}, tokenId={}",
                 LogEvent.SUCCESS, userId, token.getId());
-    }
-
-    @Transactional
-    @Override
-    public void logoutAll(final UUID userId) {
-        log.info("Logout-all attempt: userId={}", userId);
-
-        this.userRepository.findById(userId)
-                .orElseThrow(() -> {
-                    log.error("event={} Logout-all failed: user not found: userId={}", LogEvent.EX_RESOURCE_NOT_FOUND, userId);
-                    return new ResourceNotFoundException(
-                            "USER_003",
-                            getMessage("error.user.not.found", userId));
-                });
-
-        final var revokedCount = this.refreshTokenRepository.revokeAllByUserId(
-                userId,
-                Instant.now());
-
-        log.info("event={} Logout-all success: userId={}, tokensRevoked={}",
-                LogEvent.SUCCESS, userId, revokedCount);
     }
 
     private String normalizeEmail(final String email) {
@@ -356,18 +345,6 @@ public class AuthServiceImpl implements IAuthService {
         return LoginResponse.builder()
                 .accessToken(newAccessToken)
                 .expiresIn(expiresIn)
-                .build();
-    }
-
-    private RefreshToken createRefreshToken(final User user) {
-        final var tokenString = UUID.randomUUID().toString();
-        final var expiresAt = Instant.now().plus(7, java.time.temporal.ChronoUnit.DAYS);
-
-        return RefreshToken.builder()
-                .token(tokenString)
-                .user(user)
-                .expiresAt(expiresAt)
-                .isRevoked(false)
                 .build();
     }
 

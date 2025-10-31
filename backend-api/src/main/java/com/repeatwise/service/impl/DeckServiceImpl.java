@@ -18,12 +18,10 @@ import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IDeckService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -59,9 +57,8 @@ import java.time.Instant;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class DeckServiceImpl implements IDeckService {
+public class DeckServiceImpl extends BaseService implements IDeckService {
 
     // ==================== Dependencies ====================
 
@@ -70,7 +67,21 @@ public class DeckServiceImpl implements IDeckService {
     private final UserRepository userRepository;
     private final CardRepository cardRepository;
     private final DeckMapper deckMapper;
-    private final MessageSource messageSource;
+
+    public DeckServiceImpl(
+            final DeckRepository deckRepository,
+            final FolderRepository folderRepository,
+            final UserRepository userRepository,
+            final CardRepository cardRepository,
+            final DeckMapper deckMapper,
+            final MessageSource messageSource) {
+        super(messageSource);
+        this.deckRepository = deckRepository;
+        this.folderRepository = folderRepository;
+        this.userRepository = userRepository;
+        this.cardRepository = cardRepository;
+        this.deckMapper = deckMapper;
+    }
 
     // ==================== UC-011: Create Deck ====================
 
@@ -98,7 +109,7 @@ public class DeckServiceImpl implements IDeckService {
     public DeckResponse createDeck(final CreateDeckRequest request, final UUID userId) {
         // Guard clause: Validate request
         Objects.requireNonNull(request, "CreateDeckRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Creating deck: name={}, folderId={}, userId={}",
             LogEvent.DECK_CREATE_START, request.getName(), request.getFolderId(), userId);
@@ -129,7 +140,7 @@ public class DeckServiceImpl implements IDeckService {
 
     @Override
     public List<DeckResponse> getAllDecks(final UUID userId) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting all decks: userId={}", LogEvent.START, userId);
 
@@ -144,7 +155,7 @@ public class DeckServiceImpl implements IDeckService {
     @Override
     public DeckResponse getDeckById(final UUID deckId, final UUID userId) {
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting deck: deckId={}, userId={}", LogEvent.START, deckId, userId);
 
@@ -155,7 +166,7 @@ public class DeckServiceImpl implements IDeckService {
 
     @Override
     public List<DeckResponse> getDecksByFolderId(final UUID folderId, final UUID userId) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting decks by folder: folderId={}, userId={}", LogEvent.START, folderId, userId);
 
@@ -178,7 +189,7 @@ public class DeckServiceImpl implements IDeckService {
     public DeckResponse updateDeck(final UUID deckId, final UpdateDeckRequest request, final UUID userId) {
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
         Objects.requireNonNull(request, "UpdateDeckRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Updating deck: deckId={}, userId={}", LogEvent.START, deckId, userId);
 
@@ -229,7 +240,7 @@ public class DeckServiceImpl implements IDeckService {
     public DeckDeleteResponse deleteDeck(final UUID deckId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Deleting deck: deckId={}, userId={}", deckId, userId);
 
@@ -291,7 +302,7 @@ public class DeckServiceImpl implements IDeckService {
     public DeckResponse restoreDeck(final UUID deckId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Restoring deck: deckId={}, userId={}", deckId, userId);
 
@@ -337,7 +348,7 @@ public class DeckServiceImpl implements IDeckService {
     public void permanentlyDeleteDeck(final UUID deckId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Permanently deleting deck: deckId={}, userId={}", deckId, userId);
 
@@ -391,7 +402,7 @@ public class DeckServiceImpl implements IDeckService {
     public DeckResponse moveDeck(final UUID deckId, final UUID newFolderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Moving deck: deckId={}, newFolderId={}, userId={}", LogEvent.DECK_MOVE_START, deckId, newFolderId, userId);
 
@@ -458,7 +469,7 @@ public class DeckServiceImpl implements IDeckService {
         // Step 1: Guard clauses - validate parameters
         Objects.requireNonNull(deckId, "Deck ID cannot be null");
         Objects.requireNonNull(request, "CopyDeckRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Copying deck: deckId={}, newName={}, destinationFolderId={}, userId={}",
             LogEvent.DECK_COPY_START, deckId, request.getNewName(), request.getDestinationFolderId(), userId);
@@ -771,7 +782,6 @@ public class DeckServiceImpl implements IDeckService {
             final Card newCard = Card.builder()
                 .front(sourceCard.getFront())
                 .back(sourceCard.getBack())
-                .user(user)
                 .deck(newDeck)
                 .build();
 
@@ -833,12 +843,6 @@ public class DeckServiceImpl implements IDeckService {
         log.debug("event={} Restored all cards in deck: deckId={}", LogEvent.SUCCESS, deckId);
     }
 
-    /**
-     * Get internationalized message
-     */
-    private String getMessage(final String code, final Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
 }
 
 

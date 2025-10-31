@@ -244,6 +244,31 @@ public interface CardBoxPositionRepository extends JpaRepository<CardBoxPosition
     );
 
     /**
+     * Find due cards in multiple decks randomized (for random mode)
+     * UC-030: Random Mode - Folder scope
+     *
+     * @param userId User UUID
+     * @param deckIds List of deck UUIDs
+     * @param today Today's date
+     * @param pageable Pagination
+     * @return List of due card box positions (randomized)
+     */
+    @Query("SELECT cbp FROM CardBoxPosition cbp " +
+           "JOIN FETCH cbp.card c " +
+           "WHERE cbp.user.id = :userId " +
+           "AND c.deck.id IN :deckIds " +
+           "AND cbp.dueDate <= :today " +
+           "AND cbp.deletedAt IS NULL " +
+           "AND c.deletedAt IS NULL " +
+           "ORDER BY RANDOM()")
+    List<CardBoxPosition> findDueCardsByUserIdAndDeckIdsRandom(
+        @Param("userId") UUID userId,
+        @Param("deckIds") List<UUID> deckIds,
+        @Param("today") LocalDate today,
+        Pageable pageable
+    );
+
+    /**
      * Get box distribution for multiple decks (UC-032)
      *
      * @param userId User UUID

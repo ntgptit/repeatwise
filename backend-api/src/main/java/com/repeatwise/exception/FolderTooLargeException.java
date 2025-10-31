@@ -19,6 +19,7 @@ package com.repeatwise.exception;
  */
 public class FolderTooLargeException extends BusinessException {
 
+    private static final long serialVersionUID = 7646585439627104445L;
     private static final String ERROR_CODE = "FOLDER_TOO_LARGE";
 
     public FolderTooLargeException(final String message) {
@@ -27,13 +28,13 @@ public class FolderTooLargeException extends BusinessException {
 
     public FolderTooLargeException(final Integer itemCount, final Integer threshold) {
         super(ERROR_CODE,
-            String.format("Folder is too large (%d items, max %d for sync copy). Use async copy instead.",
-                itemCount, threshold));
+                String.format("Folder is too large (%d items, max %d for sync copy). Use async copy instead.",
+                        itemCount, threshold));
     }
 
     public FolderTooLargeException(final String folderName, final Integer itemCount) {
         super(ERROR_CODE,
-            String.format("Folder '%s' is too large (%d items). Use async copy endpoint.",
-                folderName, itemCount));
+                String.format("Folder '%s' is too large (%d items). Use async copy endpoint.",
+                        folderName, itemCount));
     }
 }

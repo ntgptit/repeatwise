@@ -51,7 +51,7 @@ public class LoggingAspect {
         }
 
         String methodName = signature.getName();
-        String className = signature.getDeclaringClass().getSimpleName();
+        String className = signature.getMethod().getDeclaringClass().getSimpleName();
         LogEvent event = loggable.event();
         LogLevel level = loggable.level();
 
@@ -154,7 +154,8 @@ public class LoggingAspect {
     )
     public void logServiceException(JoinPoint joinPoint, Throwable exception) {
         String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getSignature().getDeclaringClass().getSimpleName();
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        className = className.substring(className.lastIndexOf('.') + 1);
 
         log.error("[EX_INTERNAL_SERVER] {}.{} - Unhandled exception: {}",
             className, methodName, exception.getMessage(), exception);
@@ -170,7 +171,8 @@ public class LoggingAspect {
     )
     public void logControllerException(JoinPoint joinPoint, Throwable exception) {
         String methodName = joinPoint.getSignature().getName();
-        String className = joinPoint.getSignature().getDeclaringClass().getSimpleName();
+        String className = joinPoint.getSignature().getDeclaringTypeName();
+        className = className.substring(className.lastIndexOf('.') + 1);
 
         log.error("[EX_INTERNAL_SERVER] {}.{} - Controller exception: {}",
             className, methodName, exception.getMessage(), exception);

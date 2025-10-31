@@ -182,38 +182,4 @@ public class AuthController {
         return ResponseEntity.noContent().build();
     }
 
-    /**
-     * Logout user from all devices
-     *
-     * Endpoint: POST /api/auth/logout-all
-     * Authorization: Bearer <access_token>
-     * Response: 204 No Content
-     *
-     * Business Flow:
-     * 1. Get current authenticated user ID from JWT
-     * 2. Find all valid refresh tokens for user
-     * 3. Revoke all tokens (bulk update)
-     * 4. Return 204 No Content
-     *
-     * Use Case:
-     * - User suspects account compromise
-     * - User wants to logout from all devices
-     *
-     * Error Responses:
-     * - 401 UNAUTHORIZED: Invalid or missing access token
-     *
-     * @return ResponseEntity with no content
-     */
-    @PostMapping("/logout-all")
-    public ResponseEntity<Void> logoutAll() {
-
-        log.info("event={} Received logout-all request", LogEvent.AUTH_TOKEN_REVOKE);
-
-        final UUID userId = SecurityUtils.getCurrentUserId();
-        authService.logoutAll(userId);
-
-        log.info("event={} Logout-all successful: userId={}", LogEvent.AUTH_TOKEN_REVOKE, userId);
-
-        return ResponseEntity.noContent().build();
-    }
 }

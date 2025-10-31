@@ -65,20 +65,6 @@ public enum LogEvent {
     DECK_COPY_START,
     DECK_COPY_SUCCESS,
 
-    // Notifications
-    NOTIF_SETTINGS_GET,
-    NOTIF_SETTINGS_CREATE_DEFAULT,
-    NOTIF_SETTINGS_UPDATE,
-    NOTIF_TEST_SEND,
-    NOTIF_SCHEDULE_START,
-    NOTIF_SCHEDULE_DONE,
-    NOTIF_SCHEDULE_ERROR,
-    NOTIF_RETRY_START,
-    NOTIF_RETRY_DONE,
-    NOTIF_RETRY_ERROR,
-    NOTIF_CLEANUP_START,
-    NOTIF_CLEANUP_DONE,
-    NOTIF_CLEANUP_ERROR,
 
     // Exceptions
     EX_RESOURCE_NOT_FOUND,
@@ -100,7 +86,6 @@ public enum LogEvent {
         if (name.startsWith("AUTH_")) return "AUTH";
         if (name.startsWith("FOLDER_")) return "FOLDER";
         if (name.startsWith("DECK_")) return "DECK";
-        if (name.startsWith("NOTIF_")) return "NOTIFICATION";
         if (name.startsWith("EX_")) return "EXCEPTION";
         return "GENERAL";
     }

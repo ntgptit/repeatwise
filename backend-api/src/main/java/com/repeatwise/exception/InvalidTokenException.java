@@ -13,6 +13,8 @@ package com.repeatwise.exception;
  */
 public class InvalidTokenException extends BusinessException {
 
+    private static final long serialVersionUID = -4132185868894082135L;
+
     public InvalidTokenException(final String errorCode, final String message) {
         super(errorCode, message);
     }

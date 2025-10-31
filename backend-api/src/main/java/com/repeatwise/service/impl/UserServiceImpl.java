@@ -10,12 +10,10 @@ import com.repeatwise.mapper.UserMapper;
 import com.repeatwise.repository.RefreshTokenRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IUserService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.repeatwise.log.LogEvent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,19 +40,30 @@ import java.util.UUID;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class UserServiceImpl implements IUserService {
+public class UserServiceImpl extends BaseService implements IUserService {
 
     private final UserRepository userRepository;
     private final UserMapper userMapper;
-    private final MessageSource messageSource;
     private final PasswordEncoder passwordEncoder;
     private final RefreshTokenRepository refreshTokenRepository;
 
+    public UserServiceImpl(
+            final UserRepository userRepository,
+            final UserMapper userMapper,
+            final MessageSource messageSource,
+            final PasswordEncoder passwordEncoder,
+            final RefreshTokenRepository refreshTokenRepository) {
+        super(messageSource);
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.refreshTokenRepository = refreshTokenRepository;
+    }
+
     @Override
     public UserProfileResponse getCurrentUserProfile(final UUID userId) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("event={} Getting profile for user: {}", LogEvent.USER_GET_PROFILE, userId);
 
@@ -67,7 +76,7 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     @Override
     public UserProfileResponse updateProfile(final UUID userId, final UpdateProfileRequest request) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "UpdateProfileRequest cannot be null");
 
         validateRequest(request);
@@ -124,7 +133,7 @@ public class UserServiceImpl implements IUserService {
     @Transactional
     @Override
     public void changePassword(final UUID userId, final ChangePasswordRequest request) {
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(request, "ChangePasswordRequest cannot be null");
 
         validateChangePasswordRequest(request);
@@ -186,7 +195,4 @@ public class UserServiceImpl implements IUserService {
         }
     }
 
-    private String getMessage(final String code, final Object... args) {
-        return messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
 }

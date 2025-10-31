@@ -1,15 +1,15 @@
 package com.repeatwise.mapper;
 
-import com.repeatwise.dto.response.review.ReviewLogResponse;
-import com.repeatwise.dto.response.review.ReviewResultResponse;
-import com.repeatwise.dto.response.review.ReviewSessionResponse;
-import com.repeatwise.entity.Card;
-import com.repeatwise.entity.CardBoxPosition;
-import com.repeatwise.entity.ReviewLog;
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 
-import java.util.List;
+import com.repeatwise.dto.response.review.ReviewLogResponse;
+import com.repeatwise.dto.response.review.ReviewResultResponse;
+import com.repeatwise.dto.response.review.ReviewSessionResponse;
+import com.repeatwise.entity.CardBoxPosition;
+import com.repeatwise.entity.ReviewLog;
 
 /**
  * Review Mapper - MapStruct mapper for Review-related entities and DTOs
@@ -23,7 +23,7 @@ import java.util.List;
  *
  * @author RepeatWise Team
  */
-@Mapper(componentModel = "spring", uses = {CardMapper.class})
+@Mapper(componentModel = "spring", uses = { CardMapper.class })
 public interface ReviewMapper {
 
     // ==================== CardBoxPosition to Response ====================
@@ -83,10 +83,10 @@ public interface ReviewMapper {
      * Create ReviewResultResponse from card and remaining count
      * Used after rating a card
      *
-     * @param cardBoxPosition Next card box position (can be null)
-     * @param remaining Remaining cards count
-     * @param completed Total completed count
-     * @param total Total cards count
+     * @param cardBoxPosition  Next card box position (can be null)
+     * @param remaining        Remaining cards count
+     * @param completed        Total completed count
+     * @param total            Total cards count
      * @param sessionCompleted Whether session is completed
      * @return ReviewResultResponse DTO
      */
@@ -107,4 +107,3 @@ public interface ReviewMapper {
                 .build();
     }
 }
-

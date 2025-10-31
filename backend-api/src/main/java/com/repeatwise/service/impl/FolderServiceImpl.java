@@ -8,7 +8,6 @@ import java.util.UUID;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,7 +34,6 @@ import com.repeatwise.repository.FolderStatsRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.IFolderService;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -67,9 +65,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
 @Slf4j
-public class FolderServiceImpl implements IFolderService {
+public class FolderServiceImpl extends BaseService implements IFolderService {
 
     // ==================== Constants ====================
 
@@ -81,7 +78,19 @@ public class FolderServiceImpl implements IFolderService {
     private final FolderStatsRepository folderStatsRepository;
     private final UserRepository userRepository;
     private final FolderMapper folderMapper;
-    private final MessageSource messageSource;
+
+    public FolderServiceImpl(
+            final FolderRepository folderRepository,
+            final FolderStatsRepository folderStatsRepository,
+            final UserRepository userRepository,
+            final FolderMapper folderMapper,
+            final MessageSource messageSource) {
+        super(messageSource);
+        this.folderRepository = folderRepository;
+        this.folderStatsRepository = folderStatsRepository;
+        this.userRepository = userRepository;
+        this.folderMapper = folderMapper;
+    }
 
     // ==================== UC-005: Create Folder Hierarchy ====================
 
@@ -202,7 +211,7 @@ public class FolderServiceImpl implements IFolderService {
         // Guard clause: Validate request
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(request, "CopyFolderRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Copying folder: folderId={}, targetParentId={}, newName={}, userId={}",
                 folderId, request.getTargetParentFolderId(), request.getNewName(), userId);
@@ -319,7 +328,7 @@ public class FolderServiceImpl implements IFolderService {
     public FolderResponse createFolder(final CreateFolderRequest request, final UUID userId) {
         // Guard clause: Validate request
         Objects.requireNonNull(request, "CreateFolderRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Creating folder: name={}, parentFolderId={}, userId={}",
                 request.getName(), request.getParentFolderId(), userId);
@@ -380,7 +389,7 @@ public class FolderServiceImpl implements IFolderService {
     public void deleteFolder(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Soft-deleting folder: folderId={}, userId={}", folderId, userId);
 
@@ -480,7 +489,7 @@ public class FolderServiceImpl implements IFolderService {
     public FolderResponse getFolderById(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Getting folder by ID: folderId={}, userId={}", folderId, userId);
 
@@ -614,7 +623,7 @@ public class FolderServiceImpl implements IFolderService {
     public FolderStatsResponse getFolderStats(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Getting folder stats: folderId={}, userId={}", folderId, userId);
 
@@ -642,7 +651,7 @@ public class FolderServiceImpl implements IFolderService {
     @Override
     public List<FolderTreeResponse> getFolderTree(final UUID userId, final Integer maxDepth) {
         // Guard clause: Validate parameters
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
         Objects.requireNonNull(maxDepth, "Max depth cannot be null");
 
         log.info("Getting folder tree: userId={}, maxDepth={}", userId, maxDepth);
@@ -736,12 +745,6 @@ public class FolderServiceImpl implements IFolderService {
         treeResponse.setMatureCards(stats.getMatureCardsCount());
     }
 
-    /**
-     * Get internationalized message
-     */
-    private String getMessage(final String code, final Object... args) {
-        return this.messageSource.getMessage(code, args, LocaleContextHolder.getLocale());
-    }
 
     /**
      * Get parent folder by ID (if not null)
@@ -841,7 +844,7 @@ public class FolderServiceImpl implements IFolderService {
     public void invalidateFolderStats(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Invalidating folder stats: folderId={}, userId={}", folderId, userId);
 
@@ -928,7 +931,7 @@ public class FolderServiceImpl implements IFolderService {
         // Guard clause: Validate request
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(request, "MoveFolderRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Moving folder: folderId={}, newParentFolderId={}, userId={}",
                 folderId, request.getNewParentFolderId(), userId);
@@ -1152,7 +1155,7 @@ public class FolderServiceImpl implements IFolderService {
     public void permanentlyDeleteFolder(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.warn("Permanently deleting folder: folderId={}, userId={}", folderId, userId);
 
@@ -1221,7 +1224,7 @@ public class FolderServiceImpl implements IFolderService {
     public FolderResponse restoreFolder(final UUID folderId, final UUID userId) {
         // Guard clause: Validate parameters
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Restoring folder from trash: folderId={}, userId={}", folderId, userId);
 
@@ -1319,7 +1322,7 @@ public class FolderServiceImpl implements IFolderService {
         // Guard clause: Validate request
         Objects.requireNonNull(folderId, "Folder ID cannot be null");
         Objects.requireNonNull(request, "UpdateFolderRequest cannot be null");
-        Objects.requireNonNull(userId, "User ID cannot be null");
+        Objects.requireNonNull(userId, MSG_USER_ID_CANNOT_BE_NULL);
 
         log.info("Updating folder: folderId={}, newName={}, userId={}",
                 folderId, request.getName(), userId);

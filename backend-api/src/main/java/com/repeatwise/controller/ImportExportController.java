@@ -1,24 +1,30 @@
 package com.repeatwise.controller;
 
-import com.repeatwise.dto.request.card.ImportCardsRequest;
-import com.repeatwise.dto.response.card.ImportResultResponse;
-import com.repeatwise.security.SecurityUtils;
-import com.repeatwise.service.IImportExportService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import com.repeatwise.log.LogEvent;
-import org.springframework.core.io.Resource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+
+import org.springframework.core.io.Resource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.repeatwise.dto.request.card.ImportCardsRequest;
+import com.repeatwise.dto.response.card.ImportResultResponse;
+import com.repeatwise.log.LogEvent;
+import com.repeatwise.security.SecurityUtils;
+import com.repeatwise.service.IImportExportService;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * REST Controller for Import/Export Management
@@ -28,8 +34,8 @@ import java.util.UUID;
  * - UC-022: Export Cards
  *
  * Endpoints:
- * - POST   /api/decks/{deckId}/import     - Import cards from CSV/XLSX
- * - GET    /api/decks/{deckId}/export     - Export cards to CSV/XLSX
+ * - POST /api/decks/{deckId}/import - Import cards from CSV/XLSX
+ * - GET /api/decks/{deckId}/export - Export cards to CSV/XLSX
  *
  * @author RepeatWise Team
  */
@@ -58,8 +64,8 @@ public class ImportExportController {
      *
      * Response: 200 OK with import result
      *
-     * @param deckId Deck UUID
-     * @param file CSV or XLSX file
+     * @param deckId          Deck UUID
+     * @param file            CSV or XLSX file
      * @param duplicatePolicy Duplicate handling policy (SKIP, REPLACE, KEEP_BOTH)
      * @return Import result response
      */
@@ -69,19 +75,19 @@ public class ImportExportController {
             @RequestPart("file") final MultipartFile file,
             @RequestParam(value = "duplicatePolicy", defaultValue = "SKIP") final String duplicatePolicy) {
 
-        final UUID userId = SecurityUtils.getCurrentUserId();
+        final var userId = SecurityUtils.getCurrentUserId();
 
         log.info("event={} POST /api/decks/{}/import - Importing cards: fileName={}, duplicatePolicy={}, userId={}",
-            LogEvent.START, deckId, file.getOriginalFilename(), duplicatePolicy, userId);
+                LogEvent.START, deckId, file.getOriginalFilename(), duplicatePolicy, userId);
 
-        final ImportCardsRequest request = ImportCardsRequest.builder()
-            .duplicatePolicy(ImportCardsRequest.DuplicatePolicy.valueOf(duplicatePolicy.toUpperCase()))
-            .build();
+        final var request = ImportCardsRequest.builder()
+                .duplicatePolicy(ImportCardsRequest.DuplicatePolicy.valueOf(duplicatePolicy.toUpperCase()))
+                .build();
 
-        final ImportResultResponse response = importExportService.importCards(deckId, file, request, userId);
+        final var response = this.importExportService.importCards(deckId, file, request, userId);
 
         log.info("event={} Import completed: imported={}, skipped={}, failed={}, userId={}",
-            LogEvent.SUCCESS, response.getImported(), response.getSkipped(), response.getFailed(), userId);
+                LogEvent.SUCCESS, response.getImported(), response.getSkipped(), response.getFailed(), userId);
 
         return ResponseEntity.ok(response);
     }
@@ -105,7 +111,7 @@ public class ImportExportController {
      *
      * @param deckId Deck UUID
      * @param format Export format (csv or xlsx)
-     * @param scope Export scope (ALL or DUE_ONLY)
+     * @param scope  Export scope (ALL or DUE_ONLY)
      * @return File resource for download
      */
     @GetMapping("/decks/{deckId}/export")
@@ -114,22 +120,21 @@ public class ImportExportController {
             @RequestParam(value = "format", defaultValue = "csv") final String format,
             @RequestParam(value = "scope", defaultValue = "ALL") final String scope) {
 
-        final UUID userId = SecurityUtils.getCurrentUserId();
+        final var userId = SecurityUtils.getCurrentUserId();
 
         log.info("event={} GET /api/decks/{}/export - Exporting cards: format={}, scope={}, userId={}",
-            LogEvent.START, deckId, format, scope, userId);
+                LogEvent.START, deckId, format, scope, userId);
 
-        final Resource resource = importExportService.exportCards(deckId, format, scope, userId);
+        final var resource = this.importExportService.exportCards(deckId, format, scope, userId);
 
-        final String filename = String.format("deck_%s_%s.%s",
-            deckId.toString().substring(0, 8),
-            LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
-            format.toLowerCase());
+        final var filename = String.format("deck_%s_%s.%s",
+                deckId.toString().substring(0, 8),
+                LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMMdd")),
+                format.toLowerCase());
 
         return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
-            .contentType(MediaType.APPLICATION_OCTET_STREAM)
-            .body(resource);
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + filename + "\"")
+                .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                .body(resource);
     }
 }
-

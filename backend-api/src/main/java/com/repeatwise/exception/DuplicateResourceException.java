@@ -18,11 +18,13 @@ package com.repeatwise.exception;
  */
 public class DuplicateResourceException extends BusinessException {
 
+    private static final long serialVersionUID = 7496055878003683999L;
+
     /**
      * Constructor with error code and message
      *
      * @param errorCode Error code (e.g., "USER_002", "FOLDER_004")
-     * @param message Error message from MessageSource
+     * @param message   Error message from MessageSource
      */
     public DuplicateResourceException(final String errorCode, final String message) {
         super(errorCode, message);
@@ -32,8 +34,8 @@ public class DuplicateResourceException extends BusinessException {
      * Constructor with error code, message, and cause
      *
      * @param errorCode Error code
-     * @param message Error message
-     * @param cause Root cause
+     * @param message   Error message
+     * @param cause     Root cause
      */
     public DuplicateResourceException(final String errorCode, final String message, final Throwable cause) {
         super(errorCode, message, cause);
