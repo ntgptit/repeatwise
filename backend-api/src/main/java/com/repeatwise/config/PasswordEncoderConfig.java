@@ -24,7 +24,7 @@ public class PasswordEncoderConfig {
      * Higher cost = more secure but slower
      */
     @Bean
-    public PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder(12);
     }
 }

@@ -15,12 +15,15 @@ export interface User {
 
 export interface UpdateUserRequest {
   name?: string
-  email?: string
+  timezone?: string
+  language?: 'VI' | 'EN'
+  theme?: 'LIGHT' | 'DARK' | 'SYSTEM'
 }
 
 export interface ChangePasswordRequest {
   currentPassword: string
   newPassword: string
+  confirmNewPassword: string
 }
 
 export interface GetUsersParams {
@@ -45,7 +48,7 @@ class UserApi extends BaseApi {
    * Update user profile
    */
   async updateProfile(data: UpdateUserRequest): Promise<User> {
-    return this.customPut<User, UpdateUserRequest>('/profile', data)
+    return this.customPatch<User, UpdateUserRequest>('/profile', data)
   }
 
   /**

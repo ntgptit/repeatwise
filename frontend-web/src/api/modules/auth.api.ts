@@ -7,24 +7,30 @@ import type { PaginatedResponse } from '@/api/types/pagination'
  * Follows consistent convention: BaseApi + TypeScript Generics
  */
 export interface LoginRequest {
-  email: string
+  usernameOrEmail: string
   password: string
 }
 
 export interface LoginResponse {
-  accessToken: string
-  refreshToken: string
+  access_token: string
+  expires_in: number
   user: {
     id: string
     email: string
-    name: string
+    username?: string
+    name?: string
+    language: string
+    theme: string
+    timezone: string
   }
 }
 
 export interface RegisterRequest {
   email: string
+  username?: string
   password: string
-  name: string
+  confirmPassword: string
+  name?: string
 }
 
 export interface RegisterResponse {
@@ -32,17 +38,22 @@ export interface RegisterResponse {
 }
 
 export interface RefreshTokenRequest {
-  refreshToken: string
+  // Refresh token is sent via HTTP-only cookie, no need for body
 }
 
 export interface RefreshTokenResponse {
-  accessToken: string
+  access_token: string
+  expires_in: number
 }
 
 export interface UserProfile {
   id: string
   email: string
-  name: string
+  username?: string
+  name?: string
+  language: string
+  theme: string
+  timezone: string
   createdAt: string
   updatedAt?: string
 }
@@ -83,13 +94,12 @@ class AuthApi extends BaseApi {
 
   /**
    * Refresh access token
+   * Refresh token is automatically sent via HTTP-only cookie
    */
-  async refreshToken(
-    data: RefreshTokenRequest,
-  ): Promise<RefreshTokenResponse> {
+  async refreshToken(): Promise<RefreshTokenResponse> {
     return this.customPost<RefreshTokenResponse, RefreshTokenRequest>(
       '/refresh',
-      data,
+      {},
       { skipAuth: true },
     )
   }

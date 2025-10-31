@@ -27,6 +27,7 @@ class AxiosInstanceConfig {
     this.instance = axios.create({
       baseURL: API_CONFIG.BASE_URL,
       timeout: API_CONFIG.TIMEOUT,
+      withCredentials: true, // Include cookies for refresh token
       headers: {
         'Content-Type': 'application/json',
       },

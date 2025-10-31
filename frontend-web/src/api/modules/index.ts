@@ -6,3 +6,4 @@
 export * from './auth.api'
 export * from './user.api'
 export * from './folder.api'
+export * from './deck.api'

@@ -14,7 +14,7 @@ export default tseslint.config(
   },
   
   // Base configs
-  js.configs.recommended,
+      js.configs.recommended,
   ...tseslint.configs.recommended,
   
   // Prettier config (disables conflicting ESLint rules)
@@ -71,7 +71,7 @@ export default tseslint.config(
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
-          argsIgnorePattern: '^_',
+        argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           caughtErrorsIgnorePattern: '^_',
         },

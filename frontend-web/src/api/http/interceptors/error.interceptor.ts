@@ -83,27 +83,25 @@ export class ErrorInterceptor {
     this.isRefreshing = true
 
     try {
-      const refreshToken = this.getRefreshToken()
-      if (!refreshToken) {
-        this.logout()
-        return Promise.reject(this.extractError(error))
-      }
-
-      // Call refresh token endpoint
-      const response = await axios.post<ApiResponse<{ accessToken: string }>>(
+      // Refresh token is sent via HTTP-only cookie automatically
+      // Call refresh token endpoint (no body needed)
+      const response = await axios.post<ApiResponse<{ access_token: string }>>(
         `${API_CONFIG.BASE_URL}/auth/refresh`,
-        { refreshToken },
+        {},
+        {
+          withCredentials: true, // Include cookies
+        },
       )
 
-      const { accessToken } = response.data.data
-      this.setAccessToken(accessToken)
+      const { access_token } = response.data.data
+      this.setAccessToken(access_token)
 
       // Retry failed requests
       this.processQueue(null)
 
       // Retry original request
       if (config && config.headers) {
-        config.headers.Authorization = `Bearer ${accessToken}`
+        config.headers.Authorization = `Bearer ${access_token}`
         return axios.request(config)
       }
 
@@ -183,13 +181,6 @@ export class ErrorInterceptor {
   }
 
   /**
-   * Get refresh token from storage
-   */
-  private getRefreshToken(): string | null {
-    return localStorage.getItem(APP_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
-  }
-
-  /**
    * Set access token to storage
    */
   private setAccessToken(token: string): void {
@@ -201,7 +192,6 @@ export class ErrorInterceptor {
    */
   private logout(): void {
     localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.ACCESS_TOKEN)
-    localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.REFRESH_TOKEN)
     localStorage.removeItem(APP_CONFIG.STORAGE_KEYS.USER)
     window.location.href = '/login'
   }
