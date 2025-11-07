@@ -43,24 +43,24 @@ public class User extends BaseEntity implements UserDetails {
 
     private static final long serialVersionUID = 1L;
 
-    @Email(message = "Invalid email format")
-    @NotBlank(message = "Email is required")
-    @Size(max = 255, message = "Email must not exceed 255 characters")
+    @Email(message = "{error.user.email.invalid}")
+    @NotBlank(message = "{error.user.email.required}")
+    @Size(max = 255, message = "{error.user.email.too.long}")
     @Column(name = "email", nullable = false, length = 255)
     private String email;
 
-    @NotBlank(message = "Username is required")
-    @Pattern(regexp = "^[a-z0-9_]{3,30}$", message = "Username must be 3-30 characters, lowercase alphanumeric and underscore only")
+    @NotBlank(message = "{error.user.username.required}")
+    @Pattern(regexp = "^[a-z0-9_]{3,30}$", message = "{error.user.username.invalid}")
     @Column(name = "username", nullable = false, length = 30)
     private String username;
 
-    @NotBlank(message = "Password is required")
-    @Size(min = 60, max = 60, message = "Password hash must be exactly 60 characters (bcrypt)")
+    @NotBlank(message = "{error.user.password.required}")
+    @Size(min = 60, max = 60, message = "{error.user.password.hash.length}")
     @Column(name = "password_hash", nullable = false, length = 60)
     private String passwordHash;
 
-    @NotBlank(message = "Name is required")
-    @Size(max = 100, message = "Name must not exceed 100 characters")
+    @NotBlank(message = "{error.user.name.required}")
+    @Size(max = 100, message = "{error.user.name.too.long}")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 

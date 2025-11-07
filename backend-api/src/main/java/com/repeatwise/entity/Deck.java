@@ -22,7 +22,7 @@ import java.util.List;
 @Builder
 public class Deck extends SoftDeletableEntity {
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -31,12 +31,12 @@ public class Deck extends SoftDeletableEntity {
     @JoinColumn(name = "folder_id")
     private Folder folder;
 
-    @NotBlank(message = "Deck name is required")
-    @Size(max = 100, message = "Deck name must not exceed 100 characters")
+    @NotBlank(message = "{error.deck.name.required}")
+    @Size(max = 100, message = "{error.deck.name.too.long}")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @Size(max = 500, message = "{error.deck.description.size}")
     @Column(name = "description", length = 500)
     private String description;
 

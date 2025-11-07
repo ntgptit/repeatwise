@@ -18,9 +18,9 @@ import java.util.UUID;
 @AllArgsConstructor
 public class ReviewCardRequest {
 
-    @NotNull(message = "Card ID is required")
+    @NotNull(message = "{error.card.id.required}")
     private UUID cardId;
 
-    @NotNull(message = "Rating is required")
+    @NotNull(message = "{error.reviewlog.rating.required}")
     private Rating rating;
 }

@@ -28,15 +28,15 @@ public class UpdateSrsSettingsRequest {
 
     private ForgottenCardAction forgottenCardAction;
 
-    @Min(value = 1, message = "Move down boxes must be at least 1")
-    @Max(value = 3, message = "Move down boxes must not exceed 3")
+    @Min(value = 1, message = "{error.srs.movedown.min}")
+    @Max(value = 3, message = "{error.srs.movedown.max}")
     private Integer moveDownBoxes;
 
-    @Min(value = 1, message = "New cards per day must be at least 1")
-    @Max(value = 100, message = "New cards per day must not exceed 100")
+    @Min(value = 1, message = "{error.srs.newcards.min}")
+    @Max(value = 100, message = "{error.srs.newcards.max}")
     private Integer newCardsPerDay;
 
-    @Min(value = 1, message = "Max reviews per day must be at least 1")
-    @Max(value = 500, message = "Max reviews per day must not exceed 500")
+    @Min(value = 1, message = "{error.srs.maxreviews.min}")
+    @Max(value = 500, message = "{error.srs.maxreviews.max}")
     private Integer maxReviewsPerDay;
 }

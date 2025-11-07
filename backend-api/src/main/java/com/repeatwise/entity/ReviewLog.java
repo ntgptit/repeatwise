@@ -27,33 +27,33 @@ public class ReviewLog {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @NotNull(message = "Card is required")
+    @NotNull(message = "{error.card.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "card_id", nullable = false)
     private Card card;
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotNull(message = "Rating is required")
+    @NotNull(message = "{error.reviewlog.rating.required}")
     @Enumerated(EnumType.STRING)
     @Column(name = "rating", nullable = false, length = 10)
     private Rating rating;
 
-    @NotNull(message = "Previous box is required")
-    @Min(value = 1, message = "Previous box must be at least 1")
+    @NotNull(message = "{error.reviewlog.previousbox.required}")
+    @Min(value = 1, message = "{error.reviewlog.previousbox.min}")
     @Column(name = "previous_box", nullable = false)
     private Integer previousBox;
 
-    @NotNull(message = "New box is required")
-    @Min(value = 1, message = "New box must be at least 1")
+    @NotNull(message = "{error.reviewlog.newbox.required}")
+    @Min(value = 1, message = "{error.reviewlog.newbox.min}")
     @Column(name = "new_box", nullable = false)
     private Integer newBox;
 
-    @NotNull(message = "Interval days is required")
-    @Min(value = 1, message = "Interval days must be at least 1")
+    @NotNull(message = "{error.reviewlog.interval.required}")
+    @Min(value = 1, message = "{error.reviewlog.interval.min}")
     @Column(name = "interval_days", nullable = false)
     private Integer intervalDays;
 

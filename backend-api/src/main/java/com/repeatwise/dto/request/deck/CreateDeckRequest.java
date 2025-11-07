@@ -18,11 +18,11 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CreateDeckRequest {
 
-    @NotBlank(message = "Deck name is required")
-    @Size(min = 1, max = 100, message = "Deck name must be between 1 and 100 characters")
+    @NotBlank(message = "{error.deck.name.required}")
+    @Size(min = 1, max = 100, message = "{error.deck.name.size}")
     private String name;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @Size(max = 500, message = "{error.deck.description.size}")
     private String description;
 
     private UUID folderId; // null = root level deck

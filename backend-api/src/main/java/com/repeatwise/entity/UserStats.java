@@ -20,33 +20,33 @@ import java.time.LocalDate;
 @Builder
 public class UserStats extends BaseEntity {
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.userstats.user.required}")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false, unique = true)
     private User user;
 
     @Builder.Default
-    @Min(value = 0, message = "Total cards must be at least 0")
+    @Min(value = 0, message = "{error.userstats.totalcards.non.negative}")
     @Column(name = "total_cards", nullable = false)
     private Integer totalCards = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Total decks must be at least 0")
+    @Min(value = 0, message = "{error.userstats.totaldecks.non.negative}")
     @Column(name = "total_decks", nullable = false)
     private Integer totalDecks = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Total folders must be at least 0")
+    @Min(value = 0, message = "{error.userstats.totalfolders.non.negative}")
     @Column(name = "total_folders", nullable = false)
     private Integer totalFolders = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Cards reviewed today must be at least 0")
+    @Min(value = 0, message = "{error.userstats.cardsreviewed.non.negative}")
     @Column(name = "cards_reviewed_today", nullable = false)
     private Integer cardsReviewedToday = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Streak days must be at least 0")
+    @Min(value = 0, message = "{error.userstats.streakdays.non.negative}")
     @Column(name = "streak_days", nullable = false)
     private Integer streakDays = 0;
 
@@ -54,7 +54,7 @@ public class UserStats extends BaseEntity {
     private LocalDate lastStudyDate;
 
     @Builder.Default
-    @Min(value = 0, message = "Total study time must be at least 0")
+    @Min(value = 0, message = "{error.userstats.totaltime.non.negative}")
     @Column(name = "total_study_time_minutes", nullable = false)
     private Integer totalStudyTimeMinutes = 0;
 

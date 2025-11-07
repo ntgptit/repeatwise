@@ -20,7 +20,7 @@ import java.util.List;
 @Builder
 public class Folder extends SoftDeletableEntity {
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
@@ -29,24 +29,24 @@ public class Folder extends SoftDeletableEntity {
     @JoinColumn(name = "parent_folder_id")
     private Folder parentFolder;
 
-    @NotBlank(message = "Folder name is required")
-    @Size(max = 100, message = "Folder name must not exceed 100 characters")
+    @NotBlank(message = "{error.folder.name.required}")
+    @Size(max = 100, message = "{error.folder.name.too.long}")
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @Size(max = 500, message = "{error.folder.description.too.long}")
     @Column(name = "description", length = 500)
     private String description;
 
     @Builder.Default
-    @Min(value = 0, message = "Depth must be at least 0")
-    @Max(value = 10, message = "Depth must not exceed 10")
+    @Min(value = 0, message = "{error.folder.depth.min}")
+    @Max(value = 10, message = "{error.folder.depth.max}")
     @Column(name = "depth", nullable = false)
     private Integer depth = 0;
 
-    @NotBlank(message = "Path is required")
-    @Size(max = 1000, message = "Path must not exceed 1000 characters")
-    @Pattern(regexp = "^(/[0-9a-f-]{36})+$", message = "Invalid path format")
+    @NotBlank(message = "{error.folder.path.required}")
+    @Size(max = 1000, message = "{error.folder.path.length}")
+    @Pattern(regexp = "^(/[0-9a-f-]{36})+$", message = "{error.folder.path.invalid}")
     @Column(name = "path", nullable = false, length = 1000)
     private String path;
 

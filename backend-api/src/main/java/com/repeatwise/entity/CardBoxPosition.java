@@ -22,41 +22,41 @@ import java.time.LocalDateTime;
 @Builder
 public class CardBoxPosition extends SoftDeletableEntity {
 
-    @NotNull(message = "Card is required")
+    @NotNull(message = "{error.card.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "card_id", nullable = false)
     private Card card;
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder.Default
-    @NotNull(message = "Current box is required")
-    @Min(value = 1, message = "Current box must be at least 1")
+    @NotNull(message = "{error.cardbox.current.required}")
+    @Min(value = 1, message = "{error.cardbox.current.min}")
     @Column(name = "current_box", nullable = false)
     private Integer currentBox = 1;
 
     @Builder.Default
-    @NotNull(message = "Interval days is required")
-    @Min(value = 1, message = "Interval days must be at least 1")
+    @NotNull(message = "{error.cardbox.interval.required}")
+    @Min(value = 1, message = "{error.cardbox.interval.min}")
     @Column(name = "interval_days", nullable = false)
     private Integer intervalDays = 1;
 
-    @NotNull(message = "Due date is required")
+    @NotNull(message = "{error.cardbox.due.required}")
     @Column(name = "due_date", nullable = false)
     private LocalDate dueDate;
 
     @Builder.Default
-    @NotNull(message = "Review count is required")
-    @Min(value = 0, message = "Review count must be at least 0")
+    @NotNull(message = "{error.cardbox.reviewcount.required}")
+    @Min(value = 0, message = "{error.cardbox.reviewcount.min}")
     @Column(name = "review_count", nullable = false)
     private Integer reviewCount = 0;
 
     @Builder.Default
-    @NotNull(message = "Lapse count is required")
-    @Min(value = 0, message = "Lapse count must be at least 0")
+    @NotNull(message = "{error.cardbox.lapsecount.required}")
+    @Min(value = 0, message = "{error.cardbox.lapsecount.min}")
     @Column(name = "lapse_count", nullable = false)
     private Integer lapseCount = 0;
 

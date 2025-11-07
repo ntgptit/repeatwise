@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateCardRequest {
 
-    @Size(min = 1, max = 5000, message = "Front text must be between 1 and 5000 characters")
+    @Size(min = 1, max = 5000, message = "{error.card.front.size}")
     private String front;
 
-    @Size(min = 1, max = 5000, message = "Back text must be between 1 and 5000 characters")
+    @Size(min = 1, max = 5000, message = "{error.card.back.size}")
     private String back;
 }

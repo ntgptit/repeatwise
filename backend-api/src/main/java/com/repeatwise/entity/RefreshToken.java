@@ -21,29 +21,29 @@ import java.time.LocalDateTime;
 @Builder
 public class RefreshToken extends BaseEntity {
 
-    @NotBlank(message = "Token is required")
-    @Size(max = 500, message = "Token must not exceed 500 characters")
+    @NotBlank(message = "{error.auth.token.required}")
+    @Size(max = 500, message = "{error.auth.token.length}")
     @Column(name = "token", nullable = false, unique = true, length = 500)
     private String token;
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @Size(max = 100, message = "Device ID must not exceed 100 characters")
+    @Size(max = 100, message = "{error.refresh.token.device.id.length}")
     @Column(name = "device_id", length = 100)
     private String deviceId;
 
-    @Size(max = 255, message = "Device info must not exceed 255 characters")
+    @Size(max = 255, message = "{error.refresh.token.device.info.length}")
     @Column(name = "device_info", length = 255)
     private String deviceInfo;
 
-    @Size(max = 50, message = "IP address must not exceed 50 characters")
+    @Size(max = 50, message = "{error.refresh.token.ip.length}")
     @Column(name = "ip_address", length = 50)
     private String ipAddress;
 
-    @NotNull(message = "Expiration time is required")
+    @NotNull(message = "{error.refresh.token.expiration.required}")
     @Column(name = "expires_at", nullable = false)
     private LocalDateTime expiresAt;
 

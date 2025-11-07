@@ -19,14 +19,14 @@ import java.util.UUID;
 @AllArgsConstructor
 public class CreateCardRequest {
 
-    @NotNull(message = "Deck ID is required")
+    @NotNull(message = "{error.card.deck.required}")
     private UUID deckId;
 
-    @NotBlank(message = "Front text is required")
-    @Size(min = 1, max = 5000, message = "Front text must be between 1 and 5000 characters")
+    @NotBlank(message = "{error.card.front.required}")
+    @Size(min = 1, max = 5000, message = "{error.card.front.size}")
     private String front;
 
-    @NotBlank(message = "Back text is required")
-    @Size(min = 1, max = 5000, message = "Back text must be between 1 and 5000 characters")
+    @NotBlank(message = "{error.card.back.required}")
+    @Size(min = 1, max = 5000, message = "{error.card.back.size}")
     private String back;
 }

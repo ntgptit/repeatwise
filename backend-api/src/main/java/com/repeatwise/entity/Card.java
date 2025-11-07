@@ -22,18 +22,18 @@ import java.util.List;
 @Builder
 public class Card extends SoftDeletableEntity {
 
-    @NotNull(message = "Deck is required")
+    @NotNull(message = "{error.card.deck.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "deck_id", nullable = false)
     private Deck deck;
 
-    @NotBlank(message = "Front text is required")
-    @Size(max = 5000, message = "Front text must not exceed 5000 characters")
+    @NotBlank(message = "{error.card.front.required}")
+    @Size(max = 5000, message = "{error.card.front.size}")
     @Column(name = "front", nullable = false, columnDefinition = "TEXT")
     private String front;
 
-    @NotBlank(message = "Back text is required")
-    @Size(max = 5000, message = "Back text must not exceed 5000 characters")
+    @NotBlank(message = "{error.card.back.required}")
+    @Size(max = 5000, message = "{error.card.back.size}")
     @Column(name = "back", nullable = false, columnDefinition = "TEXT")
     private String back;
 

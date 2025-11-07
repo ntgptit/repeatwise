@@ -15,9 +15,9 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class UpdateFolderRequest {
 
-    @Size(min = 1, max = 100, message = "Folder name must be between 1 and 100 characters")
+    @Size(min = 1, max = 100, message = "{error.folder.name.size}")
     private String name;
 
-    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @Size(max = 500, message = "{error.folder.description.too.long}")
     private String description;
 }

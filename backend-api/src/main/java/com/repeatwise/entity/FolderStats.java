@@ -26,33 +26,33 @@ public class FolderStats {
     @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 
-    @NotNull(message = "Folder is required")
+    @NotNull(message = "{error.folder.required}")
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "folder_id", nullable = false)
     private Folder folder;
 
-    @NotNull(message = "User is required")
+    @NotNull(message = "{error.user.required}")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Builder.Default
-    @Min(value = 0, message = "Total cards count must be at least 0")
+    @Min(value = 0, message = "{error.folder.stats.totalcards.non.negative}")
     @Column(name = "total_cards_count", nullable = false)
     private Integer totalCardsCount = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Due cards count must be at least 0")
+    @Min(value = 0, message = "{error.folder.stats.duecards.non.negative}")
     @Column(name = "due_cards_count", nullable = false)
     private Integer dueCardsCount = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "New cards count must be at least 0")
+    @Min(value = 0, message = "{error.folder.stats.newcards.non.negative}")
     @Column(name = "new_cards_count", nullable = false)
     private Integer newCardsCount = 0;
 
     @Builder.Default
-    @Min(value = 0, message = "Mature cards count must be at least 0")
+    @Min(value = 0, message = "{error.folder.stats.maturecards.non.negative}")
     @Column(name = "mature_cards_count", nullable = false)
     private Integer matureCardsCount = 0;
 
