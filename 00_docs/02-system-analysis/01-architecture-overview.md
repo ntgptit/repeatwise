@@ -245,12 +245,14 @@ flowchart TB
 - Uptime 99.9%, daily backups, transactional integrity on critical ops
 
 ## Technology Decisions (Rationale)
+
 - Spring Boot 3 + Java 17: mature ecosystem, strong validation, security, and JPA support.
 - PostgreSQL: robust relational DB, JSON support if needed, indexing strategies for SRS queries.
 - JWT + refresh rotation: stateless access tokens with secure, revocable refresh path.
 - In-memory job store (MVP): fast and simple at small scale; migrate to broker later.
 
 ## Security & Auth
+
 - Passwords: bcrypt hashing (cost 12), never log/store plaintext.
 - JWT access token (15m) with claims: userId, email, iat, exp.
 - Refresh token: random secret, stored hashed, rotated on use, 7-day expiry.
@@ -259,28 +261,33 @@ flowchart TB
 - Authorization: resource ownership checks (user_id) for folders/decks/cards; soft-deleted hidden by default.
 
 ## Error Handling Strategy
+
 - Global exception mapping → standard error JSON: { error, message, details? } with HTTP codes 400/401/403/404/409/429/500.
 - Validation errors include field-level details for UI.
 - Transaction boundaries ensure atomic ops (e.g., move/copy, soft-delete subtrees).
 
 ## Async Jobs (MVP)
+
 - Use ConcurrentHashMap for job states: { status, progress, total, message, resultId? } + TTL cleanup.
 - Long-running tasks: folder copy (51–500 items), deck copy (1,001–10,000 cards), large import/export.
 - Progress updates: granular counters; timeouts with best-effort rollback.
 - Migration path: message broker + workers when scaling out.
 
 ## Data Management
+
 - Soft delete via deleted_at; all queries exclude soft-deleted records.
 - Folder tree: materialized path + depth constraint (<= 10), indexed path column.
 - Review performance: composite index (user_id, due_date, current_box), limit batch size.
 - Statistics: optional denormalized tables (folder_stats) with periodic refresh.
 
 ## Observability
+
 - Structured logs (JSON) with request ids; log slow queries and job transitions.
 - Basic metrics: request latency, error rates, job throughput, DB pool metrics.
 - Health checks: liveness/readiness endpoints; DB connectivity check.
 
 ## Environments & Config
+
 - Envs: DEV/LOCAL, PROD.
 - Config via env vars: DB_URL, DB_USER, DB_PASS, JWT_SECRET, REFRESH_COOKIE_NAME, JOB_TTL_MINS, IMPORT_LIMITS.
 - Docker Compose for local: api + postgres; seed scripts optional.

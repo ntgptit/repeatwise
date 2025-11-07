@@ -75,7 +75,14 @@
       "Bash(do echo \"📁 $dir:\")",
       "Bash(echo:*)",
       "Bash(for dir in */)",
-      "Bash(do echo \"📁 $dir%/:\")"
+      "Bash(do echo \"📁 $dir%/:\")",
+      "Bash(for dir in \"common/components/data-display\" \"common/components/feedback\" \"common/hooks\" \"common/types/data-management\" \"design-system/components\" \"features/auth\" \"features/user\" \"features/order\" \"layouts\" \"pages\" \"queries\" \"store\")",
+      "Bash(do)",
+      "Bash(file=\"frontend-web/src/$dir/index.ts\")",
+      "Bash(if [ -f \"$file\" ])",
+      "Bash(then)",
+      "Bash(else)",
+      "Bash(fi)"
     ],
     "deny": [],
     "ask": []

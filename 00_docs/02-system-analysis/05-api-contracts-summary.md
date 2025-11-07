@@ -5,9 +5,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ## Authentication Endpoints
 
 ### POST `/api/auth/register`
+
 **Purpose**: Register a new user account
 
 **Request Body**:
+
 ```json
 {
   "email": "user@example.com",           // Required, unique, valid email format
@@ -18,21 +20,26 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `201 Created`: Registration successful
+
   ```json
   {
     "message": "Registration successful. Please login."
   }
   ```
+
 - `400 Bad Request`: Validation errors (email exists, username exists, invalid format, weak password)
 - `409 Conflict`: Email or username already exists
 
 **Behavior**: Does not auto-login; redirects to login page
 
 ### POST `/api/auth/login`
+
 **Purpose**: Authenticate user and receive tokens
 
 **Request Body**:
+
 ```json
 {
   "identifier": "user@example.com",       // Username or email
@@ -41,7 +48,9 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Login successful
+
   ```json
   {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -53,53 +62,64 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
     }
   }
   ```
+
   - Sets HTTP-only cookie: `refresh_token`
 - `401 Unauthorized`: Invalid credentials
 
 **Behavior**: System detects if identifier is email or username automatically
 
 ### POST `/api/auth/refresh`
+
 **Purpose**: Rotate refresh token and get new access token
 
 **Request**: Cookie with `refresh_token` (HTTP-only)
 
 **Response**:
+
 - `200 OK`: Token refreshed
+
   ```json
   {
     "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
   }
   ```
+
   - Sets new HTTP-only cookie: `refresh_token` (rotated)
 - `401 Unauthorized`: Refresh token expired or invalid
 
 **Behavior**: Old refresh token is revoked (one-time use)
 
 ### POST `/api/auth/logout`
+
 **Purpose**: Logout current device
 
 **Request**: JWT access token in Authorization header
 
 **Response**:
+
 - `200 OK`: Logout successful
   - Clears refresh token cookie
   - Revokes current refresh token in database
 
 ### POST `/api/auth/logout-all`
+
 **Purpose**: Logout all devices
 
 **Request**: JWT access token in Authorization header
 
 **Response**:
+
 - `200 OK`: All sessions terminated
   - Revokes all refresh tokens for user
 
 ## User Management Endpoints
 
 ### GET `/api/users/me`
+
 **Purpose**: Get current user profile
 
 **Response**:
+
 ```json
 {
   "id": "uuid",
@@ -115,9 +135,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 ### PATCH `/api/users/me`
+
 **Purpose**: Update user profile
 
 **Request Body**:
+
 ```json
 {
   "name": "John Doe",                     // Optional, 1-100 chars
@@ -129,14 +151,17 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Profile updated
 - `400 Bad Request`: Validation errors
 - `409 Conflict`: Username already exists
 
 ### PATCH `/api/users/me/password`
+
 **Purpose**: Change password
 
 **Request Body**:
+
 ```json
 {
   "current_password": "OldPassword123",
@@ -145,15 +170,18 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Password changed
   - All refresh tokens revoked
   - User redirected to login
 - `400 Bad Request`: Current password incorrect or validation error
 
 ### GET `/api/users/me/stats`
+
 **Purpose**: Get user statistics
 
 **Response**:
+
 ```json
 {
   "total_cards": 1250,
@@ -169,9 +197,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ## SRS Settings Endpoints
 
 ### GET `/api/srs-settings`
+
 **Purpose**: Get user SRS settings
 
 **Response**:
+
 ```json
 {
   "total_boxes": 7,                       // 3-10, default: 7
@@ -186,25 +216,30 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 ### PATCH `/api/srs-settings`
+
 **Purpose**: Update SRS settings
 
 **Request Body**: Same fields as GET response (all optional)
 
 **Response**:
+
 - `200 OK`: Settings updated
 - `400 Bad Request`: Validation errors (out of range values)
 
 ## Folder Management Endpoints
 
 ### GET `/api/folders?parentId={parentId}`
+
 **Purpose**: List folders and decks under a parent (paginated)
 
 **Query Parameters**:
+
 - `parentId`: UUID or null (for root level)
 - `page`: Page number (default: 0)
 - `size`: Page size (default: 50)
 
 **Response**:
+
 ```json
 {
   "content": [
@@ -226,9 +261,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 ### POST `/api/folders`
+
 **Purpose**: Create folder
 
 **Request Body**:
+
 ```json
 {
   "parent_id": "uuid",                   // Nullable (root level)
@@ -238,7 +275,9 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `201 Created`: Folder created
+
   ```json
   {
     "id": "uuid",
@@ -249,15 +288,18 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
     "created_at": "2024-01-01T00:00:00Z"
   }
   ```
+
 - `400 Bad Request`: Validation errors (max depth exceeded, duplicate name)
 - `404 Not Found`: Parent folder not found
 
 **Validation**: Max depth 10, unique name per parent (case-insensitive)
 
 ### PATCH `/api/folders/{folderId}`
+
 **Purpose**: Rename or update folder description
 
 **Request Body**:
+
 ```json
 {
   "name": "Renamed Folder",              // Optional
@@ -266,14 +308,17 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Folder updated
 - `400 Bad Request`: Validation errors (duplicate name)
 - `404 Not Found`: Folder not found
 
 ### POST `/api/folders/{folderId}/move`
+
 **Purpose**: Move folder to new location
 
 **Request Body**:
+
 ```json
 {
   "destination_folder_id": "uuid"        // Nullable (root level)
@@ -281,6 +326,7 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Folder moved
 - `400 Bad Request`: Cannot move into self/descendant, max depth exceeded
 - `404 Not Found`: Folder or destination not found
@@ -288,9 +334,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 **Validation**: Cycle prevention, depth check (max 10)
 
 ### POST `/api/folders/{folderId}/copy`
+
 **Purpose**: Copy folder (including sub-folders and decks)
 
 **Request Body**:
+
 ```json
 {
   "destination_folder_id": "uuid",      // Nullable (root level)
@@ -299,36 +347,45 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Folder copied synchronously (≤50 items)
+
   ```json
   {
     "folder": {...},
     "copied_items": 25
   }
   ```
+
 - `202 Accepted`: Copy job enqueued (51-500 items)
+
   ```json
   {
     "job_id": "uuid",
     "message": "Copy job started"
   }
   ```
+
 - `400 Bad Request`: Folder too large (>500 items), max depth exceeded
 
 **Behavior**: Sync ≤50 items, async 51-500 items, reject >500 items
 
 ### DELETE `/api/folders/{folderId}`
+
 **Purpose**: Soft delete folder (recursive)
 
 **Response**:
+
 - `200 OK`: Folder deleted
   - Sets `deleted_at` timestamp
   - Recursively soft-deletes all descendants
 
 ### GET `/api/folders/{folderId}/stats`
+
 **Purpose**: Get recursive folder statistics
 
 **Response**:
+
 ```json
 {
   "total_decks": 15,                     // Recursive count
@@ -342,9 +399,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ## Deck Management Endpoints
 
 ### GET `/api/decks?folderId={folderId}`
+
 **Purpose**: List decks (paginated)
 
 **Query Parameters**:
+
 - `folderId`: UUID or null (for root level decks)
 - `page`: Page number (default: 0)
 - `size`: Page size (default: 50)
@@ -352,9 +411,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 **Response**: Paginated list of decks
 
 ### POST `/api/decks`
+
 **Purpose**: Create deck
 
 **Request Body**:
+
 ```json
 {
   "folder_id": "uuid",                    // Nullable (root level)
@@ -364,14 +425,17 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `201 Created`: Deck created
 - `400 Bad Request`: Validation errors (duplicate name)
 - `404 Not Found`: Folder not found
 
 ### POST `/api/decks/{deckId}/copy`
+
 **Purpose**: Copy deck (including all cards)
 
 **Request Body**:
+
 ```json
 {
   "destination_folder_id": "uuid",      // Nullable (root level)
@@ -380,30 +444,37 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `200 OK`: Deck copied synchronously (≤1,000 cards)
 - `202 Accepted`: Copy job enqueued (1,001-10,000 cards)
+
   ```json
   {
     "job_id": "uuid"
   }
   ```
+
 - `400 Bad Request`: Deck too large (>10,000 cards)
 
 ## Card Management Endpoints
 
 ### GET `/api/decks/{deckId}/cards?page={page}`
+
 **Purpose**: List cards in deck (paginated)
 
 **Query Parameters**:
+
 - `page`: Page number (default: 0)
 - `size`: Page size (default: 100)
 
 **Response**: Paginated list of cards
 
 ### POST `/api/decks/{deckId}/cards`
+
 **Purpose**: Create card
 
 **Request Body**:
+
 ```json
 {
   "front": "Card front text",            // Required, max 5,000 chars
@@ -412,24 +483,29 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 - `201 Created`: Card created
 - `400 Bad Request`: Validation errors (empty front/back, exceeds max length)
 
 ## Import/Export Endpoints
 
 ### POST `/api/decks/{deckId}/import`
+
 **Purpose**: Import cards from CSV/XLSX file
 
 **Request**: Multipart form data with file
 
 **Constraints**:
+
 - File size: max 50MB
 - Row limit: max 10,000 rows
 - Required columns: Front, Back
 - Format: CSV (UTF-8) or Excel (.xlsx)
 
 **Response**:
+
 - `200 OK`: Import completed synchronously
+
   ```json
   {
     "imported": 950,
@@ -438,31 +514,39 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
     "errors": [...]
   }
   ```
+
 - `202 Accepted`: Import job enqueued (large files)
+
   ```json
   {
     "job_id": "uuid"
   }
   ```
+
 - `400 Bad Request`: Invalid format, missing columns, exceeds limits
 - `413 Payload Too Large`: File size exceeds 50MB
 
 ### GET `/api/decks/{deckId}/export?format={format}&scope={scope}`
+
 **Purpose**: Export cards to CSV/XLSX
 
 **Query Parameters**:
+
 - `format`: `csv` or `xlsx` (default: csv)
 - `scope`: `ALL` or `DUE_ONLY` (default: ALL)
 
 **Response**:
+
 - `200 OK`: File download (sync for ≤5,000 cards)
 - `202 Accepted`: Export job enqueued (>5,000 cards)
 - `400 Bad Request`: Invalid parameters
 
 ### GET `/api/jobs/{jobId}`
+
 **Purpose**: Get async job status
 
 **Response**:
+
 ```json
 {
   "job_id": "uuid",
@@ -477,9 +561,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ## Review (SRS) Endpoints
 
 ### POST `/api/review/sessions`
+
 **Purpose**: Start review session
 
 **Request Body**:
+
 ```json
 {
   "scope_type": "DECK",                  // DECK or FOLDER
@@ -488,6 +574,7 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 ```json
 {
   "session_id": "uuid",
@@ -503,9 +590,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 **Behavior**: Respects daily limits (new_cards_per_day, max_reviews_per_day)
 
 ### POST `/api/review/sessions/{sessionId}/rate`
+
 **Purpose**: Rate current card
 
 **Request Body**:
+
 ```json
 {
   "card_id": "uuid",
@@ -515,6 +604,7 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ```
 
 **Response**:
+
 ```json
 {
   "next_card": {...},                    // Next card or null
@@ -530,9 +620,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 **Behavior**: Applies SRS algorithm, updates box/due_date, creates review log
 
 ### POST `/api/review/sessions/{sessionId}/undo`
+
 **Purpose**: Undo last rating
 
 **Response**:
+
 ```json
 {
   "card": {...},                         // Restored card
@@ -543,9 +635,11 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 **Behavior**: Restores previous SRS state, removes last review log (windowed)
 
 ### POST `/api/review/sessions/{sessionId}/skip`
+
 **Purpose**: Skip current card (no SRS change)
 
 **Response**:
+
 ```json
 {
   "next_card": {...},
@@ -558,13 +652,16 @@ This is a concise summary of key REST endpoints. Detailed contracts should be ma
 ## Statistics Endpoints
 
 ### GET `/api/stats/box-distribution?scopeType={scopeType}&scopeId={scopeId}`
+
 **Purpose**: Get box distribution statistics
 
 **Query Parameters**:
+
 - `scopeType`: `ALL`, `FOLDER`, or `DECK`
 - `scopeId`: UUID (required if scopeType is FOLDER or DECK)
 
 **Response**:
+
 ```json
 {
   "box_distribution": [

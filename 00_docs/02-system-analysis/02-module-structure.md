@@ -3,6 +3,7 @@
 ## Backend Modules (Spring Boot)
 
 ### auth Module
+
 **Purpose**: Authentication and authorization
 
 - **Endpoints**:
@@ -28,6 +29,7 @@
   - Refresh token stored in HTTP-only cookie
 
 ### users Module
+
 **Purpose**: User profile and settings management
 
 - **Endpoints**:
@@ -49,6 +51,7 @@
   - Timezone and locale management
 
 ### srs_settings Module
+
 **Purpose**: Spaced Repetition System configuration
 
 - **Endpoints**:
@@ -67,6 +70,7 @@
   - Review order configuration (DUE_DATE_ASC, RANDOM, CURRENT_BOX_ASC)
 
 ### folders Module
+
 **Purpose**: Folder hierarchy management
 
 - **Endpoints**:
@@ -93,6 +97,7 @@
   - Unique name validation per parent
 
 ### decks Module
+
 **Purpose**: Deck management
 
 - **Endpoints**:
@@ -116,6 +121,7 @@
   - Soft delete
 
 ### cards Module
+
 **Purpose**: Flashcard management
 
 - **Endpoints**:
@@ -136,6 +142,7 @@
   - Per-deck ownership
 
 ### review Module
+
 **Purpose**: SRS review session management
 
 - **Endpoints**:
@@ -163,6 +170,7 @@
   - Review log creation
 
 ### import_export Module
+
 **Purpose**: Bulk card import/export
 
 - **Endpoints**:
@@ -186,6 +194,7 @@
   - Export scope selection (ALL/DUE_ONLY)
 
 ### jobs Module
+
 **Purpose**: Async job management
 
 - **Endpoints**:
@@ -204,6 +213,7 @@
   - Used by folder/deck copy and import/export
 
 ### stats Module
+
 **Purpose**: Statistics and analytics
 
 - **Endpoints**:
@@ -225,6 +235,7 @@
 ## Backend Layers
 
 ### Controller Layer (REST API)
+
 **Responsibility**: HTTP request/response handling, input validation
 
 - Receives HTTP requests
@@ -235,6 +246,7 @@
 - Exception handling via `@ControllerAdvice`
 
 **Example Flow**:
+
 ```java
 @RestController
 @RequestMapping("/api/folders")
@@ -247,6 +259,7 @@ public class FolderController {
 ```
 
 ### Service Layer (Business Logic)
+
 **Responsibility**: Business rules enforcement, transaction management
 
 - Implements business logic
@@ -257,6 +270,7 @@ public class FolderController {
 - Handles complex operations (move, copy, async jobs)
 
 **Key Business Rules Enforced**:
+
 - Folder depth <= 10
 - Unique names per parent
 - Copy limits (folder ≤500 items, deck ≤10,000 cards)
@@ -264,6 +278,7 @@ public class FolderController {
 - SRS box algorithm (AGAIN/HARD/GOOD/EASY)
 
 ### Repository Layer (Data Access)
+
 **Responsibility**: Database queries, data persistence
 
 - JPA/Hibernate queries
@@ -274,12 +289,14 @@ public class FolderController {
 - Composite indexes for performance
 
 **Key Query Patterns**:
+
 - Find by user_id (authorization)
 - Find with soft delete exclusion
 - Paginated queries (Pageable)
 - Recursive queries (folder descendants)
 
 ### DTO/Mapper Layer
+
 **Responsibility**: Entity ↔ DTO conversion
 
 - Request DTOs (validation annotations)
@@ -289,6 +306,7 @@ public class FolderController {
 - Handles timezone conversion for display
 
 ### Configuration & Security Layer
+
 **Responsibility**: Cross-cutting concerns
 
 - **Security Configuration**:
@@ -311,6 +329,7 @@ public class FolderController {
 ## Frontend Modules (React + TypeScript)
 
 ### auth Module
+
 **Purpose**: Authentication and authorization UI
 
 - **Components**:
@@ -326,6 +345,7 @@ public class FolderController {
   - Redirect handling after login/registration
 
 ### folders Module
+
 **Purpose**: Folder hierarchy management UI
 
 - **Components**:
@@ -343,6 +363,7 @@ public class FolderController {
   - Real-time statistics updates
 
 ### decks Module
+
 **Purpose**: Deck management UI
 
 - **Components**:
@@ -357,6 +378,7 @@ public class FolderController {
   - Quick actions menu
 
 ### cards Module
+
 **Purpose**: Flashcard management UI
 
 - **Components**:
@@ -371,6 +393,7 @@ public class FolderController {
   - Bulk selection
 
 ### review Module
+
 **Purpose**: SRS review session UI
 
 - **Components**:
@@ -389,6 +412,7 @@ public class FolderController {
   - Undo functionality (windowed)
 
 ### importExport Module
+
 **Purpose**: Bulk import/export UI
 
 - **Components**:
@@ -407,6 +431,7 @@ public class FolderController {
   - Async job polling
 
 ### settings Module
+
 **Purpose**: User settings UI
 
 - **Components**:
@@ -422,6 +447,7 @@ public class FolderController {
   - Settings persistence
 
 ### stats Module
+
 **Purpose**: Statistics and analytics UI
 
 - **Components**:
@@ -436,6 +462,7 @@ public class FolderController {
   - Export statistics
 
 ### lib Module (Shared Utilities)
+
 **Purpose**: Shared utilities and infrastructure
 
 - **API Client**:
@@ -481,6 +508,7 @@ public class FolderController {
 - Export: max 50,000 rows; async > 5,000
 
 ## Class & Layer Diagram (Simplified)
+
 ```mermaid
 classDiagram
   class FolderController
@@ -498,6 +526,7 @@ classDiagram
 ```
 
 ## Transactions & Concurrency
+
 - Create/Rename/Delete: short transaction per entity.
 - Move folder: transaction updating parent_id, path, depth for subtree; optimistic locking/version recommended.
 - Copy: sync path wrapped in a transaction; async path uses chunked transactions per batch.
@@ -505,6 +534,7 @@ classDiagram
 - Undo rating: short transaction restoring prior SRS state and adjusting logs.
 
 ## Error Mapping (Common)
+
 - 400 Bad Request: validation errors (fields included in response).
 - 401 Unauthorized: missing/expired JWT.
 - 403 Forbidden: resource ownership violations.
@@ -515,6 +545,7 @@ classDiagram
 - 500 Internal Server Error: unhandled exceptions.
 
 ## Naming & IDs
+
 - IDs: UUID (v4) for entities and jobs.
 - Timestamps: UTC in backend; convert to user timezone on display.
 - Slugs/paths: internal materialized path uses UUIDs for robustness.

@@ -51,6 +51,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Email field (required, validated)
 - Username field (optional, format validation)
 - Password fields (min 8 chars, match validation)
@@ -87,6 +88,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Username/Email field (auto-detects format)
 - Password field
 - Remember me checkbox
@@ -132,6 +134,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Left sidebar: Folder tree navigation
 - Header: Logo, search, user menu, theme toggle
 - Dashboard cards: Total cards, due cards, streak
@@ -188,6 +191,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Left sidebar: Expandable folder tree
 - Breadcrumb navigation
 - Folder statistics panel
@@ -220,6 +224,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Name field (required, validated)
 - Description field (optional)
 - Parent folder selector (dropdown)
@@ -254,6 +259,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Source folder display
 - Destination folder tree selector
 - Validation warnings
@@ -295,6 +301,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Search and filter controls
 - Deck cards with statistics
 - Action buttons per deck
@@ -350,6 +357,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Deck metadata display
 - Statistics panel
 - Action buttons
@@ -392,6 +400,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Front textarea (required, max 5000 chars)
 - Back textarea (required, max 5000 chars)
 - Character counter
@@ -450,6 +459,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Multi-step wizard
 - File upload with drag & drop
 - Column mapping interface
@@ -511,6 +521,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Progress bar
 - Card display (front/back reveal)
 - Rating buttons (AGAIN/HARD/GOOD/EASY)
@@ -541,6 +552,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Completion message
 - Session statistics
 - Box distribution chart
@@ -611,6 +623,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Profile form fields
 - Password change section
 - Account actions
@@ -674,6 +687,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - SRS configuration form
 - Box intervals display
 - Validation for ranges
@@ -723,6 +737,7 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ```
 
 **Key Elements**:
+
 - Overview statistics
 - Box distribution chart
 - Review history chart
@@ -785,16 +800,19 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ## Responsive Breakpoints
 
 ### Desktop (> 1024px)
+
 - Full sidebar + main content
 - Multi-column layouts
 - Hover states
 
 ### Tablet (768px - 1024px)
+
 - Collapsible sidebar
 - Stacked layouts
 - Touch-friendly buttons
 
 ### Mobile (< 768px)
+
 - Bottom navigation
 - Full-width content
 - Hamburger menu
@@ -805,21 +823,25 @@ This document provides detailed wireframes for the RepeatWise web application, c
 ## UI Components Library
 
 ### Buttons
+
 - Primary: `[Primary Action]`
 - Secondary: `[Secondary]`
 - Danger: `[Delete]`
 - Text: `[Cancel]`
 
 ### Input Fields
+
 - Text: `[___________]`
 - Password: `[●●●●●●●●]`
 - Textarea: `┌─────┐\n│     │\n└─────┘`
 - Select: `[Option ▼]`
 
 ### Cards
+
 - Container: `┌─────────────┐\n│  Content    │\n└─────────────┘`
 
 ### Indicators
+
 - Progress: `[████░░░░░░]`
 - Status: `✅ ⚠️ ❌`
 - Icons: `📁 📚 📝 🔍`
@@ -833,4 +855,3 @@ This document provides detailed wireframes for the RepeatWise web application, c
 - Colors and styling follow design system (light/dark themes)
 - All interactive elements should be keyboard accessible
 - Responsive design adapts layout for different screen sizes
-

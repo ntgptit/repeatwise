@@ -73,6 +73,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Scrollable form
 - Required field indicators (*)
 - Password visibility toggle
@@ -116,6 +117,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Username/Email field
 - Password field with visibility toggle
 - Remember me checkbox
@@ -174,6 +176,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Header with menu and search
 - Statistics cards (swipeable)
 - Quick action buttons
@@ -228,6 +231,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Folder list with statistics
 - Tap to expand/collapse
 - Long press for context menu
@@ -287,6 +291,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Folder statistics cards
 - Action buttons
 - Deck list within folder
@@ -324,6 +329,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Form fields
 - Parent folder picker
 - Create button
@@ -371,6 +377,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Search and filter controls
 - Deck cards with statistics
 - Tap to open deck
@@ -436,6 +443,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Deck statistics
 - Action buttons
 - Card list with filters
@@ -478,6 +486,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Large text areas
 - Character counter
 - Save button
@@ -514,6 +523,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - File picker button
 - File format information
 - Multi-step wizard
@@ -560,6 +570,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Progress bar
 - Large card display area
 - Show answer button
@@ -607,6 +618,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Card flip animation
 - Rating buttons (4 options)
 - Large touch targets
@@ -646,6 +658,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Celebration message
 - Session statistics
 - Action buttons
@@ -702,6 +715,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Settings sections
 - Navigation items
 - Account actions
@@ -752,6 +766,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Number pickers
 - Radio buttons
 - Sliders for limits
@@ -806,6 +821,7 @@ This document provides detailed wireframes for the RepeatWise mobile application
 ```
 
 **Key Elements**:
+
 - Statistics cards
 - Charts (bar, line)
 - Scrollable content
@@ -902,16 +918,19 @@ Screen (Modal)
 ## Gestures
 
 ### Swipe Actions
+
 - **Swipe Left**: Delete/Archive
 - **Swipe Right**: Favorite/Mark
 - **Pull to Refresh**: Refresh list
 
 ### Tap Actions
+
 - **Single Tap**: Open/Select
 - **Long Press**: Context menu
 - **Double Tap**: Quick action
 
 ### Pinch/Zoom
+
 - **Pinch**: Zoom card content (future)
 
 ---
@@ -919,18 +938,21 @@ Screen (Modal)
 ## Platform-Specific Considerations
 
 ### iOS
+
 - Native navigation patterns
 - iOS-style modals
 - Safe area insets
 - Haptic feedback
 
 ### Android
+
 - Material Design components
 - Android-style navigation
 - Back button handling
 - Material ripple effects
 
 ### Common
+
 - Bottom navigation (primary)
 - Stack navigation (secondary)
 - Modal overlays
@@ -967,4 +989,3 @@ Home/Dashboard
 - Empty states with helpful messages
 - Pull-to-refresh on list screens
 - Infinite scroll for long lists
-
