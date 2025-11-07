@@ -2,7 +2,7 @@
 -- Purpose: Flashcard decks containing cards
 
 CREATE TABLE decks (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL,
     folder_id UUID,
     name VARCHAR(100) NOT NULL,

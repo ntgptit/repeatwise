@@ -39,9 +39,9 @@ public interface CardMapper {
     @Mapping(source = "position.reviewCount", target = "reviewCount")
     @Mapping(source = "position.lapseCount", target = "lapseCount")
     @Mapping(source = "position.lastReviewedAt", target = "lastReviewedAt")
-    @Mapping(expression = "java(position.isNew())", target = "isNew")
-    @Mapping(expression = "java(position.isDue())", target = "isDue")
-    @Mapping(expression = "java(position.isMature())", target = "isMature")
+    @Mapping(expression = "java(position != null && position.isNew())", target = "isNew")
+    @Mapping(expression = "java(position != null && position.isDue())", target = "isDue")
+    @Mapping(expression = "java(position != null && position.isMature())", target = "isMature")
     CardWithProgressResponse toResponseWithProgress(Card card, CardBoxPosition position);
 
     /**

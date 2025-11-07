@@ -1,16 +1,53 @@
 spring:
+  datasource:
+    driver-class-name: net.sf.log4jdbc.sql.jdbcapi.DriverSpy
+    url: jdbc:log4jdbc:postgresql://localhost:5432/repeatwise_db
+    username: giapnt
+    password: abcd1234
+    hikari:
+      schema: repeatwise
+      data-source-properties:
+        currentSchema: repeatwise,public
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+  jackson:
+    time-zone: UTC
+
   jpa:
-    show-sql: true
+    show-sql: false   # Disable duplicate SQL logging, rely on log4jdbc instead
     properties:
       hibernate:
         format_sql: true
+        default_schema: repeatwise
 
 logging:
   level:
+    # Keep only meaningful SQL-level logs
+    jdbc.sqlonly: debug       # Logs SQL statements being executed (important)
+    jdbc.sqltiming: debug     # Logs query execution time (important)
+
+    # Suppress noisy low-level JDBC internals
+    log4jdbc.log4j2: WARN
+    jdbc.audit: WARN
+    jdbc.connection: WARN
+    jdbc.resultset: WARN
+    jdbc.resultsettable: WARN
+
+    # Application logs
     com.repeatwise: DEBUG
-    org.springframework.web: DEBUG
-    org.hibernate.SQL: DEBUG
-    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+    # Reduce Spring Web noise
+    org.springframework.web: INFO
+
+    # Hibernate query + binding visibility
+    org.hibernate.SQL: INFO
+    org.hibernate.type.descriptor.sql.BasicBinder: INFO
+
+jwt:
+  secret: dev-repeatwise-secret-key-change-me
 
 springdoc:
   swagger-ui:

@@ -1,10 +1,10 @@
 -- V1: Create users table
 -- Purpose: User accounts and authentication
 
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email VARCHAR(255) NOT NULL,
     username VARCHAR(30) NOT NULL,
     password_hash VARCHAR(60) NOT NULL,

@@ -2,7 +2,7 @@
 -- Purpose: Flashcards with front and back text
 
 CREATE TABLE cards (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     deck_id UUID NOT NULL,
     front TEXT NOT NULL,
     back TEXT NOT NULL,

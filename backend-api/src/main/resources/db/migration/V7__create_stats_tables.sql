@@ -4,7 +4,7 @@
 -- Table: user_stats
 -- Purpose: Denormalized user statistics for performance
 CREATE TABLE user_stats (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL UNIQUE,
     total_cards INTEGER NOT NULL DEFAULT 0,
     total_decks INTEGER NOT NULL DEFAULT 0,
@@ -37,7 +37,7 @@ COMMENT ON COLUMN user_stats.total_study_time_minutes IS 'Total study time in mi
 -- Table: folder_stats
 -- Purpose: Cached folder statistics with TTL (performance optimization)
 CREATE TABLE folder_stats (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     folder_id UUID NOT NULL,
     user_id UUID NOT NULL,
     total_cards_count INTEGER NOT NULL DEFAULT 0,

@@ -4,7 +4,7 @@
 -- Table: srs_settings
 -- Purpose: User SRS configuration
 CREATE TABLE srs_settings (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id UUID NOT NULL UNIQUE,
     total_boxes INTEGER NOT NULL DEFAULT 7,
     review_order VARCHAR(20) NOT NULL DEFAULT 'RANDOM',
@@ -45,7 +45,7 @@ COMMENT ON COLUMN srs_settings.max_reviews_per_day IS 'Maximum reviews per day (
 -- Table: card_box_position
 -- Purpose: SRS state per user per card (CRITICAL for review performance)
 CREATE TABLE card_box_position (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     card_id UUID NOT NULL,
     user_id UUID NOT NULL,
     current_box INTEGER NOT NULL DEFAULT 1,
@@ -94,7 +94,7 @@ COMMENT ON INDEX idx_card_box_user_due IS 'MOST IMPORTANT index for review sessi
 -- Table: review_logs
 -- Purpose: Immutable review history for analytics, undo, and statistics
 CREATE TABLE review_logs (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     card_id UUID NOT NULL,
     user_id UUID NOT NULL,
     rating VARCHAR(10) NOT NULL,
@@ -119,8 +119,7 @@ CREATE TABLE review_logs (
 -- Indexes for review_logs
 CREATE INDEX idx_review_logs_user_date ON review_logs (user_id, reviewed_at DESC);
 CREATE INDEX idx_review_logs_card ON review_logs (card_id);
-CREATE INDEX idx_review_logs_user_today ON review_logs (user_id, reviewed_at)
-    WHERE reviewed_at >= CURRENT_DATE;
+CREATE INDEX idx_review_logs_recent ON review_logs (user_id, reviewed_at DESC);
 
 -- Comments for review_logs
 COMMENT ON TABLE review_logs IS 'Immutable review history for analytics, undo, and statistics';
@@ -128,4 +127,4 @@ COMMENT ON COLUMN review_logs.rating IS 'User rating: AGAIN, HARD, GOOD, or EASY
 COMMENT ON COLUMN review_logs.previous_box IS 'Box number before review';
 COMMENT ON COLUMN review_logs.new_box IS 'Box number after review';
 COMMENT ON COLUMN review_logs.interval_days IS 'Interval assigned after review';
-COMMENT ON INDEX idx_review_logs_user_today IS 'Optimized for daily statistics queries';
+COMMENT ON INDEX idx_review_logs_recent IS 'Optimized for recent review queries';
