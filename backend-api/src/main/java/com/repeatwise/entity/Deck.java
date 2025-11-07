@@ -1,0 +1,61 @@
+package com.repeatwise.entity;
+
+import com.repeatwise.entity.base.SoftDeletableEntity;
+import jakarta.persistence.*;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.*;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Deck entity for flashcard collections
+ */
+@Entity
+@Table(name = "decks")
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Deck extends SoftDeletableEntity {
+
+    @NotNull(message = "User is required")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "folder_id")
+    private Folder folder;
+
+    @NotBlank(message = "Deck name is required")
+    @Size(max = 100, message = "Deck name must not exceed 100 characters")
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Size(max = 500, message = "Description must not exceed 500 characters")
+    @Column(name = "description", length = 500)
+    private String description;
+
+    // Relationships
+    @Builder.Default
+    @OneToMany(mappedBy = "deck", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Card> cards = new ArrayList<>();
+
+    /**
+     * Check if this is a root-level deck (not in any folder)
+     */
+    public boolean isRootLevel() {
+        return folder == null;
+    }
+
+    /**
+     * Get the total number of cards in this deck
+     */
+    public int getCardCount() {
+        return cards != null ? cards.size() : 0;
+    }
+}
