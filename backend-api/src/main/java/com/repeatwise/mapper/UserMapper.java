@@ -36,6 +36,10 @@ public interface UserMapper {
     @Mapping(target = "cardBoxPositions", ignore = true)
     @Mapping(target = "reviewLogs", ignore = true)
     @Mapping(target = "userStats", ignore = true)
+    @Mapping(target = "timezone", ignore = true)
+    @Mapping(target = "language", ignore = true)
+    @Mapping(target = "theme", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
     User toEntity(RegisterRequest request);
 
     /**
@@ -55,5 +59,6 @@ public interface UserMapper {
     @Mapping(target = "cardBoxPositions", ignore = true)
     @Mapping(target = "reviewLogs", ignore = true)
     @Mapping(target = "userStats", ignore = true)
+    @Mapping(target = "authorities", ignore = true)
     void updateEntityFromRequest(UpdateUserRequest request, @MappingTarget User user);
 }
