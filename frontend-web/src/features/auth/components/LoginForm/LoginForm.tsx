@@ -140,13 +140,24 @@ export default function LoginForm() {
 
       {/* Links */}
       <div className="space-y-2 text-center text-sm">
+        <div>
+          <Link
+            to={APP_ROUTES.FORGOT_PASSWORD}
+            className="text-blue-600 hover:underline"
+            onClick={(e) => {
+              e.preventDefault()
+              alert('Forgot password feature is coming soon!')
+            }}
+          >
+            Forgot password?
+          </Link>
+        </div>
         <p className="text-gray-600">
           Don't have an account?{' '}
           <Link to={APP_ROUTES.REGISTER} className="text-blue-600 hover:underline">
             Sign up
           </Link>
         </p>
-        {/* TODO: Add forgot password link when implemented */}
       </div>
     </form>
   )
