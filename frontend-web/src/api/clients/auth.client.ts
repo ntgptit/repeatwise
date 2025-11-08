@@ -1,72 +1,97 @@
 import type { AxiosInstance } from 'axios'
 import { apiClient } from './base.client'
 import { API_ENDPOINTS } from '@/config/app.config'
-import { isApiResponse, type ApiResponse } from '@/api/types'
 
 const { AUTH, USER } = API_ENDPOINTS
 
-export interface AuthTokens {
-  accessToken: string
-  refreshToken: string
-  expiresIn?: number
-  tokenType?: string
+// ==================== Types ====================
+
+export enum Language {
+  VI = 'VI',
+  EN = 'EN',
 }
 
-export interface AuthUser {
-  id: string
+export enum Theme {
+  LIGHT = 'LIGHT',
+  DARK = 'DARK',
+  SYSTEM = 'SYSTEM',
+}
+
+// Request DTOs
+export interface RegisterRequest {
   email: string
-  fullName: string
-  avatarUrl?: string
-  roles?: string[]
-  createdAt?: string
-  updatedAt?: string
-}
-
-export interface AuthSession {
-  user: AuthUser
-  tokens: AuthTokens
+  username?: string
+  password: string
+  confirmPassword: string
+  name?: string
 }
 
 export interface LoginRequest {
-  email: string
+  identifier: string // username or email
   password: string
-  rememberMe?: boolean
 }
-
-export type LoginResponse = AuthSession
-
-export interface RegisterRequest {
-  fullName: string
-  email: string
-  password: string
-  confirmPassword?: string
-}
-
-export type RegisterResponse = AuthSession
 
 export interface RefreshTokenRequest {
-  refreshToken: string
+  // Refresh token is sent via HTTP-only cookie automatically
 }
 
-export type RefreshTokenResponse = AuthTokens
+export interface UpdateProfileRequest {
+  name?: string
+  username?: string
+  timezone?: string
+  language?: Language
+  theme?: Theme
+}
 
-export interface ForgotPasswordRequest {
+export interface ChangePasswordRequest {
+  currentPassword: string
+  newPassword: string
+  confirmNewPassword: string
+}
+
+// Response DTOs
+export interface UserResponse {
+  id: string
   email: string
+  username?: string
+  name?: string
+  timezone?: string
+  language: Language
+  theme: Theme
+  createdAt: string
+  updatedAt: string
 }
 
-export interface ResetPasswordRequest {
-  token: string
-  password: string
-  confirmPassword?: string
+export interface AuthResponse {
+  accessToken: string
+  expiresIn: number // seconds (900 for 15 minutes)
+  user: UserResponse
 }
 
-export interface VerifyEmailRequest {
-  token: string
+export interface RegisterResponse {
+  message: string
+  userId: string
 }
 
-export interface BaseMessageResponse {
+export interface LogoutResponse {
   message: string
 }
+
+export interface RefreshTokenResponse {
+  access_token: string
+  expires_in: number
+}
+
+export interface UpdateProfileResponse {
+  message: string
+  user: UserResponse
+}
+
+export interface ChangePasswordResponse {
+  message: string
+}
+
+// ==================== Auth Client ====================
 
 export class AuthClient {
   private readonly http: AxiosInstance
@@ -75,66 +100,67 @@ export class AuthClient {
     this.http = http
   }
 
-  private unwrap<T>(payload: ApiResponse<T> | T): T {
-    if (isApiResponse<T>(payload)) {
-      if (!payload.success) {
-        throw new Error(payload.message ?? 'Request failed')
-      }
-      return payload.data
-    }
-
-    return payload
-  }
-
-  async login(payload: LoginRequest): Promise<LoginResponse> {
-    const response = await this.http.post<ApiResponse<LoginResponse>>(AUTH.LOGIN, payload)
-    return this.unwrap<LoginResponse>(response.data)
-  }
-
+  /**
+   * UC-001: User Registration
+   * Register a new user account
+   */
   async register(payload: RegisterRequest): Promise<RegisterResponse> {
-    const response = await this.http.post<ApiResponse<RegisterResponse>>(AUTH.REGISTER, payload)
-    return this.unwrap<RegisterResponse>(response.data)
+    const response = await this.http.post<RegisterResponse>(AUTH.REGISTER, payload)
+    return response.data
   }
 
-  async logout(): Promise<void> {
-    await this.http.post(AUTH.LOGOUT)
+  /**
+   * UC-002: User Login
+   * Login with username/email and password
+   * Returns access token and sets refresh token in HTTP-only cookie
+   */
+  async login(payload: LoginRequest): Promise<AuthResponse> {
+    const response = await this.http.post<AuthResponse>(AUTH.LOGIN, payload)
+    return response.data
   }
 
-  async refreshToken(payload: RefreshTokenRequest): Promise<RefreshTokenResponse> {
-    const response = await this.http.post<ApiResponse<RefreshTokenResponse>>(
-      AUTH.REFRESH_TOKEN,
-      payload
-    )
-    return this.unwrap<RefreshTokenResponse>(response.data)
+  /**
+   * UC-003: Refresh Access Token
+   * Refresh access token using refresh token from HTTP-only cookie
+   */
+  async refreshToken(): Promise<RefreshTokenResponse> {
+    const response = await this.http.post<RefreshTokenResponse>(AUTH.REFRESH_TOKEN)
+    return response.data
   }
 
-  async forgotPassword(payload: ForgotPasswordRequest): Promise<BaseMessageResponse> {
-    const response = await this.http.post<ApiResponse<BaseMessageResponse>>(
-      AUTH.FORGOT_PASSWORD,
-      payload
-    )
-    return this.unwrap<BaseMessageResponse>(response.data)
+  /**
+   * UC-004: User Logout
+   * Logout and revoke all refresh tokens
+   */
+  async logout(): Promise<LogoutResponse> {
+    const response = await this.http.post<LogoutResponse>(AUTH.LOGOUT)
+    return response.data
   }
 
-  async resetPassword(payload: ResetPasswordRequest): Promise<BaseMessageResponse> {
-    const response = await this.http.post<ApiResponse<BaseMessageResponse>>(
-      AUTH.RESET_PASSWORD,
-      payload
-    )
-    return this.unwrap<BaseMessageResponse>(response.data)
+  /**
+   * UC-005: Update User Profile
+   * Update name, timezone, language, and theme
+   */
+  async updateProfile(payload: UpdateProfileRequest): Promise<UpdateProfileResponse> {
+    const response = await this.http.patch<UpdateProfileResponse>(USER.UPDATE_PROFILE, payload)
+    return response.data
   }
 
-  async verifyEmail(payload: VerifyEmailRequest): Promise<BaseMessageResponse> {
-    const response = await this.http.post<ApiResponse<BaseMessageResponse>>(
-      AUTH.VERIFY_EMAIL,
-      payload
-    )
-    return this.unwrap<BaseMessageResponse>(response.data)
+  /**
+   * UC-006: Change Password
+   * Change password and logout from all devices
+   */
+  async changePassword(payload: ChangePasswordRequest): Promise<ChangePasswordResponse> {
+    const response = await this.http.post<ChangePasswordResponse>(USER.CHANGE_PASSWORD, payload)
+    return response.data
   }
 
-  async getCurrentUser(): Promise<AuthUser> {
-    const response = await this.http.get<ApiResponse<AuthUser>>(USER.PROFILE)
-    return this.unwrap<AuthUser>(response.data)
+  /**
+   * Get current user profile
+   */
+  async getCurrentUser(): Promise<UserResponse> {
+    const response = await this.http.get<{ user: UserResponse }>(USER.PROFILE)
+    return response.data.user
   }
 }
 

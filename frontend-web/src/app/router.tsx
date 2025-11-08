@@ -1,9 +1,13 @@
-import { createBrowserRouter } from 'react-router-dom';
+import { createBrowserRouter, Navigate } from 'react-router-dom';
 import { lazy, Suspense } from 'react';
+import ProtectedRoute from './routes/ProtectedRoute';
 
 // Lazy load pages
 const DashboardPage = lazy(
   () => import('../pages/Dashboard/DashboardPage')
+);
+const SettingsPage = lazy(
+  () => import('../pages/Settings/SettingsPage')
 );
 const LoginPage = lazy(() => import('../pages/Auth/LoginPage'));
 const RegisterPage = lazy(() => import('../pages/Auth/RegisterPage'));
@@ -16,8 +20,8 @@ const NotFoundPage = lazy(() => import('../pages/NotFoundPage'));
 const PageLoader = () => (
   <div className="flex h-screen items-center justify-center">
     <div className="text-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
-      <p className="mt-2 text-sm text-muted-foreground">Loading...</p>
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-600 border-t-transparent"></div>
+      <p className="mt-2 text-sm text-gray-600">Loading...</p>
     </div>
   </div>
 );
@@ -25,9 +29,25 @@ const PageLoader = () => (
 export const router = createBrowserRouter([
   {
     path: '/',
+    element: <Navigate to="/dashboard" replace />,
+  },
+  {
+    path: '/dashboard',
     element: (
       <Suspense fallback={<PageLoader />}>
-        <DashboardPage />
+        <ProtectedRoute>
+          <DashboardPage />
+        </ProtectedRoute>
+      </Suspense>
+    ),
+  },
+  {
+    path: '/settings',
+    element: (
+      <Suspense fallback={<PageLoader />}>
+        <ProtectedRoute>
+          <SettingsPage />
+        </ProtectedRoute>
       </Suspense>
     ),
   },
