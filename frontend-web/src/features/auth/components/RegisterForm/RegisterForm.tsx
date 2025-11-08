@@ -81,8 +81,7 @@ export default function RegisterForm() {
       navigate(APP_ROUTES.LOGIN)
       // TODO: Show success toast
     } catch (err) {
-      // Error is handled by store
-      console.error('Registration failed:', err)
+      // Error is handled by store and displayed in UI
     }
   }
 

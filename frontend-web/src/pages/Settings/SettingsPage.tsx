@@ -87,7 +87,8 @@ export default function SettingsPage() {
       await logout()
       navigate(APP_ROUTES.LOGIN)
     } catch (err) {
-      console.error('Logout failed:', err)
+      // Error is handled by store, always redirect to login
+      navigate(APP_ROUTES.LOGIN)
     }
   }
 

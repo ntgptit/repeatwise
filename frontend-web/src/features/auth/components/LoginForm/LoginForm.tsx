@@ -60,8 +60,7 @@ export default function LoginForm() {
       // Success - redirect to dashboard
       navigate(APP_ROUTES.DASHBOARD)
     } catch (err) {
-      // Error is handled by store
-      console.error('Login failed:', err)
+      // Error is handled by store and displayed in UI
     }
   }
 
