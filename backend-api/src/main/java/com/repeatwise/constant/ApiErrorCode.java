@@ -14,6 +14,10 @@ public final class ApiErrorCode {
     public static final String INVALID_TOKEN = "INVALID_TOKEN";
     public static final String TOKEN_EXPIRED = "TOKEN_EXPIRED";
     public static final String REFRESH_TOKEN_NOT_FOUND = "REFRESH_TOKEN_NOT_FOUND";
+    public static final String REFRESH_TOKEN_EXPIRED = "REFRESH_TOKEN_EXPIRED";
+    public static final String REFRESH_TOKEN_REVOKED = "REFRESH_TOKEN_REVOKED";
+    public static final String REFRESH_TOKEN_MISSING = "REFRESH_TOKEN_MISSING";
+    public static final String TOKEN_REUSE_DETECTED = "TOKEN_REUSE_DETECTED";
     public static final String UNAUTHORIZED_ACCESS = "UNAUTHORIZED_ACCESS";
     public static final String ACCESS_DENIED = "ACCESS_DENIED";
     public static final String TYPE_MISMATCH = "TYPE_MISMATCH";
@@ -26,6 +30,7 @@ public final class ApiErrorCode {
     public static final String EMAIL_ALREADY_EXISTS = "EMAIL_ALREADY_EXISTS";
     public static final String USERNAME_ALREADY_EXISTS = "USERNAME_ALREADY_EXISTS";
     public static final String INCORRECT_PASSWORD = "INCORRECT_PASSWORD";
+    public static final String PASSWORD_MISMATCH = "PASSWORD_MISMATCH";
 
     public static final String FOLDER_NOT_FOUND = "FOLDER_NOT_FOUND";
     public static final String FOLDER_NAME_ALREADY_EXISTS = "FOLDER_NAME_ALREADY_EXISTS";

@@ -49,9 +49,8 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "email", nullable = false, length = 255)
     private String email;
 
-    @NotBlank(message = "{error.user.username.required}")
     @Pattern(regexp = "^[a-z0-9_]{3,30}$", message = "{error.user.username.invalid}")
-    @Column(name = "username", nullable = false, length = 30)
+    @Column(name = "username", nullable = true, length = 30)
     private String username;
 
     @NotBlank(message = "{error.user.password.required}")
@@ -59,9 +58,8 @@ public class User extends BaseEntity implements UserDetails {
     @Column(name = "password_hash", nullable = false, length = 60)
     private String passwordHash;
 
-    @NotBlank(message = "{error.user.name.required}")
     @Size(max = 100, message = "{error.user.name.too.long}")
-    @Column(name = "name", nullable = false, length = 100)
+    @Column(name = "name", nullable = true, length = 100)
     private String name;
 
     @Builder.Default

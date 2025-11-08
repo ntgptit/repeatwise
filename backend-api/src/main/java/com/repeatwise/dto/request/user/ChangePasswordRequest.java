@@ -22,4 +22,7 @@ public class ChangePasswordRequest {
     @NotBlank(message = "{error.user.password.required}")
     @Size(min = 8, max = 128, message = "{error.user.password.length}")
     private String newPassword;
+
+    @NotBlank(message = "{error.user.confirmpassword.required}")
+    private String confirmNewPassword;
 }

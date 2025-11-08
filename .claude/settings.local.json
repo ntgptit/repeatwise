@@ -82,7 +82,9 @@
       "Bash(if [ -f \"$file\" ])",
       "Bash(then)",
       "Bash(else)",
-      "Bash(fi)"
+      "Bash(fi)",
+      "Bash(git ls-tree:*)",
+      "Bash(jar -tf:*)"
     ],
     "deny": [],
     "ask": []

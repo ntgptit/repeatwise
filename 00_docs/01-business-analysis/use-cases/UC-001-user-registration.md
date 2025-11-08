@@ -21,7 +21,7 @@ User registers a new account in RepeatWise system using email, optional username
 
 - New user account created in database with hashed password (bcrypt)
 - User profile initialized with default values:
-  - language: 'VI'
+  - language: 'EN'
   - theme: 'SYSTEM'
   - timezone: auto-detected or default
 - SRS settings initialized with default values

@@ -22,6 +22,13 @@ public interface UserMapper {
     UserResponse toResponse(User user);
 
     /**
+     * Alias for toResponse - Convert User entity to UserResponse DTO
+     */
+    default UserResponse toUserResponse(User user) {
+        return toResponse(user);
+    }
+
+    /**
      * Convert RegisterRequest to User entity
      * Note: Password will be hashed separately in service layer
      */

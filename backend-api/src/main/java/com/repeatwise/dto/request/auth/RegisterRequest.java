@@ -31,6 +31,9 @@ public class RegisterRequest {
     @Size(min = 8, max = 128, message = "{error.user.password.length}")
     private String password;
 
+    @NotBlank(message = "{error.user.confirmpassword.required}")
+    private String confirmPassword;
+
     @Size(max = 100, message = "{error.user.name.too.long}")
     private String name;
 }
