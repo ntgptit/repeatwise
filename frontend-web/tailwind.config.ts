@@ -1,5 +1,22 @@
-/** @type {import('tailwindcss').Config} */
-export default {
+import type { Config } from 'tailwindcss'
+
+import { coloredShadows, shadows } from './src/design-system/foundations/shadows'
+import { negativeSpacing, spacing } from './src/design-system/foundations/spacing'
+
+const baseBoxShadows = {
+  ...shadows,
+}
+
+const primaryColoredBoxShadows = Object.fromEntries(
+  Object.entries(coloredShadows.primary).map(([key, value]) => [`primary-${key}`, value])
+) satisfies Record<string, string>
+
+const tailwindSpacing = {
+  ...spacing,
+  ...negativeSpacing,
+} as const
+
+const config: Config = {
   darkMode: ['class'],
   content: [
     './index.html',
@@ -59,7 +76,15 @@ export default {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      boxShadow: {
+        ...baseBoxShadows,
+        ...primaryColoredBoxShadows,
+      },
+      spacing: tailwindSpacing,
     },
   },
   plugins: [],
 }
+
+export default config
+

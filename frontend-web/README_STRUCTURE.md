@@ -38,6 +38,7 @@ src/
 ## Key Features
 
 ### ✅ Implemented
+
 - Complete design system (primitives, patterns, widgets)
 - Generic data components (DataTable, Pagination, FilterPanel, SearchBar)
 - Auth feature module with login, register, forgot password
@@ -48,6 +49,7 @@ src/
 - State management setup
 
 ### 🎯 Next Steps for RepeatWise
+
 - Implement Deck management feature
 - Implement Card management feature
 - Implement Folder system feature
@@ -60,7 +62,9 @@ src/
 ## Architecture Highlights
 
 ### 1. Feature-Based Architecture
+
 Each feature is self-contained:
+
 ```
 features/[name]/
 ├── api/          # API endpoints
@@ -73,19 +77,25 @@ features/[name]/
 ```
 
 ### 2. Design System
+
 Three-tier hierarchy:
+
 - **Primitives**: Button, Input, Checkbox, Select, Radio, Badge
 - **Patterns**: Form, Modal, Drawer, Card
 - **Widgets**: Calendar, DatePicker, RichTextEditor
 
 ### 3. Common Layer
+
 Generic reusable components:
+
 - **Data Display**: DataTable, Pagination, SearchBar, FilterPanel, SortControl
 - **Feedback**: Toast, Alert, LoadingSkeleton, EmptyState
 - **Business**: Formatters and domain-specific components
 
 ### 4. Clean Imports
+
 Every directory has index.ts for clean imports:
+
 ```typescript
 // Good
 import { UserTable } from '@/features/user';
@@ -128,22 +138,26 @@ import { UserTable } from '@/features/user/components/UserTable/UserTable';
 ## Getting Started
 
 1. **Explore the structure**:
+
    ```bash
    cat DIRECTORY_TREE.md
    ```
 
 2. **Understand the architecture**:
+
    ```bash
    cat ARCHITECTURE.md
    ```
 
 3. **Check specific feature documentation**:
+
    ```bash
    cat src/features/auth/README.md
    cat src/features/user/README.md
    ```
 
 4. **View component documentation**:
+
    ```bash
    cat src/common/components/data-display/DataTable/README.md
    ```
