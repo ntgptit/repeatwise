@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
-import { RadioProps } from './Radio.types';
+import { forwardRef } from 'react'
+import type { RadioProps } from './Radio.types'
 
 export const Radio = forwardRef<HTMLInputElement, RadioProps>(
   ({ label, className = '', ...props }, ref) => {
@@ -11,11 +11,11 @@ export const Radio = forwardRef<HTMLInputElement, RadioProps>(
           className={`w-4 h-4 border-input text-primary focus:ring-2 focus:ring-ring ${className}`}
           {...props}
         />
-        {label && <span className="ml-2 text-sm">{label}</span>}
+        {label ? <span className="ml-2 text-sm">{label}</span> : null}
       </label>
-    );
+    )
   }
-);
+)
 
-Radio.displayName = 'Radio';
-export default Radio;
+Radio.displayName = 'Radio'
+export default Radio

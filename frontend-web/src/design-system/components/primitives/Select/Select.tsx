@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
-import { SelectProps } from './Select.types';
+import { forwardRef } from 'react'
+import type { SelectProps } from './Select.types'
 
 export const Select = forwardRef<HTMLSelectElement, SelectProps>(
   ({ options, label, error, helperText, fullWidth = false, className = '', ...props }, ref) => {
@@ -9,24 +9,28 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
       fullWidth && 'w-full',
       'disabled:opacity-50 disabled:cursor-not-allowed',
       className,
-    ].filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ')
 
     return (
       <div className={fullWidth ? 'w-full' : ''}>
-        {label && <label className="block text-sm font-medium mb-1.5">{label}</label>}
+        {label ? <label className="block text-sm font-medium mb-1.5">{label}</label> : null}
         <select ref={ref} className={selectClasses} {...props}>
-          {options.map((opt) => (
+          {options.map(opt => (
             <option key={opt.value} value={opt.value}>
               {opt.label}
             </option>
           ))}
         </select>
-        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
-        {helperText && !error && <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>}
+        {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
+        {helperText && !error ? (
+          <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
+        ) : null}
       </div>
-    );
+    )
   }
-);
+)
 
-Select.displayName = 'Select';
-export default Select;
+Select.displayName = 'Select'
+export default Select

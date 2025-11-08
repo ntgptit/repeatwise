@@ -5,12 +5,12 @@
  * Can be integrated with react-toastify, sonner, or custom toast
  */
 
-import { notificationConfig } from '@/config/services.config';
+import { notificationConfig } from '@/config/services.config'
 
 /**
  * Notification types
  */
-export type NotificationType = 'success' | 'error' | 'warning' | 'info';
+export type NotificationType = 'success' | 'error' | 'warning' | 'info'
 
 /**
  * Notification options
@@ -19,51 +19,51 @@ export interface NotificationOptions {
   /**
    * Notification title
    */
-  title?: string;
+  title?: string
 
   /**
    * Notification message
    */
-  message: string;
+  message: string
 
   /**
    * Notification type
    * @default 'info'
    */
-  type?: NotificationType;
+  type?: NotificationType
 
   /**
    * Duration in milliseconds
    * @default 3000
    */
-  duration?: number;
+  duration?: number
 
   /**
    * Position
    */
-  position?: typeof notificationConfig.toast.position;
+  position?: typeof notificationConfig.toast.position
 
   /**
    * Auto close
    * @default true
    */
-  autoClose?: boolean;
+  autoClose?: boolean
 
   /**
    * Show close button
    * @default true
    */
-  closeable?: boolean;
+  closeable?: boolean
 
   /**
    * Click handler
    */
-  onClick?: () => void;
+  onClick?: () => void
 
   /**
    * Close handler
    */
-  onClose?: () => void;
+  onClose?: () => void
 }
 
 /**
@@ -73,8 +73,8 @@ export interface NotificationOptions {
  * Integrate with your preferred toast library (react-toastify, sonner, etc.)
  */
 class NotificationService {
-  private notifications: NotificationOptions[] = [];
-  private maxNotifications = notificationConfig.toast.maxToasts;
+  private notifications: NotificationOptions[] = []
+  private readonly maxNotifications = notificationConfig.toast.maxToasts
 
   /**
    * Show notification
@@ -87,24 +87,24 @@ class NotificationService {
       autoClose: true,
       closeable: true,
       ...options,
-    };
+    }
 
     // Add to notifications array
-    this.notifications.push(notification);
+    this.notifications.push(notification)
 
     // Limit number of notifications
     if (this.notifications.length > this.maxNotifications) {
-      this.notifications.shift();
+      this.notifications.shift()
     }
 
     // Log to console (replace with actual toast implementation)
-    this.logNotification(notification);
+    this.logNotification(notification)
 
     // Auto close if enabled
     if (notification.autoClose && notification.duration) {
       setTimeout(() => {
-        this.close(notification);
-      }, notification.duration);
+        this.close(notification)
+      }, notification.duration)
     }
   }
 
@@ -116,7 +116,7 @@ class NotificationService {
       message,
       type: 'success',
       ...options,
-    });
+    })
   }
 
   /**
@@ -128,7 +128,7 @@ class NotificationService {
       type: 'error',
       duration: 5000, // Longer duration for errors
       ...options,
-    });
+    })
   }
 
   /**
@@ -139,7 +139,7 @@ class NotificationService {
       message,
       type: 'warning',
       ...options,
-    });
+    })
   }
 
   /**
@@ -150,20 +150,20 @@ class NotificationService {
       message,
       type: 'info',
       ...options,
-    });
+    })
   }
 
   /**
    * Close notification
    */
   close(notification: NotificationOptions): void {
-    const index = this.notifications.indexOf(notification);
+    const index = this.notifications.indexOf(notification)
     if (index > -1) {
-      this.notifications.splice(index, 1);
+      this.notifications.splice(index, 1)
     }
 
     if (notification.onClose) {
-      notification.onClose();
+      notification.onClose()
     }
   }
 
@@ -171,7 +171,7 @@ class NotificationService {
    * Close all notifications
    */
   closeAll(): void {
-    this.notifications = [];
+    this.notifications = []
   }
 
   /**
@@ -181,26 +181,26 @@ class NotificationService {
     const emoji = {
       success: '',
       error: 'L',
-      warning: ' ',
+      warning: 'ï¿½',
       info: '9',
-    }[notification.type || 'info'];
+    }[notification.type || 'info']
 
-    console.log(
-      `${emoji} ${notification.title ? `${notification.title}: ` : ''}${notification.message}`
-    );
+    const titlePrefix = notification.title ? `${notification.title}: ` : ''
+    const message = `${emoji} ${titlePrefix}${notification.message}`
+    console.warn(message)
   }
 
   /**
    * Get active notifications
    */
   getNotifications(): NotificationOptions[] {
-    return [...this.notifications];
+    return [...this.notifications]
   }
 }
 
 /**
  * Notification service instance
  */
-export const notificationService = new NotificationService();
+export const notificationService = new NotificationService()
 
-export default notificationService;
+export default notificationService

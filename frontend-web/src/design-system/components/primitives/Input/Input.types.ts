@@ -2,16 +2,21 @@
  * Input Types
  */
 
-import { InputHTMLAttributes } from 'react';
+/**
+ * Input Types
+ */
+import type { InputHTMLAttributes } from 'react'
 
-export type InputSize = 'sm' | 'md' | 'lg';
+export type InputSize = 'sm' | 'md' | 'lg'
 
-export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
-  size?: InputSize;
-  error?: string;
-  label?: string;
-  helperText?: string;
-  leftIcon?: React.ReactNode;
-  rightIcon?: React.ReactNode;
-  fullWidth?: boolean;
+type NativeInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, 'size'>
+
+export interface InputProps extends NativeInputProps {
+  size?: InputSize
+  error?: string
+  label?: string
+  helperText?: string
+  leftIcon?: React.ReactNode
+  rightIcon?: React.ReactNode
+  fullWidth?: boolean
 }

@@ -2,14 +2,14 @@
  * Input Component
  */
 
-import { forwardRef } from 'react';
-import { InputProps } from './Input.types';
+import { forwardRef } from 'react'
+import type { InputProps } from './Input.types'
 
 const sizes = {
   sm: 'h-8 px-3 text-sm',
   md: 'h-10 px-3.5 text-sm',
   lg: 'h-12 px-4 text-base',
-};
+}
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
   (
@@ -28,9 +28,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
   ) => {
     const inputClasses = [
       'rounded-lg border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1',
-      error
-        ? 'border-destructive focus:ring-destructive'
-        : 'border-input focus:ring-ring',
+      error ? 'border-destructive focus:ring-destructive' : 'border-input focus:ring-ring',
       sizes[size],
       leftIcon && 'pl-10',
       rightIcon && 'pr-10',
@@ -39,35 +37,33 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       className,
     ]
       .filter(Boolean)
-      .join(' ');
+      .join(' ')
 
     return (
       <div className={fullWidth ? 'w-full' : ''}>
-        {label && (
-          <label className="block text-sm font-medium mb-1.5">{label}</label>
-        )}
+        {label ? <label className="block text-sm font-medium mb-1.5">{label}</label> : null}
         <div className="relative">
-          {leftIcon && (
+          {leftIcon ? (
             <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
               {leftIcon}
             </div>
-          )}
+          ) : null}
           <input ref={ref} className={inputClasses} {...props} />
-          {rightIcon && (
+          {rightIcon ? (
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
               {rightIcon}
             </div>
-          )}
+          ) : null}
         </div>
-        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
-        {helperText && !error && (
+        {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
+        {helperText && !error ? (
           <p className="mt-1 text-sm text-muted-foreground">{helperText}</p>
-        )}
+        ) : null}
       </div>
-    );
+    )
   }
-);
+)
 
-Input.displayName = 'Input';
+Input.displayName = 'Input'
 
-export default Input;
+export default Input

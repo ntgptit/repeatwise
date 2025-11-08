@@ -175,7 +175,7 @@ export const validateEnv = (): void => {
  */
 export const printEnv = (): void => {
   if (env.isDevelopment) {
-    console.group('=' Environment Configuration');
+    console.group('=== Environment Configuration ===')
     console.log('Environment:', env.environment);
     console.log('API Base URL:', env.apiBaseUrl);
     console.log('API Timeout:', env.apiTimeout);

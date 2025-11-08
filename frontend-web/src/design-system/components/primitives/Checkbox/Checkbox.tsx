@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
-import { CheckboxProps } from './Checkbox.types';
+import { forwardRef } from 'react'
+import type { CheckboxProps } from './Checkbox.types'
 
 export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
   ({ label, error, className = '', ...props }, ref) => {
@@ -12,13 +12,13 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(
             className={`w-4 h-4 rounded border-input text-primary focus:ring-2 focus:ring-ring ${className}`}
             {...props}
           />
-          {label && <span className="ml-2 text-sm">{label}</span>}
+          {label ? <span className="ml-2 text-sm">{label}</span> : null}
         </label>
-        {error && <p className="mt-1 text-sm text-destructive">{error}</p>}
+        {error ? <p className="mt-1 text-sm text-destructive">{error}</p> : null}
       </div>
-    );
+    )
   }
-);
+)
 
-Checkbox.displayName = 'Checkbox';
-export default Checkbox;
+Checkbox.displayName = 'Checkbox'
+export default Checkbox

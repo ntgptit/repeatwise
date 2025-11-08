@@ -1,5 +1,5 @@
-import { forwardRef } from 'react';
-import { BadgeProps } from './Badge.types';
+import { forwardRef } from 'react'
+import type { BadgeProps } from './Badge.types'
 
 const variants = {
   default: 'bg-secondary text-secondary-foreground',
@@ -7,7 +7,7 @@ const variants = {
   warning: 'bg-warning text-warning-foreground',
   error: 'bg-destructive text-destructive-foreground',
   info: 'bg-info text-info-foreground',
-};
+}
 
 export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
   ({ variant = 'default', className = '', children, ...props }, ref) => {
@@ -15,15 +15,17 @@ export const Badge = forwardRef<HTMLSpanElement, BadgeProps>(
       'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold',
       variants[variant],
       className,
-    ].filter(Boolean).join(' ');
+    ]
+      .filter(Boolean)
+      .join(' ')
 
     return (
       <span ref={ref} className={classes} {...props}>
         {children}
       </span>
-    );
+    )
   }
-);
+)
 
-Badge.displayName = 'Badge';
-export default Badge;
+Badge.displayName = 'Badge'
+export default Badge
