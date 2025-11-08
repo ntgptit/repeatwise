@@ -118,21 +118,21 @@ export const SESSION_KEYS = {
 export const API_ENDPOINTS = {
   // Authentication
   AUTH: {
-    REGISTER: '/auth/register',
-    LOGIN: '/auth/login',
-    LOGOUT: '/auth/logout',
-    REFRESH_TOKEN: '/auth/refresh-token',
-    FORGOT_PASSWORD: '/auth/forgot-password',
-    RESET_PASSWORD: '/auth/reset-password',
-    VERIFY_EMAIL: '/auth/verify-email',
+    REGISTER: '/v1/auth/register',
+    LOGIN: '/v1/auth/login',
+    LOGOUT: '/v1/auth/logout',
+    REFRESH_TOKEN: '/v1/auth/refresh',
+    FORGOT_PASSWORD: '/v1/auth/forgot-password',
+    RESET_PASSWORD: '/v1/auth/reset-password',
+    VERIFY_EMAIL: '/v1/auth/verify-email',
   },
 
   // User
   USER: {
-    PROFILE: '/users/profile',
-    UPDATE_PROFILE: '/users/profile',
-    CHANGE_PASSWORD: '/users/change-password',
-    SETTINGS: '/users/settings',
+    PROFILE: '/v1/users/profile',
+    UPDATE_PROFILE: '/v1/users/profile',
+    CHANGE_PASSWORD: '/v1/users/change-password',
+    SETTINGS: '/v1/users/settings',
   },
 
   // Folders
