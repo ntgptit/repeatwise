@@ -85,7 +85,8 @@
       "Bash(fi)",
       "Bash(git ls-tree:*)",
       "Bash(jar -tf:*)",
-      "Bash(npm run type-check:*)"
+      "Bash(npm run type-check:*)",
+      "Bash(timeout 3 bash -c 'while ! curl -s http://localhost:8080/actuator/health > /dev/null 2>&1; do sleep 0.5; done; echo \"\"Backend is ready\"\"')"
     ],
     "deny": [],
     "ask": []
