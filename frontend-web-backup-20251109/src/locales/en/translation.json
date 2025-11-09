@@ -1,0 +1,47 @@
+{
+  "common": {
+    "welcome": "Welcome to RepeatWise",
+    "loading": "Loading…",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "theme": "Toggle theme",
+    "language": "Change language"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot Password?"
+  },
+  "folder": {
+    "title": "Folders",
+    "create": "Create Folder",
+    "edit": "Edit Folder",
+    "delete": "Delete Folder",
+    "move": "Move Folder",
+    "copy": "Copy Folder"
+  },
+  "deck": {
+    "title": "Decks",
+    "create": "Create Deck",
+    "edit": "Edit Deck",
+    "delete": "Delete Deck",
+    "import": "Import Cards",
+    "export": "Export Deck"
+  },
+  "review": {
+    "title": "Review Session",
+    "start": "Start Review",
+    "again": "Again",
+    "hard": "Hard",
+    "good": "Good",
+    "easy": "Easy"
+  }
+}
+

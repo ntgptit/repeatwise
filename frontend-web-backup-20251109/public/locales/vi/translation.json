@@ -1,0 +1,44 @@
+{
+  "common": {
+    "welcome": "Chào mừng đến RepeatWise",
+    "loading": "Đang tải...",
+    "error": "Đã xảy ra lỗi",
+    "save": "Lưu",
+    "cancel": "Hủy",
+    "delete": "Xóa",
+    "edit": "Sửa",
+    "create": "Tạo mới"
+  },
+  "auth": {
+    "login": "Đăng nhập",
+    "register": "Đăng ký",
+    "logout": "Đăng xuất",
+    "email": "Email",
+    "password": "Mật khẩu",
+    "forgotPassword": "Quên mật khẩu?"
+  },
+  "folder": {
+    "title": "Thư mục",
+    "create": "Tạo thư mục",
+    "edit": "Sửa thư mục",
+    "delete": "Xóa thư mục",
+    "move": "Di chuyển thư mục",
+    "copy": "Sao chép thư mục"
+  },
+  "deck": {
+    "title": "Bộ thẻ",
+    "create": "Tạo bộ thẻ",
+    "edit": "Sửa bộ thẻ",
+    "delete": "Xóa bộ thẻ",
+    "import": "Nhập thẻ",
+    "export": "Xuất bộ thẻ"
+  },
+  "review": {
+    "title": "Ôn tập",
+    "start": "Bắt đầu ôn tập",
+    "again": "Quên",
+    "hard": "Khó",
+    "good": "Tốt",
+    "easy": "Dễ"
+  }
+}

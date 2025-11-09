@@ -84,7 +84,8 @@
       "Bash(else)",
       "Bash(fi)",
       "Bash(git ls-tree:*)",
-      "Bash(jar -tf:*)"
+      "Bash(jar -tf:*)",
+      "Bash(npm run type-check:*)"
     ],
     "deny": [],
     "ask": []
