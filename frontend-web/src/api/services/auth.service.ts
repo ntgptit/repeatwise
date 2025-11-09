@@ -27,7 +27,7 @@ export const authService = {
    * @throws {AuthError} if registration fails
    */
   register: async (data: RegisterRequest): Promise<RegisterResponse> => {
-    const response = await apiClient.post<RegisterResponse>('/api/v1/auth/register', {
+    const response = await apiClient.post<RegisterResponse>('/v1/auth/register', {
       email: data.email,
       username: data.username || undefined, // Send undefined instead of empty string
       password: data.password,
@@ -43,7 +43,7 @@ export const authService = {
    * @throws {AuthError} if login fails
    */
   login: async (data: LoginRequest): Promise<LoginResponse> => {
-    const response = await apiClient.post<LoginResponse>('/api/v1/auth/login', {
+    const response = await apiClient.post<LoginResponse>('/v1/auth/login', {
       identifier: data.usernameOrEmail, // Backend expects 'identifier'
       password: data.password,
     })
@@ -56,7 +56,7 @@ export const authService = {
    * @throws {AuthError} if refresh fails
    */
   refreshToken: async (): Promise<RefreshTokenResponse> => {
-    const response = await apiClient.post<RefreshTokenResponse>('/api/v1/auth/refresh')
+    const response = await apiClient.post<RefreshTokenResponse>('/v1/auth/refresh')
     return response.data
   },
 
@@ -66,7 +66,7 @@ export const authService = {
    * @throws {AuthError} if logout fails (but client should logout anyway)
    */
   logout: async (): Promise<LogoutResponse> => {
-    const response = await apiClient.post<LogoutResponse>('/api/v1/auth/logout')
+    const response = await apiClient.post<LogoutResponse>('/v1/auth/logout')
     return response.data
   },
 
@@ -75,7 +75,7 @@ export const authService = {
    * Revokes all refresh tokens for user
    */
   logoutAll: async (): Promise<LogoutResponse> => {
-    const response = await apiClient.post<LogoutResponse>('/api/v1/auth/logout-all')
+    const response = await apiClient.post<LogoutResponse>('/v1/auth/logout-all')
     return response.data
   },
 
@@ -84,7 +84,7 @@ export const authService = {
    * @throws {AuthError} if not authenticated
    */
   getMe: async (): Promise<User> => {
-    const response = await apiClient.get<User>('/api/v1/users/me')
+    const response = await apiClient.get<User>('/v1/users/me')
     return response.data
   },
 
@@ -93,7 +93,7 @@ export const authService = {
    * @throws {AuthError} if update fails
    */
   updateProfile: async (data: UpdateProfileRequest): Promise<UpdateProfileResponse> => {
-    const response = await apiClient.patch<UpdateProfileResponse>('/api/v1/users/profile', data)
+    const response = await apiClient.patch<UpdateProfileResponse>('/v1/users/profile', data)
     return response.data
   },
 
@@ -104,7 +104,7 @@ export const authService = {
    */
   changePassword: async (data: ChangePasswordRequest): Promise<ChangePasswordResponse> => {
     const response = await apiClient.post<ChangePasswordResponse>(
-      '/api/v1/users/change-password',
+      '/v1/users/change-password',
       {
         currentPassword: data.currentPassword,
         newPassword: data.newPassword,

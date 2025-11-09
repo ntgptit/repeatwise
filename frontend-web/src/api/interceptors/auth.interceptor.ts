@@ -51,6 +51,13 @@ export const authInterceptor = (instance: AxiosInstance): void => {
         return Promise.reject(error)
       }
 
+      const { accessToken, isAuthenticated } = useAuthStore.getState()
+
+      // If user is not authenticated or no access token, do not attempt refresh
+      if (!isAuthenticated || !accessToken) {
+        return Promise.reject(error)
+      }
+
       if (isRefreshing) {
         // Queue the request while refresh is in progress
         return new Promise((resolve, reject) => {

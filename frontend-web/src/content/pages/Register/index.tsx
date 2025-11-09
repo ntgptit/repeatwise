@@ -137,7 +137,6 @@ function Register() {
       if (!result?.success) {
         // Error is already set in auth store and will be displayed
         // Don't navigate to login page when registration fails
-        console.log('Registration failed, staying on register page')
         return
       }
 
@@ -154,9 +153,9 @@ function Register() {
       })
 
       // Redirect to login after 2 seconds on successful registration
-      // setTimeout(() => {
-      //   navigate('/login')
-      // }, 2000)
+      setTimeout(() => {
+        navigate('/login')
+      }, 2000)
     } catch (err) {
       // Catch any unexpected errors (shouldn't happen as register() handles errors internally)
       // Don't navigate to login page when there's an error
