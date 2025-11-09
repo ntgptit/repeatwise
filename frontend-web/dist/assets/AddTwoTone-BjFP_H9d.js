@@ -1,0 +1,1 @@
+import{z as u,E as d,G as n,H as i}from"./index-Cg5IDLAj.js";var e={},r;function v(){if(r)return e;r=1;var o=u();Object.defineProperty(e,"__esModule",{value:!0}),e.default=void 0;var t=o(d()),a=n();return e.default=(0,t.default)((0,a.jsx)("path",{d:"M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6z"}),"AddTwoTone"),e}var s=v();const f=i(s);export{f as A};

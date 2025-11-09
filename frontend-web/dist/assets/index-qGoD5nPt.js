@@ -1,0 +1,3 @@
+import{j as e,s as o,a as r,T as t,ab as a}from"./index-Cg5IDLAj.js";import{C as n}from"./Container-CmgLE638.js";const i=o(n)(({theme:s})=>`
+        margin-top: ${s.spacing(4)};
+`);function c(){return e.jsx(i,{className:"footer-wrapper",children:e.jsxs(r,{pb:4,display:{xs:"block",md:"flex"},alignItems:"center",textAlign:{xs:"center",md:"left"},justifyContent:"space-between",children:[e.jsx(r,{children:e.jsx(t,{variant:"subtitle1",children:"© 2022 - Tokyo Free White React Typescript Admin Dashboard"})}),e.jsxs(t,{sx:{pt:{xs:2,md:0}},variant:"subtitle1",children:["Crafted by"," ",e.jsx(a,{href:"https://bloomui.com",target:"_blank",rel:"noopener noreferrer",children:"BloomUI.com"})]})]})})}export{c as F};

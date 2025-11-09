@@ -1,0 +1,1 @@
+import{r as n}from"./index-Cg5IDLAj.js";const u=({title:t,restorePreviousTitle:e=!1})=>(n.useEffect(()=>{if(!t)return;const r=document.title;return document.title=t,()=>{e&&(document.title=r)}},[t,e]),null);export{u as P};

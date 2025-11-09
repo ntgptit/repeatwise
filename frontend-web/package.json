@@ -10,6 +10,7 @@
     "@mui/material": "^5.15.21",
     "@mui/styles": "^5.15.21",
     "@mui/x-date-pickers": "^7.8.0",
+    "@tanstack/react-query": "^5.90.7",
     "apexcharts": "3.35.3",
     "axios": "^1.13.2",
     "clsx": "1.1.1",

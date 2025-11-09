@@ -36,6 +36,7 @@ const Messenger = loadable(lazy(() => import('src/content/applications/Messenger
 const Transactions = loadable(lazy(() => import('src/content/applications/Transactions')))
 const UserProfile = loadable(lazy(() => import('src/content/applications/Users/profile')))
 const UserSettings = loadable(lazy(() => import('src/content/applications/Users/settings')))
+const FolderManagement = loadable(lazy(() => import('src/content/applications/FolderManagement')))
 
 // Components
 const Buttons = loadable(lazy(() => import('src/content/pages/Components/Buttons')))
@@ -130,7 +131,11 @@ const routes: RouteObject[] = [
     children: [
       {
         path: '',
-        element: <Navigate to="transactions" replace />,
+        element: <Navigate to="folders" replace />,
+      },
+      {
+        path: 'folders',
+        element: <FolderManagement />,
       },
       {
         path: 'transactions',
