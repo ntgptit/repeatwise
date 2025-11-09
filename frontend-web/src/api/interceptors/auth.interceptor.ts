@@ -87,8 +87,8 @@ export const authInterceptor = (instance: AxiosInstance): void => {
         useAuthStore.getState().clearAuth()
 
         // Redirect to login page
-        if (typeof window !== 'undefined') {
-          window.location.href = '/login'
+        if (typeof globalThis.window !== 'undefined') {
+          globalThis.location.href = '/login'
         }
 
         return Promise.reject(refreshError)

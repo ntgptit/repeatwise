@@ -138,7 +138,7 @@ public class AuthServiceImpl implements AuthService {
      *
      * @param loginRequest Login credentials
      * @return LoginResponse with access token, user info, and refresh token
-     * @throws RepeatWiseException         if user not found or password is incorrect
+     * @throws RepeatWiseException if user not found or password is incorrect
      */
     @Override
     @Transactional
@@ -216,9 +216,9 @@ public class AuthServiceImpl implements AuthService {
      * Old refresh token is revoked (token rotation pattern for security).
      *
      * @param refreshToken Refresh token string
-     * @param deviceId Optional device ID for tracking
-     * @param deviceInfo Optional device information
-     * @param ipAddress Optional IP address
+     * @param deviceId     Optional device ID for tracking
+     * @param deviceInfo   Optional device information
+     * @param ipAddress    Optional IP address
      * @return RefreshTokenResponse with new access token and new refresh token
      */
     @Override
