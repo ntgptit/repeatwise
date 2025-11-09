@@ -36,6 +36,7 @@ public final class ApiErrorCode {
     public static final String FOLDER_NAME_ALREADY_EXISTS = "FOLDER_NAME_ALREADY_EXISTS";
     public static final String MAX_FOLDER_DEPTH_EXCEEDED = "MAX_FOLDER_DEPTH_EXCEEDED";
     public static final String CIRCULAR_FOLDER_REFERENCE = "CIRCULAR_FOLDER_REFERENCE";
+    public static final String FOLDER_TOO_LARGE = "FOLDER_TOO_LARGE";
 
     public static final String DECK_NOT_FOUND = "DECK_NOT_FOUND";
     public static final String DECK_NAME_ALREADY_EXISTS = "DECK_NAME_ALREADY_EXISTS";

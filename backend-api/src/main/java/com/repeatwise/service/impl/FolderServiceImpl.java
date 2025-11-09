@@ -1,12 +1,12 @@
 package com.repeatwise.service.impl;
 
-import com.repeatwise.constant.ApiErrorCode;
 import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.entity.Folder;
 import com.repeatwise.entity.User;
+import com.repeatwise.exception.RepeatWiseError;
 import com.repeatwise.exception.RepeatWiseException;
 import com.repeatwise.mapper.FolderMapper;
 import com.repeatwise.repository.DeckRepository;
@@ -17,7 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +35,7 @@ public class FolderServiceImpl implements FolderService {
 
     private static final int MAX_FOLDER_DEPTH = 10;
     private static final int MAX_COPY_ITEMS = 500;
+    private static final String PATH_DELIMITER = "/";
 
     private final FolderRepository folderRepository;
     private final DeckRepository deckRepository;
@@ -56,7 +56,7 @@ public class FolderServiceImpl implements FolderService {
         int newDepth = 0;
 
         if (request.getParentFolderId() != null) {
-            parentFolder = getFolderEntityById(request.getParentFolderId(), userId);
+            parentFolder = getFolderEntityByIdInternal(request.getParentFolderId(), userId);
 
             // Calculate new depth
             newDepth = parentFolder.getDepth() + 1;
@@ -64,13 +64,8 @@ public class FolderServiceImpl implements FolderService {
             // Validate max depth constraint (BR-FOLD-01)
             if (newDepth > MAX_FOLDER_DEPTH) {
                 throw new RepeatWiseException(
-                        ApiErrorCode.MAX_FOLDER_DEPTH_EXCEEDED,
-                        HttpStatus.BAD_REQUEST,
-                        messageSource.getMessage(
-                                "error.folder.max.depth",
-                                new Object[]{MAX_FOLDER_DEPTH},
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.MAX_FOLDER_DEPTH_EXCEEDED,
+                        MAX_FOLDER_DEPTH
                 );
             }
         }
@@ -79,13 +74,8 @@ public class FolderServiceImpl implements FolderService {
         String trimmedName = request.getName().trim();
         if (folderRepository.existsByNameAndParent(userId, request.getParentFolderId(), trimmedName)) {
             throw new RepeatWiseException(
-                    ApiErrorCode.FOLDER_NAME_ALREADY_EXISTS,
-                    HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage(
-                            "error.folder.duplicate.name",
-                            new Object[]{trimmedName},
-                            LocaleContextHolder.getLocale()
-                    )
+                    RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
+                    trimmedName
             );
         }
 
@@ -115,7 +105,7 @@ public class FolderServiceImpl implements FolderService {
         log.debug("Updating folder {} for user {}", folderId, userId);
 
         // Get folder
-        Folder folder = getFolderEntityById(folderId, userId);
+        Folder folder = getFolderEntityByIdInternal(folderId, userId);
 
         // Check if name is being changed
         if (request.getName() != null) {
@@ -127,13 +117,8 @@ public class FolderServiceImpl implements FolderService {
 
                 if (folderRepository.existsByNameAndParentExcludingId(userId, parentId, trimmedName, folderId)) {
                     throw new RepeatWiseException(
-                            ApiErrorCode.FOLDER_NAME_ALREADY_EXISTS,
-                            HttpStatus.BAD_REQUEST,
-                            messageSource.getMessage(
-                                    "error.folder.name.exists",
-                                    new Object[]{trimmedName},
-                                    LocaleContextHolder.getLocale()
-                            )
+                            RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
+                            trimmedName
                     );
                 }
             }
@@ -161,7 +146,7 @@ public class FolderServiceImpl implements FolderService {
         log.debug("Moving folder {} to parent {} for user {}", folderId, request.getTargetParentFolderId(), userId);
 
         // Get source folder
-        Folder sourceFolder = getFolderEntityById(folderId, userId);
+        Folder sourceFolder = getFolderEntityByIdInternal(folderId, userId);
         UUID oldParentId = sourceFolder.getParentFolder() != null ? sourceFolder.getParentFolder().getId() : null;
 
         // Check if moving to same parent (no-op)
@@ -177,32 +162,23 @@ public class FolderServiceImpl implements FolderService {
         int newDepth = 0;
 
         if (targetParentId != null) {
-            targetParent = getFolderEntityById(targetParentId, userId);
+            targetParent = getFolderEntityByIdInternal(targetParentId, userId);
             newDepth = targetParent.getDepth() + 1;
 
             // Validate: Cannot move into itself (BR-FOLD-04)
             if (targetParentId.equals(folderId)) {
                 throw new RepeatWiseException(
-                        ApiErrorCode.CIRCULAR_FOLDER_REFERENCE,
-                        HttpStatus.BAD_REQUEST,
-                        messageSource.getMessage(
-                                "error.folder.move.into.self",
-                                null,
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.CIRCULAR_FOLDER_REFERENCE,
+                        folderId
                 );
             }
 
             // Validate: Cannot move into descendant (BR-FOLD-04)
-            if (targetParent.getPath().startsWith(sourceFolder.getPath() + "/")) {
+            if (targetParent.getPath().startsWith(sourceFolder.getPath() + PATH_DELIMITER)) {
                 throw new RepeatWiseException(
-                        ApiErrorCode.CIRCULAR_FOLDER_REFERENCE,
-                        HttpStatus.BAD_REQUEST,
-                        messageSource.getMessage(
-                                "error.folder.move.into.descendant",
-                                new Object[]{sourceFolder.getName(), targetParent.getName()},
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.CIRCULAR_FOLDER_REFERENCE,
+                        sourceFolder.getName(),
+                        targetParent.getName()
                 );
             }
         }
@@ -211,19 +187,15 @@ public class FolderServiceImpl implements FolderService {
         int depthDelta = newDepth - sourceFolder.getDepth();
 
         // Validate max depth for all descendants (BR-FOLD-01)
-        String sourcePath = sourceFolder.getPath() + "/";
+        String sourcePath = sourceFolder.getPath() + PATH_DELIMITER;
         Integer maxDescendantDepth = folderRepository.getMaxDepthInSubtree(userId, sourcePath);
         if (maxDescendantDepth != null) {
             int newMaxDepth = maxDescendantDepth + depthDelta;
             if (newMaxDepth > MAX_FOLDER_DEPTH) {
                 throw new RepeatWiseException(
-                        ApiErrorCode.MAX_FOLDER_DEPTH_EXCEEDED,
-                        HttpStatus.BAD_REQUEST,
-                        messageSource.getMessage(
-                                "error.folder.move.max.depth.exceeded",
-                                new Object[]{newMaxDepth, MAX_FOLDER_DEPTH},
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.MAX_FOLDER_DEPTH_EXCEEDED,
+                        newMaxDepth,
+                        MAX_FOLDER_DEPTH
                 );
             }
         }
@@ -231,13 +203,8 @@ public class FolderServiceImpl implements FolderService {
         // Validate name uniqueness at destination
         if (folderRepository.existsByNameAndParentExcludingId(userId, targetParentId, sourceFolder.getName(), folderId)) {
             throw new RepeatWiseException(
-                    ApiErrorCode.FOLDER_NAME_ALREADY_EXISTS,
-                    HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage(
-                            "error.folder.move.name.conflict",
-                            new Object[]{sourceFolder.getName()},
-                            LocaleContextHolder.getLocale()
-                    )
+                    RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
+                    sourceFolder.getName()
             );
         }
 
@@ -251,7 +218,7 @@ public class FolderServiceImpl implements FolderService {
         folderRepository.save(sourceFolder);
 
         // Update all descendants' paths and depths
-        List<Folder> descendants = folderRepository.findDescendantsByPath(userId, oldPath + "/");
+        List<Folder> descendants = folderRepository.findDescendantsByPath(userId, oldPath + PATH_DELIMITER);
         for (Folder descendant : descendants) {
             // Update path by replacing old prefix with new prefix
             String updatedPath = descendant.getPath().replaceFirst("^" + oldPath, newPath);
@@ -274,22 +241,18 @@ public class FolderServiceImpl implements FolderService {
         log.debug("Copying folder {} to destination {} for user {}", folderId, destinationFolderId, userId);
 
         // Get source folder
-        Folder sourceFolder = getFolderEntityById(folderId, userId);
+        Folder sourceFolder = getFolderEntityByIdInternal(folderId, userId);
 
         // Count total items in subtree
-        String sourcePath = sourceFolder.getPath() + "/";
+        String sourcePath = sourceFolder.getPath() + PATH_DELIMITER;
         long totalItems = folderRepository.countItemsInSubtree(userId, sourcePath) + 1; // +1 for source folder itself
 
         // Validate size limit (BR-COPY-01, BR-COPY-02, BR-COPY-03)
         if (totalItems > MAX_COPY_ITEMS) {
             throw new RepeatWiseException(
-                    ApiErrorCode.FOLDER_TOO_LARGE,
-                    HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage(
-                            "error.folder.too.large",
-                            new Object[]{totalItems, MAX_COPY_ITEMS},
-                            LocaleContextHolder.getLocale()
-                    )
+                    RepeatWiseError.FOLDER_TOO_LARGE,
+                    totalItems,
+                    MAX_COPY_ITEMS
             );
         }
 
@@ -298,7 +261,7 @@ public class FolderServiceImpl implements FolderService {
         int destinationDepth = 0;
 
         if (destinationFolderId != null) {
-            destinationParent = getFolderEntityById(destinationFolderId, userId);
+            destinationParent = getFolderEntityByIdInternal(destinationFolderId, userId);
             destinationDepth = destinationParent.getDepth();
         }
 
@@ -309,13 +272,9 @@ public class FolderServiceImpl implements FolderService {
 
         if (newMaxDepth > MAX_FOLDER_DEPTH) {
             throw new RepeatWiseException(
-                    ApiErrorCode.MAX_FOLDER_DEPTH_EXCEEDED,
-                    HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage(
-                            "error.folder.copy.max.depth.exceeded",
-                            new Object[]{newMaxDepth, MAX_FOLDER_DEPTH},
-                            LocaleContextHolder.getLocale()
-                    )
+                    RepeatWiseError.MAX_FOLDER_DEPTH_EXCEEDED,
+                    newMaxDepth,
+                    MAX_FOLDER_DEPTH
             );
         }
 
@@ -375,7 +334,7 @@ public class FolderServiceImpl implements FolderService {
         log.debug("Soft deleting folder {} for user {}", folderId, userId);
 
         // Get folder
-        Folder folder = getFolderEntityById(folderId, userId);
+        Folder folder = getFolderEntityByIdInternal(folderId, userId);
 
         LocalDateTime now = LocalDateTime.now();
 
@@ -384,7 +343,7 @@ public class FolderServiceImpl implements FolderService {
         folderRepository.save(folder);
 
         // Soft delete all descendants
-        String path = folder.getPath() + "/";
+        String path = folder.getPath() + PATH_DELIMITER;
         List<Folder> descendants = folderRepository.findDescendantsByPath(userId, path);
         int foldersDeleted = 1; // Include the folder itself
 
@@ -424,7 +383,7 @@ public class FolderServiceImpl implements FolderService {
     @Override
     @Transactional(readOnly = true)
     public FolderResponse getFolderById(UUID folderId, UUID userId) {
-        Folder folder = getFolderEntityById(folderId, userId);
+        Folder folder = getFolderEntityByIdInternal(folderId, userId);
         return folderMapper.toResponse(folder);
     }
 
@@ -450,7 +409,7 @@ public class FolderServiceImpl implements FolderService {
     @Transactional(readOnly = true)
     public List<FolderResponse> getChildFolders(UUID parentId, UUID userId) {
         // Verify parent exists and belongs to user
-        getFolderEntityById(parentId, userId);
+        getFolderEntityByIdInternal(parentId, userId);
 
         List<Folder> folders = folderRepository.findChildrenByUserIdAndParentId(userId, parentId);
         return folders.stream()
@@ -466,13 +425,8 @@ public class FolderServiceImpl implements FolderService {
         // Find soft-deleted folder
         Folder folder = folderRepository.findDeletedByIdAndUserId(folderId, userId)
                 .orElseThrow(() -> new RepeatWiseException(
-                        ApiErrorCode.FOLDER_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        messageSource.getMessage(
-                                "error.folder.delete.not.found",
-                                null,
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.FOLDER_NOT_FOUND,
+                        folderId
                 ));
 
         // Restore folder
@@ -480,7 +434,7 @@ public class FolderServiceImpl implements FolderService {
         folderRepository.save(folder);
 
         // Restore all descendants
-        String path = folder.getPath() + "/";
+        String path = folder.getPath() + PATH_DELIMITER;
         List<Folder> descendants = folderRepository.findDescendantsByPath(userId, path);
 
         List<UUID> folderIds = new ArrayList<>();
@@ -505,28 +459,22 @@ public class FolderServiceImpl implements FolderService {
     @Override
     @Transactional(readOnly = true)
     public Folder getFolderEntityById(UUID folderId, UUID userId) {
+        return getFolderEntityByIdInternal(folderId, userId);
+    }
+
+    private Folder getFolderEntityByIdInternal(UUID folderId, UUID userId) {
         return folderRepository.findByIdAndUserId(folderId, userId)
                 .orElseThrow(() -> new RepeatWiseException(
-                        ApiErrorCode.FOLDER_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        messageSource.getMessage(
-                                "error.folder.not.found",
-                                new Object[]{folderId},
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.FOLDER_NOT_FOUND,
+                        folderId
                 ));
     }
 
     private User getUserOrThrow(UUID userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new RepeatWiseException(
-                        ApiErrorCode.USER_NOT_FOUND,
-                        HttpStatus.NOT_FOUND,
-                        messageSource.getMessage(
-                                "error.user.not.found",
-                                new Object[]{userId},
-                                LocaleContextHolder.getLocale()
-                        )
+                        RepeatWiseError.USER_NOT_FOUND,
+                        userId
                 ));
     }
 }

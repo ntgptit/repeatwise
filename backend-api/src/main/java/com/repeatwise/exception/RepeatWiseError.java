@@ -61,6 +61,8 @@ public enum RepeatWiseError {
             "error.folder.circular.reference"),
     /** Folder hierarchy exceeds the configured depth limit. */
     MAX_FOLDER_DEPTH_EXCEEDED(HttpStatus.BAD_REQUEST, ApiErrorCode.MAX_FOLDER_DEPTH_EXCEEDED, "error.folder.max.depth"),
+    /** Folder copy operation exceeds allowed item limit. */
+    FOLDER_TOO_LARGE(HttpStatus.BAD_REQUEST, ApiErrorCode.FOLDER_TOO_LARGE, "error.folder.too.large"),
 
     /** Card is not yet due for review. */
     CARD_NOT_DUE_FOR_REVIEW(HttpStatus.BAD_REQUEST, ApiErrorCode.CARD_NOT_DUE_FOR_REVIEW, "error.review.card.not.due"),
