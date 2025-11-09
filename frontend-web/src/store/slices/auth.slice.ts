@@ -84,8 +84,10 @@ export const useAuthStore = create<AuthState>()(
 
       /**
        * UC-001: User Registration
+       * Returns success status and message - NEVER throws error
+       * This ensures the calling component can safely check success status
        */
-      register: async (payload: RegisterRequest) => {
+      register: async (payload: RegisterRequest): Promise<RegisterResult> => {
         try {
           set({ isLoading: true, error: null })
 
@@ -100,18 +102,20 @@ export const useAuthStore = create<AuthState>()(
           return {
             success: true,
             message:
-              response.message || 'Registration successful! Please login with your credentials.',
+              response.message || 'Đăng ký thành công! Vui lòng đăng nhập.',
           }
         } catch (error: any) {
           // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
-            error.message || error.response?.data?.message || 'Registration failed'
+            error.message || error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
 
           set({
             error: errorMessage,
             isLoading: false,
           })
 
+          // Always return RegisterResult object, never throw
+          // This ensures the calling component receives a predictable response
           return {
             success: false,
             message: errorMessage,
