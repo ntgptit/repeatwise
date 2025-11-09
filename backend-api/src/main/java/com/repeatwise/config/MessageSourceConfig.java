@@ -38,7 +38,7 @@ public class MessageSourceConfig {
     @Bean
     LocaleResolver localeResolver() {
         final var localeResolver = new AcceptHeaderLocaleResolver();
-        localeResolver.setDefaultLocale(Locale.forLanguageTag("vi"));
+        localeResolver.setDefaultLocale(Locale.forLanguageTag("en"));
         localeResolver.setSupportedLocales(Objects.requireNonNull(supportedLocales()));
         return localeResolver;
     }

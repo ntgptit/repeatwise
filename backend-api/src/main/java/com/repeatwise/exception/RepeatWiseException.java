@@ -21,14 +21,8 @@ public class RepeatWiseException extends BaseException {
         this.error = error;
     }
 
-    public RepeatWiseException(RepeatWiseError error, String messageKey, Object... messageArgs) {
-        super(messageKey, error.getErrorCode(), messageArgs);
-        this.error = error;
-    }
-
     @Override
     public HttpStatus getHttpStatus() {
         return this.error.getHttpStatus();
     }
 }
-

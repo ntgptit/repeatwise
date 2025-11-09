@@ -2,7 +2,6 @@ package com.repeatwise.exception;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Objects;
 import java.util.stream.Collectors;
 
 import org.springframework.context.MessageSource;
@@ -250,8 +249,7 @@ public class GlobalExceptionHandler {
         if (ex.getMessageKey() == null) {
             return ex.getFallbackMessage();
         }
-        return this.messageSource.getMessage(
-                Objects.requireNonNull(ex.getMessageKey(), "messageKey must not be null"),
+        return this.messageSource.getMessage(ex.getMessageKey(),
                 ex.getMessageArgs(),
                 ex.getFallbackMessage(),
                 LocaleContextHolder.getLocale());
