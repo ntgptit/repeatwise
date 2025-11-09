@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.repeatwise.dto.request.user.ChangePasswordRequest;
 import com.repeatwise.dto.request.user.UpdateUserRequest;
-import com.repeatwise.dto.response.user.UserResponse;
 import com.repeatwise.entity.User;
 import com.repeatwise.service.UserService;
 
@@ -51,11 +50,11 @@ public class UserController {
             @Valid @RequestBody UpdateUserRequest request) {
         log.info("Profile update request for user: {}", user.getId());
 
-        final var updatedUser = userService.updateProfile(user.getId(), request);
+        final var updatedUser = this.userService.updateProfile(user.getId(), request);
 
         final var response = new HashMap<String, Object>();
         final var locale = LocaleContextHolder.getLocale();
-        final var successMessage = messageSource.getMessage("success.user.profile.updated", null, locale);
+        final var successMessage = this.messageSource.getMessage("success.user.profile.updated", null, locale);
         response.put("message", successMessage);
         response.put("user", updatedUser);
 
@@ -74,7 +73,7 @@ public class UserController {
             HttpServletResponse response) {
         log.info("Password change request for user: {}", user.getId());
 
-        userService.changePassword(user.getId(), request);
+        this.userService.changePassword(user.getId(), request);
 
         // Clear refresh token cookie
         final var cookie = new Cookie("refresh_token", "");
@@ -86,7 +85,7 @@ public class UserController {
         response.addCookie(cookie);
 
         final var locale = LocaleContextHolder.getLocale();
-        final var successMessage = messageSource.getMessage("success.user.password.changed", null, locale);
+        final var successMessage = this.messageSource.getMessage("success.user.password.changed", null, locale);
 
         final var responseBody = new HashMap<String, String>();
         responseBody.put("message", successMessage);
