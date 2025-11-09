@@ -90,7 +90,7 @@ function Register() {
 
     // Username validation (optional but must be valid if provided)
     if (formData.username && !validateUsername(formData.username)) {
-      errors.username = 'Username phải gồm 3-30 ký tự viết thường, chỉ gồm chữ, số hoặc gạch dưới'
+      errors.username = 'Username must be 3-30 lowercase characters (letters, numbers, underscores only)'
     }
 
     // Password validation
@@ -129,14 +129,19 @@ function Register() {
       }
 
       const result = await register(sanitizedPayload)
-      if (!result.success) {
+
+      // Defensive check: ensure result exists and has success property
+      if (!result || !result.success) {
+        // Error is already set in auth store and will be displayed
+        // Don't navigate to login page when registration fails
+        console.log('Registration failed, staying on register page')
         return
       }
 
-      // Only show success and redirect if register() returned success
-      setSuccessMessage(result.message)
+      // Only show success message and redirect if registration succeeded
+      setSuccessMessage(result.message || 'Registration successful! Redirecting to login...')
 
-      // Clear form
+      // Clear form after successful registration
       setFormData({
         email: '',
         username: '',
@@ -145,14 +150,15 @@ function Register() {
         name: '',
       })
 
-      // Redirect to login after 2 seconds
+      // Redirect to login after 2 seconds on successful registration
       setTimeout(() => {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      // Error is already set in auth store and will be displayed
-      // Don't navigate, don't show success message
-      console.error('Registration failed:', err)
+      // Catch any unexpected errors (shouldn't happen as register() handles errors internally)
+      // Don't navigate to login page when there's an error
+      console.error('Unexpected error during registration:', err)
+      // Error message should already be set in auth store
     }
   }
 
@@ -223,7 +229,7 @@ function Register() {
                   error={!!validationErrors.username}
                   helperText={
                     validationErrors.username ||
-                    '3-30 ký tự viết thường, gồm chữ cái, số hoặc dấu gạch dưới'
+                    '3-30 lowercase characters (letters, numbers, underscores only)'
                   }
                   disabled={isLoading}
                 />

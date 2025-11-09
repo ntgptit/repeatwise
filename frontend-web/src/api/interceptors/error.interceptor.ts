@@ -69,16 +69,25 @@ const transformError = (error: AxiosError): ErrorResponse => {
 
   const result: ErrorResponse = {
     message: (data?.['message'] as string) || error.message || 'An unexpected error occurred',
-    code: (data?.['code'] as string) || 'UNKNOWN_ERROR',
+    code: (data?.['errorCode'] as string) || (data?.['code'] as string) || 'UNKNOWN_ERROR',
     statusCode: response.status,
     timestamp: (data?.['timestamp'] as string) || new Date().toISOString(),
     path: (data?.['path'] as string) || error.config?.url || '',
   }
 
-  // Add errors if present
-  const errors = data?.['errors'] as ValidationError[] | undefined
-  if (errors) {
-    result.errors = errors
+  // Transform validation errors from backend Map<String, String> to ValidationError[]
+  const validationErrorsMap = data?.['validationErrors'] as Record<string, string> | undefined
+  if (validationErrorsMap) {
+    result.errors = Object.entries(validationErrorsMap).map(([field, message]) => ({
+      field,
+      message,
+    }))
+  }
+
+  // Also handle errors array if present (for compatibility)
+  const errorsArray = data?.['errors'] as ValidationError[] | undefined
+  if (errorsArray && !result.errors) {
+    result.errors = errorsArray
   }
 
   return result
