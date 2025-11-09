@@ -5,11 +5,11 @@ import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
-// Deck import removed - DeckRepository not yet implemented
 import com.repeatwise.entity.Folder;
 import com.repeatwise.entity.User;
 import com.repeatwise.exception.RepeatWiseException;
 import com.repeatwise.mapper.FolderMapper;
+import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.FolderService;
@@ -38,6 +38,7 @@ public class FolderServiceImpl implements FolderService {
     private static final int MAX_COPY_ITEMS = 500;
 
     private final FolderRepository folderRepository;
+    private final DeckRepository deckRepository;
     private final UserRepository userRepository;
     private final FolderMapper folderMapper;
     private final MessageSource messageSource;
@@ -414,10 +415,10 @@ public class FolderServiceImpl implements FolderService {
     }
 
     private int softDeleteDecksInFolders(List<UUID> folderIds, LocalDateTime deletedAt) {
-        // This method would soft delete all decks in the given folders
-        // Implementation depends on DeckRepository having this capability
-        // For now, returning 0 as placeholder
-        return 0;
+        if (folderIds.isEmpty()) {
+            return 0;
+        }
+        return deckRepository.softDeleteByFolderIds(folderIds, deletedAt);
     }
 
     @Override
@@ -481,9 +482,19 @@ public class FolderServiceImpl implements FolderService {
         // Restore all descendants
         String path = folder.getPath() + "/";
         List<Folder> descendants = folderRepository.findDescendantsByPath(userId, path);
+
+        List<UUID> folderIds = new ArrayList<>();
+        folderIds.add(folderId);
+
         for (Folder descendant : descendants) {
             descendant.setDeletedAt(null);
             folderRepository.save(descendant);
+            folderIds.add(descendant.getId());
+        }
+
+        // Restore all decks in folder tree
+        if (!folderIds.isEmpty()) {
+            deckRepository.restoreByFolderIds(folderIds);
         }
 
         log.info("Restored folder {} and {} descendants for user {}", folderId, descendants.size(), userId);

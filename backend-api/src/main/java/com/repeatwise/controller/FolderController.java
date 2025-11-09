@@ -1,5 +1,6 @@
 package com.repeatwise.controller;
 
+import com.repeatwise.dto.request.folder.CopyFolderRequest;
 import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
@@ -134,14 +135,18 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> copyFolder(
             @PathVariable UUID folderId,
-            @RequestParam(required = false) UUID destinationFolderId,
-            @RequestParam(required = false) String newName,
+            @Valid @RequestBody CopyFolderRequest request,
             @AuthenticationPrincipal UserDetails userDetails
     ) {
         UUID userId = UUID.fromString(userDetails.getUsername());
-        log.info("User {} copying folder {} to destination {}", userId, folderId, destinationFolderId);
+        log.info("User {} copying folder {} to destination {}", userId, folderId, request.getDestinationFolderId());
 
-        FolderResponse response = folderService.copyFolder(folderId, destinationFolderId, newName, userId);
+        FolderResponse response = folderService.copyFolder(
+                folderId,
+                request.getDestinationFolderId(),
+                request.getNewName(),
+                userId
+        );
 
         return ResponseEntity.ok(response);
     }
