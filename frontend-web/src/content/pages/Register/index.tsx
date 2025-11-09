@@ -121,7 +121,10 @@ function Register() {
 
     try {
       await register(formData)
+
+      // Only show success and redirect if register() didn't throw error
       setSuccessMessage('Registration successful! Please login with your credentials.')
+
       // Clear form
       setFormData({
         email: '',
@@ -130,12 +133,14 @@ function Register() {
         confirmPassword: '',
         name: '',
       })
+
       // Redirect to login after 2 seconds
       setTimeout(() => {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      // Error is handled by auth store
+      // Error is already set in auth store and will be displayed
+      // Don't navigate, don't show success message
       console.error('Registration failed:', err)
     }
   }

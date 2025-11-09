@@ -62,13 +62,17 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
         } catch (error: any) {
+          // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
-            error.response?.data?.message || error.message || 'Login failed'
+            error.message || error.response?.data?.message || 'Login failed'
+
           set({
             error: errorMessage,
             isLoading: false,
             isAuthenticated: false,
           })
+
+          // Re-throw error so calling code can handle it
           throw error
         }
       },
@@ -88,12 +92,16 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
         } catch (error: any) {
+          // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
-            error.response?.data?.message || error.message || 'Registration failed'
+            error.message || error.response?.data?.message || 'Registration failed'
+
           set({
             error: errorMessage,
             isLoading: false,
           })
+
+          // Re-throw error so calling code can handle it
           throw error
         }
       },
@@ -195,12 +203,16 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
         } catch (error: any) {
+          // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
-            error.response?.data?.message || error.message || 'Profile update failed'
+            error.message || error.response?.data?.message || 'Profile update failed'
+
           set({
             error: errorMessage,
             isLoading: false,
           })
+
+          // Re-throw error so calling code can handle it
           throw error
         }
       },
@@ -224,12 +236,16 @@ export const useAuthStore = create<AuthState>()(
             error: null,
           })
         } catch (error: any) {
+          // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
-            error.response?.data?.message || error.message || 'Password change failed'
+            error.message || error.response?.data?.message || 'Password change failed'
+
           set({
             error: errorMessage,
             isLoading: false,
           })
+
+          // Re-throw error so calling code can handle it
           throw error
         }
       },
