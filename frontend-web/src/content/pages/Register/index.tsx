@@ -68,7 +68,7 @@ function Register() {
   const validateUsername = (username: string): boolean => {
     if (!username) return true // Username is optional
     if (username.length < 3 || username.length > 30) return false
-    const usernameRegex = /^[a-zA-Z0-9_-]+$/
+    const usernameRegex = /^[a-z0-9_]+$/
     return usernameRegex.test(username)
   }
 
@@ -90,7 +90,7 @@ function Register() {
 
     // Username validation (optional but must be valid if provided)
     if (formData.username && !validateUsername(formData.username)) {
-      errors.username = 'Username must be 3-30 characters, alphanumeric + underscore/hyphen only'
+      errors.username = 'Username phải gồm 3-30 ký tự viết thường, chỉ gồm chữ, số hoặc gạch dưới'
     }
 
     // Password validation
@@ -120,7 +120,15 @@ function Register() {
     }
 
     try {
-      const result = await register(formData)
+      const sanitizedPayload = {
+        ...formData,
+        username: formData.username.trim()
+          ? formData.username.trim().toLowerCase()
+          : undefined,
+        name: formData.name.trim() || undefined,
+      }
+
+      const result = await register(sanitizedPayload)
       if (!result.success) {
         return
       }
@@ -214,7 +222,8 @@ function Register() {
                   variant="outlined"
                   error={!!validationErrors.username}
                   helperText={
-                    validationErrors.username || '3-30 characters, alphanumeric + underscore/hyphen'
+                    validationErrors.username ||
+                    '3-30 ký tự viết thường, gồm chữ cái, số hoặc dấu gạch dưới'
                   }
                   disabled={isLoading}
                 />

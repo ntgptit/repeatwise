@@ -31,6 +31,7 @@ export const authService = {
       email: data.email,
       username: data.username || undefined, // Send undefined instead of empty string
       password: data.password,
+      confirmPassword: data.confirmPassword,
       name: data.name || undefined,
     })
     return response.data
