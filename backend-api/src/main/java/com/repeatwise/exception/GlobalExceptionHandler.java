@@ -245,15 +245,38 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
+    /**
+     * Resolve localized message from MessageSource using the exception's message key.
+     * Falls back to the exception's fallback message if resolution fails.
+     *
+     * @param ex The BaseException containing message key and arguments
+     * @return Localized message string
+     */
     private String resolveLocalizedMessage(BaseException ex) {
+        // If no message key, return fallback message
         if (ex.getMessageKey() == null) {
+            log.debug("No message key found, using fallback: {}", ex.getFallbackMessage());
             return ex.getFallbackMessage();
         }
-        return this.messageSource.getMessage(
-                Objects.requireNonNull(ex.getMessageKey(), "messageKey must not be null"),
-                ex.getMessageArgs(),
-                ex.getFallbackMessage(),
-                LocaleContextHolder.getLocale());
+
+        final var locale = LocaleContextHolder.getLocale();
+        log.debug("Resolving message key '{}' with locale '{}' and args {}",
+                ex.getMessageKey(), locale, ex.getMessageArgs());
+
+        try {
+            final var resolvedMessage = this.messageSource.getMessage(
+                    Objects.requireNonNull(ex.getMessageKey(), "messageKey must not be null"),
+                    ex.getMessageArgs(),
+                    ex.getFallbackMessage(),
+                    locale);
+
+            log.debug("Resolved message: {}", resolvedMessage);
+            return resolvedMessage;
+        } catch (Exception e) {
+            log.warn("Failed to resolve message key '{}', using fallback: {}",
+                    ex.getMessageKey(), ex.getFallbackMessage(), e);
+            return ex.getFallbackMessage();
+        }
     }
 
     private String getMessage(@NonNull String key) {
