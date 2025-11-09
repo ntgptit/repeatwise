@@ -25,6 +25,8 @@ const loadable = <P extends object>(Component: LazyExoticComponent<ComponentType
 // Pages
 const Overview = loadable(lazy(() => import('src/content/overview')))
 const Login = loadable(lazy(() => import('src/content/pages/Login')))
+const Register = loadable(lazy(() => import('src/content/pages/Register')))
+const Settings = loadable(lazy(() => import('src/content/pages/Settings')))
 
 // Dashboards
 const Crypto = loadable(lazy(() => import('src/content/dashboards/Crypto')))
@@ -64,6 +66,10 @@ const routes: RouteObject[] = [
       {
         path: 'login',
         element: <Login />,
+      },
+      {
+        path: 'register',
+        element: <Register />,
       },
       {
         path: 'overview',
@@ -146,6 +152,16 @@ const routes: RouteObject[] = [
             element: <UserSettings />,
           },
         ],
+      },
+    ],
+  },
+  {
+    path: 'settings',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Settings />,
       },
     ],
   },
