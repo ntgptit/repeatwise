@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react'
 
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 
 import {
   Avatar,
@@ -22,6 +22,7 @@ import ExpandMoreTwoToneIcon from '@mui/icons-material/ExpandMoreTwoTone'
 import AccountBoxTwoToneIcon from '@mui/icons-material/AccountBoxTwoTone'
 import LockOpenTwoToneIcon from '@mui/icons-material/LockOpenTwoTone'
 import AccountTreeTwoToneIcon from '@mui/icons-material/AccountTreeTwoTone'
+import { useAuthStore } from '@/store/slices/auth.slice'
 
 const UserBoxButton = styled(Button)(
   ({ theme }) => `
@@ -59,11 +60,11 @@ const UserBoxDescription = styled(Typography)(
 )
 
 function HeaderUserbox() {
-  const user = {
-    name: 'Catherine Pike',
-    avatar: '/static/images/avatars/1.jpg',
-    jobtitle: 'Project Manager',
-  }
+  const navigate = useNavigate()
+  const { user, logout } = useAuthStore()
+
+  const displayName = user?.name || user?.username || user?.email || 'User'
+  const displayEmail = user?.email || ''
 
   const ref = useRef<HTMLButtonElement | null>(null)
   const [isOpen, setOpen] = useState<boolean>(false)
@@ -76,14 +77,27 @@ function HeaderUserbox() {
     setOpen(false)
   }
 
+  const handleLogout = async (): void => {
+    try {
+      await logout()
+      navigate('/login')
+    } catch (error) {
+      console.error('Logout failed:', error)
+      // Even if logout fails, redirect to login
+      navigate('/login')
+    }
+  }
+
   return (
     <>
       <UserBoxButton color="secondary" ref={ref} onClick={handleOpen}>
-        <Avatar variant="rounded" alt={user.name} src={user.avatar} />
+        <Avatar variant="rounded" alt={displayName}>
+          {displayName.charAt(0).toUpperCase()}
+        </Avatar>
         <Hidden mdDown>
           <UserBoxText>
-            <UserBoxLabel variant="body1">{user.name}</UserBoxLabel>
-            <UserBoxDescription variant="body2">{user.jobtitle}</UserBoxDescription>
+            <UserBoxLabel variant="body1">{displayName}</UserBoxLabel>
+            <UserBoxDescription variant="body2">{displayEmail}</UserBoxDescription>
           </UserBoxText>
         </Hidden>
         <Hidden smDown>
@@ -104,30 +118,24 @@ function HeaderUserbox() {
         }}
       >
         <MenuUserBox sx={{ minWidth: 210 }} display="flex">
-          <Avatar variant="rounded" alt={user.name} src={user.avatar} />
+          <Avatar variant="rounded" alt={displayName}>
+            {displayName.charAt(0).toUpperCase()}
+          </Avatar>
           <UserBoxText>
-            <UserBoxLabel variant="body1">{user.name}</UserBoxLabel>
-            <UserBoxDescription variant="body2">{user.jobtitle}</UserBoxDescription>
+            <UserBoxLabel variant="body1">{displayName}</UserBoxLabel>
+            <UserBoxDescription variant="body2">{displayEmail}</UserBoxDescription>
           </UserBoxText>
         </MenuUserBox>
         <Divider sx={{ mb: 0 }} />
         <List sx={{ p: 1 }} component="nav">
-          <ListItem button to="/management/profile/details" component={NavLink}>
-            <AccountBoxTwoToneIcon fontSize="small" />
-            <ListItemText primary="My Profile" />
-          </ListItem>
-          <ListItem button to="/dashboards/messenger" component={NavLink}>
-            <InboxTwoToneIcon fontSize="small" />
-            <ListItemText primary="Messenger" />
-          </ListItem>
-          <ListItem button to="/management/profile/settings" component={NavLink}>
+          <ListItem button to="/settings" component={NavLink} onClick={handleClose}>
             <AccountTreeTwoToneIcon fontSize="small" />
-            <ListItemText primary="Account Settings" />
+            <ListItemText primary="Settings" />
           </ListItem>
         </List>
         <Divider />
         <Box sx={{ m: 1 }}>
-          <Button color="primary" fullWidth>
+          <Button color="primary" fullWidth onClick={handleLogout}>
             <LockOpenTwoToneIcon sx={{ mr: 1 }} />
             Sign out
           </Button>

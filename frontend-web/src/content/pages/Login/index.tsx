@@ -1,3 +1,8 @@
+/**
+ * UC-002: User Login Page
+ * Based on wireframes in 00_docs/02-system-analysis/07-wireframes-web.md
+ */
+
 import {
   Box,
   Card,
@@ -7,11 +12,18 @@ import {
   TextField,
   FormControl,
   Stack,
+  Alert,
+  CircularProgress,
+  InputAdornment,
+  IconButton,
 } from '@mui/material'
 import { styled } from '@mui/material/styles'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { Visibility, VisibilityOff } from '@mui/icons-material'
 import PageHelmet from 'src/components/PageHelmet'
 import Logo from 'src/components/Logo'
+import { useAuthStore } from '@/store/slices/auth.slice'
 
 const MainContent = styled(Box)(
   () => `
@@ -26,17 +38,75 @@ const MainContent = styled(Box)(
 )
 
 function Login() {
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const navigate = useNavigate()
+  const { login, isLoading, error, clearError } = useAuthStore()
 
-  const handleLogin = () => {
-    // TODO: Implement login logic
-    console.log('Login clicked', { email, password })
+  const [formData, setFormData] = useState({
+    usernameOrEmail: '',
+    password: '',
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [validationErrors, setValidationErrors] = useState({
+    usernameOrEmail: '',
+    password: '',
+  })
+
+  const validateForm = (): boolean => {
+    const errors = {
+      usernameOrEmail: '',
+      password: '',
+    }
+
+    if (!formData.usernameOrEmail.trim()) {
+      errors.usernameOrEmail = 'Username or email is required'
+    }
+
+    if (!formData.password) {
+      errors.password = 'Password is required'
+    }
+
+    setValidationErrors(errors)
+    return !errors.usernameOrEmail && !errors.password
+  }
+
+  const handleLogin = async () => {
+    clearError()
+
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      await login(formData)
+      // Navigate to dashboard on successful login
+      navigate('/dashboards/crypto')
+    } catch (err) {
+      // Error is handled by auth store
+      console.error('Login failed:', err)
+    }
+  }
+
+  const handleKeyPress = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      handleLogin()
+    }
+  }
+
+  const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormData((prev) => ({
+      ...prev,
+      [field]: event.target.value,
+    }))
+    // Clear validation error when user types
+    setValidationErrors((prev) => ({
+      ...prev,
+      [field]: '',
+    }))
   }
 
   return (
     <>
-      <PageHelmet title="Login" />
+      <PageHelmet title="Login - RepeatWise" />
       <MainContent>
         <Container maxWidth="sm">
           <Box textAlign="center" mb={3}>
@@ -50,24 +120,50 @@ function Login() {
           </Box>
           <Card sx={{ p: 4 }}>
             <Stack spacing={3}>
+              {error && (
+                <Alert severity="error" onClose={clearError}>
+                  {error}
+                </Alert>
+              )}
               <FormControl fullWidth>
                 <TextField
-                  label="Email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  label="Username or Email"
+                  type="text"
+                  value={formData.usernameOrEmail}
+                  onChange={handleChange('usernameOrEmail')}
+                  onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
+                  error={!!validationErrors.usernameOrEmail}
+                  helperText={validationErrors.usernameOrEmail}
+                  disabled={isLoading}
+                  autoFocus
                 />
               </FormControl>
               <FormControl fullWidth>
                 <TextField
                   label="Password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  type={showPassword ? 'text' : 'password'}
+                  value={formData.password}
+                  onChange={handleChange('password')}
+                  onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
+                  error={!!validationErrors.password}
+                  helperText={validationErrors.password}
+                  disabled={isLoading}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          onClick={() => setShowPassword(!showPassword)}
+                          edge="end"
+                        >
+                          {showPassword ? <VisibilityOff /> : <Visibility />}
+                        </IconButton>
+                      </InputAdornment>
+                    ),
+                  }}
                 />
               </FormControl>
               <Button
@@ -75,13 +171,20 @@ function Login() {
                 size="large"
                 fullWidth
                 onClick={handleLogin}
+                disabled={isLoading}
+                startIcon={isLoading && <CircularProgress size={20} />}
               >
-                Sign In
+                {isLoading ? 'Signing In...' : 'Sign In'}
               </Button>
               <Box textAlign="center">
                 <Typography variant="body2" color="text.secondary">
                   Don&apos;t have an account?{' '}
-                  <Button variant="text" size="small">
+                  <Button
+                    variant="text"
+                    size="small"
+                    onClick={() => navigate('/register')}
+                    disabled={isLoading}
+                  >
                     Sign Up
                   </Button>
                 </Typography>
