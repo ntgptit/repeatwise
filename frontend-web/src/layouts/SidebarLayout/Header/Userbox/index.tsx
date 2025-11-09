@@ -77,7 +77,7 @@ function HeaderUserbox() {
     setOpen(false)
   }
 
-  const handleLogout = async (): void => {
+  const handleLogout = async (): Promise<void> => {
     try {
       await logout()
       navigate('/login')
