@@ -90,7 +90,7 @@ function Register() {
 
     // Username validation (optional but must be valid if provided)
     if (formData.username && !validateUsername(formData.username)) {
-      errors.username = 'Username phải gồm 3-30 ký tự viết thường, chỉ gồm chữ, số hoặc gạch dưới'
+      errors.username = 'Username must be 3-30 lowercase characters (letters, numbers, underscores only)'
     }
 
     // Password validation
@@ -139,7 +139,7 @@ function Register() {
       }
 
       // Only show success message and redirect if registration succeeded
-      setSuccessMessage(result.message || 'Đăng ký thành công! Chuyển sang trang đăng nhập...')
+      setSuccessMessage(result.message || 'Registration successful! Redirecting to login...')
 
       // Clear form after successful registration
       setFormData({
@@ -229,7 +229,7 @@ function Register() {
                   error={!!validationErrors.username}
                   helperText={
                     validationErrors.username ||
-                    '3-30 ký tự viết thường, gồm chữ cái, số hoặc dấu gạch dưới'
+                    '3-30 lowercase characters (letters, numbers, underscores only)'
                   }
                   disabled={isLoading}
                 />

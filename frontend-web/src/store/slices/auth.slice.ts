@@ -102,12 +102,13 @@ export const useAuthStore = create<AuthState>()(
           return {
             success: true,
             message:
-              response.message || 'Đăng ký thành công! Vui lòng đăng nhập.',
+              response.message || 'Registration successful! Please login with your credentials.',
           }
         } catch (error: any) {
           // Handle both AxiosError and transformed ErrorResponse from interceptor
+          // The error.message comes from backend via error.interceptor.ts transformation
           const errorMessage =
-            error.message || error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.'
+            error.message || error.response?.data?.message || 'Registration failed. Please try again.'
 
           set({
             error: errorMessage,
