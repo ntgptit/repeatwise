@@ -66,8 +66,12 @@ function Register() {
   }
 
   const validateUsername = (username: string): boolean => {
-    if (!username) return true // Username is optional
-    if (username.length < 3 || username.length > 30) return false
+    if (!username) {
+      return true
+    } // Username is optional
+    if (username.length < 3 || username.length > 30) {
+      return false
+    }
     const usernameRegex = /^[a-z0-9_]+$/
     return usernameRegex.test(username)
   }
@@ -90,7 +94,8 @@ function Register() {
 
     // Username validation (optional but must be valid if provided)
     if (formData.username && !validateUsername(formData.username)) {
-      errors.username = 'Username must be 3-30 lowercase characters (letters, numbers, underscores only)'
+      errors.username =
+        'Username must be 3-30 lowercase characters (letters, numbers, underscores only)'
     }
 
     // Password validation
@@ -108,7 +113,7 @@ function Register() {
     }
 
     setValidationErrors(errors)
-    return Object.values(errors).every((err) => !err)
+    return Object.values(errors).every(err => !err)
   }
 
   const handleRegister = async () => {
@@ -122,16 +127,14 @@ function Register() {
     try {
       const sanitizedPayload = {
         ...formData,
-        username: formData.username.trim()
-          ? formData.username.trim().toLowerCase()
-          : undefined,
+        username: formData.username.trim() ? formData.username.trim().toLowerCase() : undefined,
         name: formData.name.trim() || undefined,
       }
 
       const result = await register(sanitizedPayload)
 
       // Defensive check: ensure result exists and has success property
-      if (!result || !result.success) {
+      if (!result?.success) {
         // Error is already set in auth store and will be displayed
         // Don't navigate to login page when registration fails
         console.log('Registration failed, staying on register page')
@@ -151,9 +154,9 @@ function Register() {
       })
 
       // Redirect to login after 2 seconds on successful registration
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+      // setTimeout(() => {
+      //   navigate('/login')
+      // }, 2000)
     } catch (err) {
       // Catch any unexpected errors (shouldn't happen as register() handles errors internally)
       // Don't navigate to login page when there's an error
@@ -169,12 +172,12 @@ function Register() {
   }
 
   const handleChange = (field: string) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: event.target.value,
     }))
     // Clear validation error when user types
-    setValidationErrors((prev) => ({
+    setValidationErrors(prev => ({
       ...prev,
       [field]: '',
     }))
@@ -196,12 +199,12 @@ function Register() {
           </Box>
           <Card sx={{ p: 4 }}>
             <Stack spacing={3}>
-              {error && (
+              {error ? (
                 <Alert severity="error" onClose={clearError}>
                   {error}
                 </Alert>
-              )}
-              {successMessage && <Alert severity="success">{successMessage}</Alert>}
+              ) : null}
+              {successMessage ? <Alert severity="success">{successMessage}</Alert> : null}
               <FormControl fullWidth>
                 <TextField
                   label="Email *"
@@ -211,7 +214,7 @@ function Register() {
                   onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
-                  error={!!validationErrors.email}
+                  error={Boolean(validationErrors.email)}
                   helperText={validationErrors.email}
                   disabled={isLoading}
                   autoFocus
@@ -226,7 +229,7 @@ function Register() {
                   onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
-                  error={!!validationErrors.username}
+                  error={Boolean(validationErrors.username)}
                   helperText={
                     validationErrors.username ||
                     '3-30 lowercase characters (letters, numbers, underscores only)'
@@ -243,16 +246,13 @@ function Register() {
                   onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
-                  error={!!validationErrors.password}
+                  error={Boolean(validationErrors.password)}
                   helperText={validationErrors.password || 'Minimum 8 characters'}
                   disabled={isLoading}
                   InputProps={{
                     endAdornment: (
                       <InputAdornment position="end">
-                        <IconButton
-                          onClick={() => setShowPassword(!showPassword)}
-                          edge="end"
-                        >
+                        <IconButton onClick={() => setShowPassword(!showPassword)} edge="end">
                           {showPassword ? <VisibilityOff /> : <Visibility />}
                         </IconButton>
                       </InputAdornment>
@@ -269,7 +269,7 @@ function Register() {
                   onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
-                  error={!!validationErrors.confirmPassword}
+                  error={Boolean(validationErrors.confirmPassword)}
                   helperText={validationErrors.confirmPassword}
                   disabled={isLoading}
                   InputProps={{
@@ -295,7 +295,7 @@ function Register() {
                   onKeyPress={handleKeyPress}
                   fullWidth
                   variant="outlined"
-                  error={!!validationErrors.name}
+                  error={Boolean(validationErrors.name)}
                   helperText={validationErrors.name}
                   disabled={isLoading}
                 />
@@ -306,7 +306,7 @@ function Register() {
                 fullWidth
                 onClick={handleRegister}
                 disabled={isLoading}
-                startIcon={isLoading && <CircularProgress size={20} />}
+                startIcon={isLoading ? <CircularProgress size={20} /> : null}
               >
                 {isLoading ? 'Creating Account...' : 'Register'}
               </Button>
