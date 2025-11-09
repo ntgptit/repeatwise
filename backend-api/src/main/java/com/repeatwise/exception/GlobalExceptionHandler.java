@@ -45,9 +45,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(BaseException.class)
     public ResponseEntity<ErrorResponse> handleBaseException(BaseException ex, HttpServletRequest request) {
-        log.error("BaseException: {}", ex.getMessage(), ex);
-
         final var message = resolveLocalizedMessage(ex);
+        log.error("BaseException [{}]: {}", ex.getErrorCode(), message, ex);
 
         final var error = ErrorResponse.of(
                 ex.getHttpStatus().value(),
