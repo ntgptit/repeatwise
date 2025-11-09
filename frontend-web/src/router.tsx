@@ -24,6 +24,7 @@ const loadable = <P extends object>(Component: LazyExoticComponent<ComponentType
 
 // Pages
 const Overview = loadable(lazy(() => import('src/content/overview')))
+const Login = loadable(lazy(() => import('src/content/pages/Login')))
 
 // Dashboards
 const Crypto = loadable(lazy(() => import('src/content/dashboards/Crypto')))
@@ -58,11 +59,15 @@ const routes: RouteObject[] = [
     children: [
       {
         path: '/',
-        element: <Overview />,
+        element: <Navigate to="/login" replace />,
+      },
+      {
+        path: 'login',
+        element: <Login />,
       },
       {
         path: 'overview',
-        element: <Navigate to="/" replace />,
+        element: <Overview />,
       },
       {
         path: 'status',
