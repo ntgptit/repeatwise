@@ -120,10 +120,13 @@ function Register() {
     }
 
     try {
-      await register(formData)
+      const result = await register(formData)
+      if (!result.success) {
+        return
+      }
 
-      // Only show success and redirect if register() didn't throw error
-      setSuccessMessage('Registration successful! Please login with your credentials.')
+      // Only show success and redirect if register() returned success
+      setSuccessMessage(result.message)
 
       // Clear form
       setFormData({

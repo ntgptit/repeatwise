@@ -11,6 +11,11 @@ import type {
 
 // ==================== Types ====================
 
+interface RegisterResult {
+  success: boolean
+  message: string
+}
+
 interface AuthState {
   // State
   user: User | null
@@ -21,7 +26,7 @@ interface AuthState {
 
   // Actions
   login: (payload: LoginRequest) => Promise<void>
-  register: (payload: RegisterRequest) => Promise<void>
+  register: (payload: RegisterRequest) => Promise<RegisterResult>
   logout: () => Promise<void>
   logoutAll: () => Promise<void>
   refreshToken: () => Promise<void>
@@ -84,13 +89,19 @@ export const useAuthStore = create<AuthState>()(
         try {
           set({ isLoading: true, error: null })
 
-          await authService.register(payload)
+          const response = await authService.register(payload)
 
           // Registration successful - user needs to login
           set({
             isLoading: false,
             error: null,
           })
+
+          return {
+            success: true,
+            message:
+              response.message || 'Registration successful! Please login with your credentials.',
+          }
         } catch (error: any) {
           // Handle both AxiosError and transformed ErrorResponse from interceptor
           const errorMessage =
@@ -101,8 +112,10 @@ export const useAuthStore = create<AuthState>()(
             isLoading: false,
           })
 
-          // Re-throw error so calling code can handle it
-          throw error
+          return {
+            success: false,
+            message: errorMessage,
+          }
         }
       },
 
