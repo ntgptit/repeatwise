@@ -37,6 +37,11 @@ const Transactions = loadable(lazy(() => import('src/content/applications/Transa
 const UserProfile = loadable(lazy(() => import('src/content/applications/Users/profile')))
 const UserSettings = loadable(lazy(() => import('src/content/applications/Users/settings')))
 
+// Folder Management
+const FolderManagement = loadable(
+  lazy(() => import('src/features/folders/components/FolderManagementPage'))
+)
+
 // Components
 const Buttons = loadable(lazy(() => import('src/content/pages/Components/Buttons')))
 const Modals = loadable(lazy(() => import('src/content/pages/Components/Modals')))
@@ -61,7 +66,7 @@ const routes: RouteObject[] = [
     children: [
       {
         path: '/',
-        element: <Navigate to="/login" replace />,
+        element: <Navigate to="/workspace/folders" replace />,
       },
       {
         path: 'login',
@@ -103,6 +108,20 @@ const routes: RouteObject[] = [
       {
         path: '*',
         element: <Status404 />,
+      },
+    ],
+  },
+  {
+    path: 'workspace',
+    element: <SidebarLayout />,
+    children: [
+      {
+        path: '',
+        element: <Navigate to="folders" replace />,
+      },
+      {
+        path: 'folders',
+        element: <FolderManagement />,
       },
     ],
   },

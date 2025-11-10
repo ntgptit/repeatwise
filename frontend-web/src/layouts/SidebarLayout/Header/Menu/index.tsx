@@ -81,6 +81,13 @@ function HeaderMenu() {
           <ListItemButton
             classes={{ root: 'MuiListItem-indicators' }}
             component={NavLink}
+            to="/workspace/folders"
+          >
+            <ListItemText primaryTypographyProps={{ noWrap: true }} primary="Folders" />
+          </ListItemButton>
+          <ListItemButton
+            classes={{ root: 'MuiListItem-indicators' }}
+            component={NavLink}
             to="/components/buttons"
           >
             <ListItemText primaryTypographyProps={{ noWrap: true }} primary="Buttons" />
@@ -114,6 +121,9 @@ function HeaderMenu() {
       <Menu anchorEl={ref.current} onClose={handleClose} open={isOpen}>
         <MenuItem sx={{ px: 3 }} component={NavLink} to="/overview">
           Overview
+        </MenuItem>
+        <MenuItem sx={{ px: 3 }} component={NavLink} to="/workspace/folders">
+          Folders
         </MenuItem>
         <MenuItem sx={{ px: 3 }} component={NavLink} to="/components/tabs">
           Tabs

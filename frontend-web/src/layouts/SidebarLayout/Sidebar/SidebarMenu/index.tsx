@@ -3,6 +3,7 @@ import { NavLink as RouterLink } from 'react-router-dom'
 import { useSidebar } from 'src/contexts/SidebarContext'
 
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone'
+import FolderSpecialIcon from '@mui/icons-material/FolderSpecialOutlined'
 import BrightnessLowTwoToneIcon from '@mui/icons-material/BrightnessLowTwoTone'
 import MmsTwoToneIcon from '@mui/icons-material/MmsTwoTone'
 import TableChartTwoToneIcon from '@mui/icons-material/TableChartTwoTone'
@@ -166,6 +167,23 @@ function SidebarMenu() {
 
   return (
     <MenuWrapper>
+      <List component="div">
+        <SubMenuWrapper>
+          <List component="div">
+            <ListItem component="div">
+              <Button
+                disableRipple
+                component={RouterLink}
+                onClick={closeSidebar}
+                to="/workspace/folders"
+                startIcon={<FolderSpecialIcon />}
+              >
+                Folder Management
+              </Button>
+            </ListItem>
+          </List>
+        </SubMenuWrapper>
+      </List>
       <List component="div">
         <SubMenuWrapper>
           <List component="div">
