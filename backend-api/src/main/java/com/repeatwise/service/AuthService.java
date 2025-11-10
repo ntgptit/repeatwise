@@ -1,12 +1,12 @@
 package com.repeatwise.service;
 
+import java.util.UUID;
+
 import com.repeatwise.dto.request.auth.LoginRequest;
 import com.repeatwise.dto.request.auth.RegisterRequest;
 import com.repeatwise.dto.response.auth.LoginResponse;
 import com.repeatwise.dto.response.auth.RefreshTokenResponse;
 import com.repeatwise.exception.RepeatWiseException;
-
-import java.util.UUID;
 
 /**
  * Service interface for authentication operations including registration and login.
@@ -44,9 +44,9 @@ public interface AuthService {
      * Refresh access token using refresh token (with token rotation).
      *
      * @param refreshToken Refresh token string
-     * @param deviceId Optional device ID for tracking
-     * @param deviceInfo Optional device information
-     * @param ipAddress Optional IP address
+     * @param deviceId     Optional device ID for tracking
+     * @param deviceInfo   Optional device information
+     * @param ipAddress    Optional IP address
      * @return RefreshTokenResponse with new access token and new refresh token
      * @throws RepeatWiseException if refresh token is missing, invalid, expired, revoked, or reused
      */

@@ -1,17 +1,18 @@
 package com.repeatwise.repository;
 
-import com.repeatwise.entity.RefreshToken;
-import com.repeatwise.entity.User;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.repeatwise.entity.RefreshToken;
+import com.repeatwise.entity.User;
 
 /**
  * Repository for RefreshToken entity with Spring Data JPA.
@@ -41,7 +42,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
      * Find all active (non-revoked, non-expired) refresh tokens for a user.
      *
      * @param user User entity
-     * @param now Current timestamp
+     * @param now  Current timestamp
      * @return List of active refresh tokens
      */
     @Query("SELECT rt FROM RefreshToken rt WHERE rt.user = :user AND rt.isRevoked = false AND rt.expiresAt > :now")
@@ -50,7 +51,7 @@ public interface RefreshTokenRepository extends JpaRepository<RefreshToken, UUID
     /**
      * Revoke all refresh tokens for a user (logout from all devices).
      *
-     * @param user User entity
+     * @param user      User entity
      * @param revokedAt Timestamp of revocation
      */
     @Modifying

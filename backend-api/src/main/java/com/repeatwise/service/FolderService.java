@@ -1,13 +1,13 @@
 package com.repeatwise.service;
 
+import java.util.List;
+import java.util.UUID;
+
 import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.entity.Folder;
-
-import java.util.List;
-import java.util.UUID;
 
 /**
  * Service interface for Folder operations
@@ -17,8 +17,8 @@ public interface FolderService {
     /**
      * UC-007: Create a new folder
      *
-     * @param request  CreateFolderRequest with name, description, parentFolderId
-     * @param userId   ID of the authenticated user
+     * @param request CreateFolderRequest with name, description, parentFolderId
+     * @param userId  ID of the authenticated user
      * @return FolderResponse with created folder details
      */
     FolderResponse createFolder(CreateFolderRequest request, UUID userId);
@@ -121,7 +121,6 @@ public interface FolderService {
     record DeletionSummary(
             int deletedFolders,
             int deletedDecks,
-            String message
-    ) {
+            String message) {
     }
 }

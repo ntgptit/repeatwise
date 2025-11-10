@@ -1,19 +1,21 @@
 package com.repeatwise.mapper;
 
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
 import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.entity.Folder;
-import org.mapstruct.*;
 
 /**
  * MapStruct mapper for Folder entity
  */
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        builder = @Builder(disableBuilder = true)
-)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, builder = @Builder(disableBuilder = true))
 public interface FolderMapper {
 
     /**

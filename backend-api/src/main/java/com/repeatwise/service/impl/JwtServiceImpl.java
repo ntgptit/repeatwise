@@ -128,7 +128,7 @@ public class JwtServiceImpl implements JwtService {
         try {
             extractAllClaims(token);
             return true;
-        } catch (RepeatWiseException e) {
+        } catch (final RepeatWiseException e) {
             return false;
         }
     }

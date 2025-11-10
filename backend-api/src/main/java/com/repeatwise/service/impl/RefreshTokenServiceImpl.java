@@ -122,7 +122,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
 
         // Check if token is revoked
-        if (refreshToken.getIsRevoked()) {
+        if (Boolean.TRUE.equals(refreshToken.getIsRevoked())) {
             log.warn("Refresh token revoked for user: {}", refreshToken.getUser().getId());
             throw new RepeatWiseException(RepeatWiseError.REFRESH_TOKEN_REVOKED);
         }
@@ -152,7 +152,7 @@ public class RefreshTokenServiceImpl implements RefreshTokenService {
         }
 
         // SECURITY: Check if token is already revoked (token reuse detection)
-        if (oldRefreshToken.getIsRevoked()) {
+        if (Boolean.TRUE.equals(oldRefreshToken.getIsRevoked())) {
             log.error("Token reuse detected for user: {}. Revoking all tokens.",
                     oldRefreshToken.getUser().getId());
             // Revoke all tokens for this user (security measure)

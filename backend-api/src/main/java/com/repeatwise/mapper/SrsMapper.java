@@ -1,9 +1,14 @@
 package com.repeatwise.mapper;
 
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
 import com.repeatwise.dto.request.srs.UpdateSrsSettingsRequest;
 import com.repeatwise.dto.response.srs.SrsSettingsResponse;
 import com.repeatwise.entity.SrsSettings;
-import org.mapstruct.*;
 
 /**
  * MapStruct mapper for SRS-related entities

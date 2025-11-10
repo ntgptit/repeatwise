@@ -1,12 +1,13 @@
 package com.repeatwise.mapper;
 
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
 import com.repeatwise.dto.response.folder.FolderStatsResponse;
 import com.repeatwise.dto.response.stats.UserStatsResponse;
 import com.repeatwise.entity.FolderStats;
 import com.repeatwise.entity.UserStats;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.NullValuePropertyMappingStrategy;
 
 /**
  * MapStruct mapper for statistics entities

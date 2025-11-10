@@ -1,13 +1,30 @@
 package com.repeatwise.controller;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.repeatwise.dto.request.folder.CopyFolderRequest;
 import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.service.FolderService;
+
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -15,15 +32,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 /**
  * REST controller for folder operations
@@ -43,10 +51,7 @@ public class FolderController {
      * UC-007: Create a new folder
      */
     @PostMapping
-    @Operation(
-            summary = "Create a new folder",
-            description = "Creates a new folder in the hierarchy. Max depth is 10 levels."
-    )
+    @Operation(summary = "Create a new folder", description = "Creates a new folder in the hierarchy. Max depth is 10 levels.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = "Folder created successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request or validation error"),
@@ -55,12 +60,11 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> createFolder(
             @Valid @RequestBody CreateFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} creating folder '{}'", userId, request.getName());
 
-        FolderResponse response = folderService.createFolder(request, userId);
+        final var response = this.folderService.createFolder(request, userId);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -69,10 +73,7 @@ public class FolderController {
      * UC-008: Rename/update a folder
      */
     @PatchMapping("/{folderId}")
-    @Operation(
-            summary = "Update folder name and/or description",
-            description = "Updates folder metadata. Hierarchy position remains unchanged."
-    )
+    @Operation(summary = "Update folder name and/or description", description = "Updates folder metadata. Hierarchy position remains unchanged.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder updated successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid request or name conflict"),
@@ -82,12 +83,11 @@ public class FolderController {
     public ResponseEntity<FolderResponse> updateFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody UpdateFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} updating folder {}", userId, folderId);
 
-        FolderResponse response = folderService.updateFolder(folderId, request, userId);
+        final var response = this.folderService.updateFolder(folderId, request, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -96,10 +96,7 @@ public class FolderController {
      * UC-009: Move a folder to a different parent
      */
     @PostMapping("/{folderId}/move")
-    @Operation(
-            summary = "Move folder to a different parent",
-            description = "Moves folder and all its descendants to a new location in the hierarchy."
-    )
+    @Operation(summary = "Move folder to a different parent", description = "Moves folder and all its descendants to a new location in the hierarchy.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder moved successfully"),
             @ApiResponse(responseCode = "400", description = "Invalid move operation (circular reference, depth exceeded, etc.)"),
@@ -109,12 +106,11 @@ public class FolderController {
     public ResponseEntity<FolderResponse> moveFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody MoveFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} moving folder {} to parent {}", userId, folderId, request.getTargetParentFolderId());
 
-        FolderResponse response = folderService.moveFolder(folderId, request, userId);
+        final var response = this.folderService.moveFolder(folderId, request, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -123,10 +119,7 @@ public class FolderController {
      * UC-010: Copy a folder (sync mode)
      */
     @PostMapping("/{folderId}/copy")
-    @Operation(
-            summary = "Copy folder and its subtree",
-            description = "Creates a deep copy of the folder and all its contents. Max 500 items for sync copy."
-    )
+    @Operation(summary = "Copy folder and its subtree", description = "Creates a deep copy of the folder and all its contents. Max 500 items for sync copy.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder copied successfully"),
             @ApiResponse(responseCode = "400", description = "Folder too large or depth exceeded"),
@@ -136,17 +129,15 @@ public class FolderController {
     public ResponseEntity<FolderResponse> copyFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody CopyFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} copying folder {} to destination {}", userId, folderId, request.getDestinationFolderId());
 
-        FolderResponse response = folderService.copyFolder(
+        final var response = this.folderService.copyFolder(
                 folderId,
                 request.getDestinationFolderId(),
                 request.getNewName(),
-                userId
-        );
+                userId);
 
         return ResponseEntity.ok(response);
     }
@@ -155,10 +146,7 @@ public class FolderController {
      * UC-011: Delete a folder (soft delete)
      */
     @DeleteMapping("/{folderId}")
-    @Operation(
-            summary = "Delete folder and its subtree",
-            description = "Soft deletes folder and all its contents. Recoverable for 30 days."
-    )
+    @Operation(summary = "Delete folder and its subtree", description = "Soft deletes folder and all its contents. Recoverable for 30 days.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder deleted successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -166,18 +154,16 @@ public class FolderController {
     })
     public ResponseEntity<Map<String, Object>> deleteFolder(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} deleting folder {}", userId, folderId);
 
-        FolderService.DeletionSummary summary = folderService.deleteFolder(folderId, userId);
+        final var summary = this.folderService.deleteFolder(folderId, userId);
 
-        Map<String, Object> response = Map.of(
+        final Map<String, Object> response = Map.of(
                 "message", summary.message(),
                 "deletedFolders", summary.deletedFolders(),
-                "deletedDecks", summary.deletedDecks()
-        );
+                "deletedDecks", summary.deletedDecks());
 
         return ResponseEntity.ok(response);
     }
@@ -186,10 +172,7 @@ public class FolderController {
      * Restore a soft-deleted folder
      */
     @PostMapping("/{folderId}/restore")
-    @Operation(
-            summary = "Restore a deleted folder",
-            description = "Restores a soft-deleted folder and all its contents from trash."
-    )
+    @Operation(summary = "Restore a deleted folder", description = "Restores a soft-deleted folder and all its contents from trash.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder restored successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -197,12 +180,11 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> restoreFolder(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
         log.info("User {} restoring folder {}", userId, folderId);
 
-        FolderResponse response = folderService.restoreFolder(folderId, userId);
+        final var response = this.folderService.restoreFolder(folderId, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -211,10 +193,7 @@ public class FolderController {
      * Get a single folder by ID
      */
     @GetMapping("/{folderId}")
-    @Operation(
-            summary = "Get folder by ID",
-            description = "Retrieves a single folder's details."
-    )
+    @Operation(summary = "Get folder by ID", description = "Retrieves a single folder's details.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folder retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -222,11 +201,10 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> getFolderById(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
 
-        FolderResponse response = folderService.getFolderById(folderId, userId);
+        final var response = this.folderService.getFolderById(folderId, userId);
 
         return ResponseEntity.ok(response);
     }
@@ -235,20 +213,16 @@ public class FolderController {
      * Get all folders for current user
      */
     @GetMapping
-    @Operation(
-            summary = "Get all folders",
-            description = "Retrieves all folders for the authenticated user (hierarchical tree)."
-    )
+    @Operation(summary = "Get all folders", description = "Retrieves all folders for the authenticated user (hierarchical tree).")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Folders retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<FolderResponse>> getAllFolders(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
 
-        List<FolderResponse> folders = folderService.getAllFolders(userId);
+        final var folders = this.folderService.getAllFolders(userId);
 
         return ResponseEntity.ok(folders);
     }
@@ -257,20 +231,16 @@ public class FolderController {
      * Get root-level folders
      */
     @GetMapping("/root")
-    @Operation(
-            summary = "Get root folders",
-            description = "Retrieves all root-level folders (no parent) for the authenticated user."
-    )
+    @Operation(summary = "Get root folders", description = "Retrieves all root-level folders (no parent) for the authenticated user.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Root folders retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<FolderResponse>> getRootFolders(
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
 
-        List<FolderResponse> folders = folderService.getRootFolders(userId);
+        final var folders = this.folderService.getRootFolders(userId);
 
         return ResponseEntity.ok(folders);
     }
@@ -279,10 +249,7 @@ public class FolderController {
      * Get child folders of a parent
      */
     @GetMapping("/{parentId}/children")
-    @Operation(
-            summary = "Get child folders",
-            description = "Retrieves all direct children of a parent folder."
-    )
+    @Operation(summary = "Get child folders", description = "Retrieves all direct children of a parent folder.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Child folders retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized"),
@@ -290,11 +257,10 @@ public class FolderController {
     })
     public ResponseEntity<List<FolderResponse>> getChildFolders(
             @PathVariable UUID parentId,
-            @AuthenticationPrincipal UserDetails userDetails
-    ) {
-        UUID userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal UserDetails userDetails) {
+        final var userId = UUID.fromString(userDetails.getUsername());
 
-        List<FolderResponse> folders = folderService.getChildFolders(parentId, userId);
+        final var folders = this.folderService.getChildFolders(parentId, userId);
 
         return ResponseEntity.ok(folders);
     }

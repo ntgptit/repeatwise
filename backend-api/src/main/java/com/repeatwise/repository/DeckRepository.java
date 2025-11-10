@@ -1,16 +1,17 @@
 package com.repeatwise.repository;
 
-import com.repeatwise.entity.Deck;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.repeatwise.entity.Deck;
 
 /**
  * Repository for Deck entity
@@ -45,23 +46,25 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
     /**
      * Check if deck name exists in a folder for a user (case-insensitive)
      */
-    @Query("SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId " +
-           "AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) " +
-           "AND LOWER(d.name) = LOWER(:name) AND d.deletedAt IS NULL")
+    @Query("""
+            SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId \
+            AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) \
+            AND LOWER(d.name) = LOWER(:name) AND d.deletedAt IS NULL""")
     boolean existsByNameAndFolder(@Param("userId") UUID userId,
-                                   @Param("folderId") UUID folderId,
-                                   @Param("name") String name);
+            @Param("folderId") UUID folderId,
+            @Param("name") String name);
 
     /**
      * Check if deck name exists in a folder for a user, excluding specific deck ID
      */
-    @Query("SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId " +
-           "AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) " +
-           "AND LOWER(d.name) = LOWER(:name) AND d.id <> :excludeId AND d.deletedAt IS NULL")
+    @Query("""
+            SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId \
+            AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) \
+            AND LOWER(d.name) = LOWER(:name) AND d.id <> :excludeId AND d.deletedAt IS NULL""")
     boolean existsByNameAndFolderExcludingId(@Param("userId") UUID userId,
-                                              @Param("folderId") UUID folderId,
-                                              @Param("name") String name,
-                                              @Param("excludeId") UUID excludeId);
+            @Param("folderId") UUID folderId,
+            @Param("name") String name,
+            @Param("excludeId") UUID excludeId);
 
     /**
      * Count total decks for a user (active only)

@@ -1,12 +1,13 @@
 package com.repeatwise.repository;
 
-import com.repeatwise.entity.UserStats;
-import com.repeatwise.entity.User;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.Optional;
-import java.util.UUID;
+import com.repeatwise.entity.User;
+import com.repeatwise.entity.UserStats;
 
 /**
  * Repository for UserStats entity with Spring Data JPA.

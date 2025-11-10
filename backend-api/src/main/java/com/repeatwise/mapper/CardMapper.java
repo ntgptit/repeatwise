@@ -1,21 +1,23 @@
 package com.repeatwise.mapper;
 
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
 import com.repeatwise.dto.request.card.CreateCardRequest;
 import com.repeatwise.dto.request.card.UpdateCardRequest;
 import com.repeatwise.dto.response.card.CardResponse;
 import com.repeatwise.dto.response.card.CardWithProgressResponse;
 import com.repeatwise.entity.Card;
 import com.repeatwise.entity.CardBoxPosition;
-import org.mapstruct.*;
 
 /**
  * MapStruct mapper for Card entity
  */
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        builder = @Builder(disableBuilder = true)
-)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, builder = @Builder(disableBuilder = true))
 public interface CardMapper {
 
     /**

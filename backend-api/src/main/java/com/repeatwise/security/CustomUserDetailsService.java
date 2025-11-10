@@ -40,12 +40,12 @@ public class CustomUserDetailsService implements UserDetailsService {
             final var userId = UUID.fromString(username);
 
             // Find user by ID
-            return userRepository.findById(userId)
+            return this.userRepository.findById(userId)
                     .orElseThrow(() -> {
                         log.warn("User not found with ID: {}", userId);
                         return new UsernameNotFoundException("User not found with ID: " + userId);
                     });
-        } catch (IllegalArgumentException e) {
+        } catch (final IllegalArgumentException e) {
             log.warn("Invalid user ID format: {}", username);
             throw new UsernameNotFoundException("Invalid user ID format: " + username);
         }

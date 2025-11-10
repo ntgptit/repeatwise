@@ -46,6 +46,6 @@ public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
         body.put("message", "You are not logged in. Please login to access this resource.");
         body.put("path", request.getServletPath());
 
-        objectMapper.writeValue(response.getOutputStream(), body);
+        this.objectMapper.writeValue(response.getOutputStream(), body);
     }
 }

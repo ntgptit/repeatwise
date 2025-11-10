@@ -44,11 +44,11 @@ public class UserServiceImpl implements UserService {
         log.info("Updating profile for user: {}", userId);
 
         // Find user
-        final var user = userRepository.findById(userId)
+        final var user = this.userRepository.findById(userId)
                 .orElseThrow(() -> new RepeatWiseException(RepeatWiseError.USER_NOT_FOUND, userId));
 
         // Update fields using MapStruct (only non-null fields)
-        userMapper.updateEntityFromRequest(request, user);
+        this.userMapper.updateEntityFromRequest(request, user);
 
         // Trim name if provided
         if (StringUtils.hasText(user.getName())) {
@@ -56,10 +56,10 @@ public class UserServiceImpl implements UserService {
         }
 
         // Save updated user
-        final var updatedUser = userRepository.save(user);
+        final var updatedUser = this.userRepository.save(user);
 
         log.info("Profile updated successfully for user: {}", userId);
-        return userMapper.toResponse(updatedUser);
+        return this.userMapper.toResponse(updatedUser);
     }
 
     /**
@@ -78,7 +78,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // Find user
-        final var user = userRepository.findById(userId)
+        final var user = this.userRepository.findById(userId)
                 .orElseThrow(() -> new RepeatWiseException(RepeatWiseError.USER_NOT_FOUND, userId));
 
         // Verify current password
@@ -100,10 +100,10 @@ public class UserServiceImpl implements UserService {
 
         // Update password
         user.setPasswordHash(newPasswordHash);
-        userRepository.save(user);
+        this.userRepository.save(user);
 
         // Revoke all refresh tokens (logout from all devices)
-        refreshTokenRepository.revokeAllTokensByUser(user, LocalDateTime.now());
+        this.refreshTokenRepository.revokeAllTokensByUser(user, LocalDateTime.now());
 
         log.info("Password changed successfully and all tokens revoked for user: {}", userId);
     }

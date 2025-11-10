@@ -7,7 +7,6 @@ import com.repeatwise.config.properties.AppProperties;
 import com.repeatwise.config.properties.JwtProperties;
 
 @Configuration
-@EnableConfigurationProperties({JwtProperties.class, AppProperties.class})
+@EnableConfigurationProperties({ JwtProperties.class, AppProperties.class })
 public class ApplicationPropertiesConfig {
 }
-

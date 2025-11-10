@@ -22,7 +22,7 @@ public class SwaggerConfig {
 
     @Bean
     OpenAPI repeatwiseOpenApi() {
-        final var info = appProperties;
+        final var info = this.appProperties;
 
         return new OpenAPI()
                 .info(new Info()
@@ -50,4 +50,3 @@ public class SwaggerConfig {
     }
 
 }
-

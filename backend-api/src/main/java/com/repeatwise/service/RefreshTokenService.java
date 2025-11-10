@@ -15,10 +15,10 @@ public interface RefreshTokenService {
      * Token is hashed with BCrypt before storing in database.
      * Expires in 7 days.
      *
-     * @param user User to generate token for
-     * @param deviceId Optional device ID for tracking
+     * @param user       User to generate token for
+     * @param deviceId   Optional device ID for tracking
      * @param deviceInfo Optional device information
-     * @param ipAddress Optional IP address
+     * @param ipAddress  Optional IP address
      * @return Generated refresh token (plain text, not hashed)
      */
     String createRefreshToken(User user, String deviceId, String deviceInfo, String ipAddress);
@@ -37,10 +37,10 @@ public interface RefreshTokenService {
      * Validates old refresh token, revokes it, and generates new one.
      * If old token is already revoked, triggers security measure (revoke all tokens).
      *
-     * @param token Old refresh token (plain text)
-     * @param deviceId Optional device ID for tracking
+     * @param token      Old refresh token (plain text)
+     * @param deviceId   Optional device ID for tracking
      * @param deviceInfo Optional device information
-     * @param ipAddress Optional IP address
+     * @param ipAddress  Optional IP address
      * @return New refresh token (plain text, not hashed)
      * @throws RepeatWiseException if token is missing, expired, revoked, or reused
      */

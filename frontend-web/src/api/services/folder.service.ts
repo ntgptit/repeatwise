@@ -1,4 +1,5 @@
 import { apiClient } from '@/api/clients/base.client'
+import { apiConfig } from '@/config/api.config'
 import type {
   CopyFolderRequest,
   CreateFolderRequest,
@@ -8,7 +9,33 @@ import type {
   UpdateFolderRequest,
 } from '@/api/types/folder.types'
 
-const basePath = '/folders'
+const resolveBasePath = (): string => {
+  try {
+    const url = new URL(apiConfig.baseURL)
+    const normalizedPath = url.pathname.replace(/\/+$/, '')
+
+    if (
+      normalizedPath === '' ||
+      normalizedPath === '/' ||
+      normalizedPath === '/api' ||
+      normalizedPath.endsWith('/api') ||
+      normalizedPath.endsWith('/v1')
+    ) {
+      return normalizedPath.endsWith('/api') || normalizedPath.endsWith('/v1') ? '/folders' : '/api/folders'
+    }
+
+    if (normalizedPath.includes('/api/')) {
+      return '/folders'
+    }
+
+    return '/api/folders'
+  } catch (error) {
+    console.warn('[folderService] Failed to parse API base URL. Falling back to /api/folders.', error)
+    return '/api/folders'
+  }
+}
+
+const basePath = resolveBasePath()
 
 const toNullable = (value: string | null | undefined): string | null | undefined => {
   if (value === undefined) {

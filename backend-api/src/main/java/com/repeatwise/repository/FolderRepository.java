@@ -1,14 +1,15 @@
 package com.repeatwise.repository;
 
-import com.repeatwise.entity.Folder;
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.UUID;
+import com.repeatwise.entity.Folder;
 
 /**
  * Repository for Folder entity
@@ -49,23 +50,25 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
     /**
      * Check if folder name exists for user under same parent (case-insensitive)
      */
-    @Query("SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId " +
-           "AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) " +
-           "AND LOWER(f.name) = LOWER(:name) AND f.deletedAt IS NULL")
+    @Query("""
+            SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId \
+            AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) \
+            AND LOWER(f.name) = LOWER(:name) AND f.deletedAt IS NULL""")
     boolean existsByNameAndParent(@Param("userId") UUID userId,
-                                   @Param("parentId") UUID parentId,
-                                   @Param("name") String name);
+            @Param("parentId") UUID parentId,
+            @Param("name") String name);
 
     /**
      * Check if folder name exists for user under same parent, excluding specific folder ID
      */
-    @Query("SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId " +
-           "AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) " +
-           "AND LOWER(f.name) = LOWER(:name) AND f.id <> :excludeId AND f.deletedAt IS NULL")
+    @Query("""
+            SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId \
+            AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) \
+            AND LOWER(f.name) = LOWER(:name) AND f.id <> :excludeId AND f.deletedAt IS NULL""")
     boolean existsByNameAndParentExcludingId(@Param("userId") UUID userId,
-                                              @Param("parentId") UUID parentId,
-                                              @Param("name") String name,
-                                              @Param("excludeId") UUID excludeId);
+            @Param("parentId") UUID parentId,
+            @Param("name") String name,
+            @Param("excludeId") UUID excludeId);
 
     /**
      * Count total folders for a user (active only)
@@ -82,10 +85,11 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
     /**
      * Count total items (folders + decks) in a folder subtree
      */
-    @Query("SELECT COUNT(f) + " +
-           "(SELECT COUNT(d) FROM Deck d WHERE d.folder.id IN " +
-           "(SELECT f2.id FROM Folder f2 WHERE f2.user.id = :userId AND f2.path LIKE CONCAT(:pathPrefix, '%') AND f2.deletedAt IS NULL)) " +
-           "FROM Folder f WHERE f.user.id = :userId AND f.path LIKE CONCAT(:pathPrefix, '%') AND f.deletedAt IS NULL")
+    @Query("""
+            SELECT COUNT(f) + \
+            (SELECT COUNT(d) FROM Deck d WHERE d.folder.id IN \
+            (SELECT f2.id FROM Folder f2 WHERE f2.user.id = :userId AND f2.path LIKE CONCAT(:pathPrefix, '%') AND f2.deletedAt IS NULL)) \
+            FROM Folder f WHERE f.user.id = :userId AND f.path LIKE CONCAT(:pathPrefix, '%') AND f.deletedAt IS NULL""")
     long countItemsInSubtree(@Param("userId") UUID userId, @Param("pathPrefix") String pathPrefix);
 
     /**

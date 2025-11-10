@@ -1,9 +1,9 @@
 package com.repeatwise.config.properties;
 
+import org.springframework.boot.context.properties.ConfigurationProperties;
+
 import lombok.Getter;
 import lombok.Setter;
-
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Getter
 @Setter
@@ -16,4 +16,3 @@ public class JwtProperties {
     private String issuer;
     private String audience;
 }
-

@@ -10,4 +10,3 @@ public class RepeatwiseApiApplication {
         SpringApplication.run(RepeatwiseApiApplication.class, args);
     }
 }
-

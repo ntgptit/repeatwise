@@ -1,19 +1,21 @@
 package com.repeatwise.mapper;
 
+import org.mapstruct.BeanMapping;
+import org.mapstruct.Builder;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.mapstruct.NullValuePropertyMappingStrategy;
+
 import com.repeatwise.dto.request.deck.CreateDeckRequest;
 import com.repeatwise.dto.request.deck.UpdateDeckRequest;
 import com.repeatwise.dto.response.deck.DeckResponse;
 import com.repeatwise.entity.Deck;
-import org.mapstruct.*;
 
 /**
  * MapStruct mapper for Deck entity
  */
-@Mapper(
-        componentModel = "spring",
-        nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE,
-        builder = @Builder(disableBuilder = true)
-)
+@Mapper(componentModel = "spring", nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE, builder = @Builder(disableBuilder = true))
 public interface DeckMapper {
 
     /**
