@@ -1,12 +1,12 @@
 package com.repeatwise.dto.request.folder;
 
+import java.util.UUID;
+
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 /**
  * DTO for copying a folder to a new location

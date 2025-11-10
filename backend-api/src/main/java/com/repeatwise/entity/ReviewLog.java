@@ -1,14 +1,30 @@
 package com.repeatwise.entity;
 
-import com.repeatwise.entity.enums.Rating;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+
+import org.hibernate.annotations.CreationTimestamp;
+
+import com.repeatwise.entity.enums.Rating;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Review Log entity - immutable review history for analytics and undo
@@ -65,7 +81,7 @@ public class ReviewLog {
      * Create a new review log entry
      */
     public static ReviewLog create(Card card, User user, Rating rating,
-                                   Integer previousBox, Integer newBox, Integer intervalDays) {
+            Integer previousBox, Integer newBox, Integer intervalDays) {
         return ReviewLog.builder()
                 .card(card)
                 .user(user)
@@ -80,27 +96,27 @@ public class ReviewLog {
      * Check if the card was moved forward (box increased)
      */
     public boolean isProgressMade() {
-        return newBox > previousBox;
+        return this.newBox > this.previousBox;
     }
 
     /**
      * Check if the card was moved backward (box decreased)
      */
     public boolean isRegression() {
-        return newBox < previousBox;
+        return this.newBox < this.previousBox;
     }
 
     /**
      * Check if the card stayed in the same box
      */
     public boolean isStagnant() {
-        return newBox.equals(previousBox);
+        return this.newBox.equals(this.previousBox);
     }
 
     /**
      * Check if this was a forgotten card (AGAIN rating)
      */
     public boolean wasForgotten() {
-        return rating == Rating.AGAIN;
+        return this.rating == Rating.AGAIN;
     }
 }

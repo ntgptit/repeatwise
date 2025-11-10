@@ -1,11 +1,11 @@
 package com.repeatwise.entity.base;
 
+import java.time.LocalDateTime;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
 
 /**
  * Base entity class with soft delete support
@@ -22,7 +22,7 @@ public abstract class SoftDeletableEntity extends BaseEntity {
      * Check if entity is deleted
      */
     public boolean isDeleted() {
-        return deletedAt != null;
+        return this.deletedAt != null;
     }
 
     /**

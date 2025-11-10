@@ -1,11 +1,11 @@
 package com.repeatwise.dto.response.stats;
 
+import java.time.LocalDate;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDate;
 
 /**
  * DTO for user statistics response

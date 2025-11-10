@@ -1,15 +1,16 @@
 package com.repeatwise.dto.request.srs;
 
+import java.time.LocalTime;
+
 import com.repeatwise.entity.enums.ForgottenCardAction;
 import com.repeatwise.entity.enums.ReviewOrder;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalTime;
 
 /**
  * DTO for updating SRS settings

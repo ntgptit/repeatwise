@@ -1,13 +1,14 @@
 package com.repeatwise.dto.response.error;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.time.LocalDateTime;
-import java.util.Map;
 
 /**
  * Standard error response DTO
@@ -44,7 +45,8 @@ public class ErrorResponse {
     /**
      * Create error response for validation errors
      */
-    public static ErrorResponse ofValidation(int status, String message, Map<String, String> validationErrors, String path) {
+    public static ErrorResponse ofValidation(int status, String message, Map<String, String> validationErrors,
+            String path) {
         return ErrorResponse.builder()
                 .timestamp(LocalDateTime.now())
                 .status(status)

@@ -1,11 +1,11 @@
 package com.repeatwise.dto.response.stats;
 
+import java.util.Map;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.Map;
 
 /**
  * DTO for box distribution statistics

@@ -1,11 +1,11 @@
 package com.repeatwise.dto.request.deck;
 
+import java.util.UUID;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 /**
  * DTO for moving a deck to another folder

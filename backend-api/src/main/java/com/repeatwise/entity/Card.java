@@ -1,14 +1,26 @@
 package com.repeatwise.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.repeatwise.entity.base.SoftDeletableEntity;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Card entity for flashcards
@@ -53,10 +65,10 @@ public class Card extends SoftDeletableEntity {
      * @return The card box position for the user, or null if not found
      */
     public CardBoxPosition getPositionForUser(String userId) {
-        if (cardBoxPositions == null) {
+        if (this.cardBoxPositions == null) {
             return null;
         }
-        return cardBoxPositions.stream()
+        return this.cardBoxPositions.stream()
                 .filter(pos -> pos.getUser().getId().toString().equals(userId))
                 .findFirst()
                 .orElse(null);

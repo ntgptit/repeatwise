@@ -1,13 +1,23 @@
 package com.repeatwise.entity;
 
-import com.repeatwise.entity.base.SoftDeletableEntity;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+
+import com.repeatwise.entity.base.SoftDeletableEntity;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Card Box Position entity - tracks SRS state per user per card
@@ -67,21 +77,21 @@ public class CardBoxPosition extends SoftDeletableEntity {
      * Check if this card is new (never reviewed)
      */
     public boolean isNew() {
-        return reviewCount == 0;
+        return this.reviewCount == 0;
     }
 
     /**
      * Check if this card is due for review
      */
     public boolean isDue() {
-        return dueDate != null && !dueDate.isAfter(LocalDate.now());
+        return (this.dueDate != null) && !this.dueDate.isAfter(LocalDate.now());
     }
 
     /**
      * Check if this card is mature (in box 5 or higher)
      */
     public boolean isMature() {
-        return currentBox >= 5;
+        return this.currentBox >= 5;
     }
 
     /**

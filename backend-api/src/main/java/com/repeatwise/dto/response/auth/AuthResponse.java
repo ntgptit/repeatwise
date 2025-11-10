@@ -1,6 +1,7 @@
 package com.repeatwise.dto.response.auth;
 
 import com.repeatwise.dto.response.user.UserResponse;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

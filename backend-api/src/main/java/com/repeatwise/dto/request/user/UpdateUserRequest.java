@@ -2,6 +2,7 @@ package com.repeatwise.dto.request.user;
 
 import com.repeatwise.entity.enums.Language;
 import com.repeatwise.entity.enums.Theme;
+
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;

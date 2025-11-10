@@ -1,13 +1,23 @@
 package com.repeatwise.entity;
 
+import java.time.LocalDateTime;
+
 import com.repeatwise.entity.base.BaseEntity;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
-import java.time.LocalDateTime;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Refresh token entity for JWT authentication
@@ -58,14 +68,14 @@ public class RefreshToken extends BaseEntity {
      * Check if token is expired
      */
     public boolean isExpired() {
-        return LocalDateTime.now().isAfter(expiresAt);
+        return LocalDateTime.now().isAfter(this.expiresAt);
     }
 
     /**
      * Check if token is valid (not revoked and not expired)
      */
     public boolean isValid() {
-        return !isRevoked && !isExpired();
+        return !this.isRevoked && !isExpired();
     }
 
     /**

@@ -1,12 +1,22 @@
 package com.repeatwise.entity;
 
+import java.time.LocalDate;
+
 import com.repeatwise.entity.base.BaseEntity;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
-
-import java.time.LocalDate;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * User Statistics entity - denormalized statistics for performance
@@ -77,32 +87,32 @@ public class UserStats extends BaseEntity {
      * Update study streak
      */
     public void updateStreak() {
-        LocalDate today = LocalDate.now();
+        final var today = LocalDate.now();
 
-        if (lastStudyDate == null) {
+        if (this.lastStudyDate == null) {
             // First study session
-            streakDays = 1;
-        } else if (lastStudyDate.equals(today)) {
+            this.streakDays = 1;
+        } else if (this.lastStudyDate.equals(today)) {
             // Already studied today, no change
             return;
-        } else if (lastStudyDate.equals(today.minusDays(1))) {
+        } else if (this.lastStudyDate.equals(today.minusDays(1))) {
             // Studied yesterday, increment streak
-            streakDays++;
+            this.streakDays++;
         } else {
             // Streak broken, reset to 1
-            streakDays = 1;
+            this.streakDays = 1;
         }
 
-        lastStudyDate = today;
+        this.lastStudyDate = today;
     }
 
     /**
      * Reset daily counters (should be called at start of new day)
      */
     public void resetDailyCounters() {
-        LocalDate today = LocalDate.now();
-        if (lastStudyDate != null && !lastStudyDate.equals(today)) {
-            cardsReviewedToday = 0;
+        final var today = LocalDate.now();
+        if ((this.lastStudyDate != null) && !this.lastStudyDate.equals(today)) {
+            this.cardsReviewedToday = 0;
         }
     }
 
@@ -110,13 +120,13 @@ public class UserStats extends BaseEntity {
      * Increment cards reviewed today
      */
     public void incrementCardsReviewedToday() {
-        cardsReviewedToday++;
+        this.cardsReviewedToday++;
     }
 
     /**
      * Add study time in minutes
      */
     public void addStudyTime(int minutes) {
-        totalStudyTimeMinutes += minutes;
+        this.totalStudyTimeMinutes += minutes;
     }
 }

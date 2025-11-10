@@ -1,14 +1,26 @@
 package com.repeatwise.entity;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.repeatwise.entity.base.SoftDeletableEntity;
-import jakarta.persistence.*;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import lombok.*;
-
-import java.util.ArrayList;
-import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Deck entity for flashcard collections
@@ -49,13 +61,13 @@ public class Deck extends SoftDeletableEntity {
      * Check if this is a root-level deck (not in any folder)
      */
     public boolean isRootLevel() {
-        return folder == null;
+        return this.folder == null;
     }
 
     /**
      * Get the total number of cards in this deck
      */
     public int getCardCount() {
-        return cards != null ? cards.size() : 0;
+        return this.cards != null ? this.cards.size() : 0;
     }
 }

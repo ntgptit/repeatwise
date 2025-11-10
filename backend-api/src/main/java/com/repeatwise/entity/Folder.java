@@ -1,12 +1,30 @@
 package com.repeatwise.entity;
 
-import com.repeatwise.entity.base.SoftDeletableEntity;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
-
 import java.util.ArrayList;
 import java.util.List;
+
+import com.repeatwise.entity.base.SoftDeletableEntity;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Folder entity for hierarchical organization of decks
@@ -66,19 +84,19 @@ public class Folder extends SoftDeletableEntity {
      * Check if this is a root folder
      */
     public boolean isRoot() {
-        return parentFolder == null;
+        return this.parentFolder == null;
     }
 
     /**
      * Get the full path as a list of folder IDs
      */
     public List<String> getPathSegments() {
-        if (path == null || path.isEmpty()) {
+        if ((this.path == null) || this.path.isEmpty()) {
             return new ArrayList<>();
         }
-        String[] segments = path.split("/");
-        List<String> result = new ArrayList<>();
-        for (String segment : segments) {
+        final var segments = this.path.split("/");
+        final List<String> result = new ArrayList<>();
+        for (final String segment : segments) {
             if (!segment.isEmpty()) {
                 result.add(segment);
             }
@@ -90,12 +108,12 @@ public class Folder extends SoftDeletableEntity {
      * Build path from parent folder
      */
     public void buildPath() {
-        if (parentFolder == null) {
-            this.path = "/" + this.getId().toString();
+        if (this.parentFolder == null) {
+            this.path = "/" + getId().toString();
             this.depth = 0;
         } else {
-            this.path = parentFolder.getPath() + "/" + this.getId().toString();
-            this.depth = parentFolder.getDepth() + 1;
+            this.path = this.parentFolder.getPath() + "/" + getId().toString();
+            this.depth = this.parentFolder.getDepth() + 1;
         }
     }
 }

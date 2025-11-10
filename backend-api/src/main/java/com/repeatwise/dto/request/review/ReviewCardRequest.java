@@ -1,13 +1,14 @@
 package com.repeatwise.dto.request.review;
 
+import java.util.UUID;
+
 import com.repeatwise.entity.enums.Rating;
+
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.UUID;
 
 /**
  * DTO for reviewing a card (SRS rating)

@@ -1,13 +1,27 @@
 package com.repeatwise.entity;
 
+import java.time.LocalTime;
+
 import com.repeatwise.entity.base.BaseEntity;
 import com.repeatwise.entity.enums.ForgottenCardAction;
 import com.repeatwise.entity.enums.ReviewOrder;
-import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
-import lombok.*;
 
-import java.time.LocalTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * SRS Settings entity for user spaced repetition configuration
