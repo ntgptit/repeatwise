@@ -38,7 +38,7 @@ import lombok.extern.slf4j.Slf4j;
  * Implements UC-007 to UC-011
  */
 @RestController
-@RequestMapping("/api/folders")
+@RequestMapping("/v1/folders")
 @RequiredArgsConstructor
 @Slf4j
 @Tag(name = "Folder Management", description = "APIs for managing folder hierarchy")
