@@ -7,6 +7,11 @@
 
 import { notificationConfig } from '@/config/services.config'
 
+export interface NotificationInstance extends NotificationOptions {
+  id: number
+}
+type NotificationListener = (notifications: NotificationInstance[]) => void
+
 /**
  * Notification types
  */
@@ -73,14 +78,17 @@ export interface NotificationOptions {
  * Integrate with your preferred toast library (react-toastify, sonner, etc.)
  */
 class NotificationService {
-  private notifications: NotificationOptions[] = []
+  private notifications: NotificationInstance[] = []
   private readonly maxNotifications = notificationConfig.toast.maxToasts
+  private listeners = new Set<NotificationListener>()
+  private counter = 0
 
   /**
    * Show notification
    */
   show(options: NotificationOptions): void {
-    const notification: NotificationOptions = {
+    const notification: NotificationInstance = {
+      id: ++this.counter,
       type: 'info',
       duration: notificationConfig.toast.duration,
       position: notificationConfig.toast.position,
@@ -100,10 +108,12 @@ class NotificationService {
     // Log to console (replace with actual toast implementation)
     this.logNotification(notification)
 
+    this.notify()
+
     // Auto close if enabled
     if (notification.autoClose && notification.duration) {
       setTimeout(() => {
-        this.close(notification)
+        this.close(notification.id)
       }, notification.duration)
     }
   }
@@ -156,15 +166,19 @@ class NotificationService {
   /**
    * Close notification
    */
-  close(notification: NotificationOptions): void {
-    const index = this.notifications.indexOf(notification)
-    if (index > -1) {
-      this.notifications.splice(index, 1)
+  close(notificationId: number): void {
+    const index = this.notifications.findIndex((item) => item.id === notificationId)
+    if (index === -1) {
+      return
     }
+
+    const [notification] = this.notifications.splice(index, 1)
 
     if (notification.onClose) {
       notification.onClose()
     }
+
+    this.notify()
   }
 
   /**
@@ -172,6 +186,7 @@ class NotificationService {
    */
   closeAll(): void {
     this.notifications = []
+    this.notify()
   }
 
   /**
@@ -193,8 +208,24 @@ class NotificationService {
   /**
    * Get active notifications
    */
-  getNotifications(): NotificationOptions[] {
+  getNotifications(): NotificationInstance[] {
     return [...this.notifications]
+  }
+
+  subscribe(listener: NotificationListener): () => void {
+    this.listeners.add(listener)
+    listener([...this.notifications])
+
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  private notify(): void {
+    const snapshot = [...this.notifications]
+    for (const listener of this.listeners) {
+      listener(snapshot)
+    }
   }
 }
 

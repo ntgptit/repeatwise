@@ -67,8 +67,25 @@ const transformError = (error: AxiosError): ErrorResponse => {
   // Server returned error response
   const data = response.data as Record<string, unknown> | undefined
 
+  const extractMessage = (): string => {
+    const candidates = [
+      data?.['message'],
+      data?.['detail'],
+      data?.['error'],
+      error.message,
+    ]
+
+    for (const candidate of candidates) {
+      if (typeof candidate === 'string' && candidate.trim().length > 0) {
+        return candidate
+      }
+    }
+
+    return 'An unexpected error occurred'
+  }
+
   const result: ErrorResponse = {
-    message: (data?.['message'] as string) || error.message || 'An unexpected error occurred',
+    message: extractMessage(),
     code: (data?.['errorCode'] as string) || (data?.['code'] as string) || 'UNKNOWN_ERROR',
     statusCode: response.status,
     timestamp: (data?.['timestamp'] as string) || new Date().toISOString(),
@@ -84,10 +101,65 @@ const transformError = (error: AxiosError): ErrorResponse => {
     }))
   }
 
+  const normalizeValidationError = (raw: unknown): ValidationError | null => {
+    if (!raw || typeof raw !== 'object') {
+      return null
+    }
+
+    const item = raw as Record<string, unknown>
+    const field =
+      typeof item['field'] === 'string'
+        ? item['field']
+        : typeof item['objectName'] === 'string'
+          ? item['objectName']
+          : ''
+
+    const messageCandidate = item['message'] ?? item['defaultMessage'] ?? item['description']
+    const message = typeof messageCandidate === 'string' ? messageCandidate : null
+
+    if (!field && !message) {
+      return null
+    }
+
+    const normalized: ValidationError = {
+      field,
+      message: message ?? '',
+    }
+
+    if ('rejectedValue' in item) {
+      normalized.rejectedValue = item['rejectedValue']
+    }
+
+    return normalized
+  }
+
   // Also handle errors array if present (for compatibility)
-  const errorsArray = data?.['errors'] as ValidationError[] | undefined
-  if (errorsArray && !result.errors) {
-    result.errors = errorsArray
+  const errorsArray = data?.['errors']
+  if (Array.isArray(errorsArray)) {
+    const normalizedErrors = errorsArray
+      .map(normalizeValidationError)
+      .filter((item): item is ValidationError => Boolean(item))
+
+    if (normalizedErrors.length > 0) {
+      result.errors = normalizedErrors
+    }
+  }
+
+  const detailsArray = data?.['details']
+  if (!result.errors && Array.isArray(detailsArray)) {
+    const normalizedErrors = detailsArray
+      .map((item) => {
+        if (typeof item === 'string') {
+          return { field: '', message: item }
+        }
+
+        return normalizeValidationError(item)
+      })
+      .filter((item): item is ValidationError => Boolean(item))
+
+    if (normalizedErrors.length > 0) {
+      result.errors = normalizedErrors
+    }
   }
 
   return result
@@ -148,12 +220,18 @@ const logError = (error: ErrorResponse): void => {
  * Show error notification
  */
 const showNotification = (error: ErrorResponse): void => {
-  const message = getErrorMessage(error.statusCode, error.message)
+  const baseMessage =
+    typeof error.message === 'string' && error.message.trim().length > 0 ? error.message.trim() : null
+  const fallbackMessage = getErrorMessage(error.statusCode, 'An unexpected error occurred')
+  const message = baseMessage ?? fallbackMessage
 
   // Show validation errors if available
   if (error.errors && error.errors.length > 0) {
     const validationMessages = error.errors
-      .map((err: ValidationError) => `${err.field}: ${err.message}`)
+      .map((err: ValidationError) => {
+        const fieldLabel = err.field ? `${err.field}: ` : ''
+        return `${fieldLabel}${err.message}`
+      })
       .join('\n')
     notificationService.error(`${message}\n\n${validationMessages}`)
     return

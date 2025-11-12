@@ -20,13 +20,13 @@ export const FolderStatsPanel = ({ stats = defaultStats }: { stats?: StatItem[] 
         Folder statistics
       </Typography>
       <Grid container spacing={2}>
-        {stats.map((item) => (
+        {stats.map(item => (
           <Grid item xs={12} sm={6} md={3} key={item.label}>
             <Paper
               elevation={0}
               sx={{
                 borderRadius: 2,
-                border: (theme) => `1px solid ${theme.palette.divider}`,
+                border: theme => `1px solid ${theme.palette.divider}`,
                 p: 2,
               }}
             >
@@ -50,4 +50,3 @@ export const FolderStatsPanel = ({ stats = defaultStats }: { stats?: StatItem[] 
 }
 
 export default FolderStatsPanel
-
