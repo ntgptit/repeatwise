@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Alert, Box, Button, Grid, Stack } from '@mui/material'
+import { Alert, Button, Container, Grid, Stack } from '@mui/material'
+import PageHelmet from '@/components/PageHelmet'
+import PageTitleWrapper from '@/components/PageTitleWrapper'
+import Footer from '@/components/Footer'
 import PageTitle from '@/components/PageTitle'
 import SuspenseLoader from '@/components/SuspenseLoader'
 import { notificationService } from '@/common/services/notification.service'
@@ -46,7 +49,7 @@ const resolveErrorMessage = (error: unknown, fallback: string) => {
   }
 
   if (typeof error === 'object' && error !== null && 'message' in error) {
-    const message = (error as { message?: unknown }).message
+    const { message } = error as { message?: unknown }
     if (typeof message === 'string') {
       return message
     }
@@ -78,11 +81,11 @@ export const FolderManagementPage = () => {
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [createParent, setCreateParent] = useState<FolderTreeNode | null>(null)
 
-  const createFolder = useCreateFolder()
-  const updateFolder = useUpdateFolder()
-  const moveFolder = useMoveFolder()
-  const copyFolder = useCopyFolder()
-  const deleteFolder = useDeleteFolder()
+  const { mutateAsync: createFolder, isPending: isCreating } = useCreateFolder()
+  const { mutateAsync: updateFolder, isPending: isUpdating } = useUpdateFolder()
+  const { mutateAsync: moveFolder, isPending: isMoving } = useMoveFolder()
+  const { mutateAsync: copyFolder, isPending: isCopying } = useCopyFolder()
+  const { mutateAsync: deleteFolder, isPending: isDeleting } = useDeleteFolder()
 
   const closeModal = () => {
     setActiveModal(null)
@@ -115,7 +118,7 @@ export const FolderManagementPage = () => {
 
   const handleCreateSubmit = async (values: CreateFolderRequest) => {
     try {
-      const result = await createFolder.mutateAsync(values)
+      const result = await createFolder(values)
       notificationService.success('Folder created successfully')
       setSelectedId(result.id)
       closeModal()
@@ -130,7 +133,7 @@ export const FolderManagementPage = () => {
     }
 
     try {
-      await updateFolder.mutateAsync({
+      await updateFolder({
         folderId: selectedFolder.id,
         payload,
       })
@@ -147,7 +150,7 @@ export const FolderManagementPage = () => {
     }
 
     try {
-      const result = await moveFolder.mutateAsync({
+      const result = await moveFolder({
         folderId: selectedFolder.id,
         payload,
       })
@@ -165,7 +168,7 @@ export const FolderManagementPage = () => {
     }
 
     try {
-      const result = await copyFolder.mutateAsync({
+      const result = await copyFolder({
         folderId: selectedFolder.id,
         payload,
       })
@@ -183,7 +186,7 @@ export const FolderManagementPage = () => {
     }
 
     try {
-      await deleteFolder.mutateAsync(selectedFolder.id)
+      await deleteFolder(selectedFolder.id)
       notificationService.success('Folder deleted successfully')
       setSelectedId(selectedFolder.parentFolderId ?? null)
       closeModal()
@@ -192,17 +195,18 @@ export const FolderManagementPage = () => {
     }
   }
 
+
   if (isLoading) {
     return (
-      <Box sx={{ p: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <SuspenseLoader />
-      </Box>
+      </Container>
     )
   }
 
   if (isError) {
     return (
-      <Box sx={{ p: 4 }}>
+      <Container maxWidth="lg" sx={{ py: 4 }}>
         <Stack spacing={2}>
           <Alert severity="error">
             Failed to load folder data. Please retry or check the backend connection.
@@ -211,51 +215,60 @@ export const FolderManagementPage = () => {
             Retry
           </Button>
         </Stack>
-      </Box>
+      </Container>
     )
   }
 
   return (
-    <Stack spacing={3}>
-      <PageTitle
-        heading="Folder management"
-        subHeading="Organize and manage folders with full support for UC-007 through UC-011."
-      />
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <Stack spacing={2}>
-            <FolderTree nodes={tree} selectedId={selectedId} onSelect={handleSelect} />
-            <FolderActionsPanel
-              selected={selectedFolder ?? null}
-              onCreateRoot={handleCreateRoot}
-              onCreateChild={handleCreateChild}
-              onRename={() => openModal('rename')}
-              onMove={() => openModal('move')}
-              onCopy={() => openModal('copy')}
-              onDelete={() => openModal('delete')}
-            />
-          </Stack>
+    <>
+      <PageHelmet title="Folder Management" />
+      <PageTitleWrapper>
+        <PageTitle
+          heading="Folder management"
+          subHeading="Organize and manage folders with full support for UC-007 through UC-011."
+        />
+      </PageTitleWrapper>
+      <Container maxWidth="lg">
+        <Grid container direction="row" justifyContent="center" alignItems="stretch" spacing={4}>
+          <Grid item xs={12} md={4}>
+            <Stack spacing={2} sx={{ height: '100%' }}>
+              <FolderTree
+                nodes={tree}
+                selectedId={selectedId}
+                onSelect={handleSelect}
+              />
+              <FolderActionsPanel
+                selected={selectedFolder ?? null}
+                onCreateRoot={handleCreateRoot}
+                onCreateChild={handleCreateChild}
+                onRename={() => openModal('rename')}
+                onMove={() => openModal('move')}
+                onCopy={() => openModal('copy')}
+                onDelete={() => openModal('delete')}
+              />
+            </Stack>
+          </Grid>
+          <Grid item xs={12} md={8}>
+            <Stack spacing={3} sx={{ height: '100%' }}>
+              <FolderStatsPanel />
+              <FolderDetailsPanel folder={selectedFolder ?? null} allFolders={data?.list ?? []} />
+              <FolderDeckListPlaceholder />
+            </Stack>
+          </Grid>
         </Grid>
-        <Grid item xs={12} md={8}>
-          <Stack spacing={3}>
-            <FolderStatsPanel />
-            <FolderDetailsPanel folder={selectedFolder ?? null} />
-            <FolderDeckListPlaceholder />
-          </Stack>
-        </Grid>
-      </Grid>
+      </Container>
 
       <CreateFolderModal
         open={activeModal === 'create'}
         parent={createParent}
-        isSubmitting={createFolder.isLoading}
+        isSubmitting={isCreating}
         onClose={closeModal}
         onSubmit={handleCreateSubmit}
       />
       <RenameFolderModal
         open={activeModal === 'rename'}
         folder={selectedFolder ?? null}
-        isSubmitting={updateFolder.isLoading}
+        isSubmitting={isUpdating}
         onClose={closeModal}
         onSubmit={handleRenameSubmit}
       />
@@ -263,7 +276,7 @@ export const FolderManagementPage = () => {
         open={activeModal === 'move'}
         folder={selectedFolder ?? null}
         tree={tree}
-        isSubmitting={moveFolder.isLoading}
+        isSubmitting={isMoving}
         onClose={closeModal}
         onSubmit={handleMoveSubmit}
       />
@@ -271,18 +284,19 @@ export const FolderManagementPage = () => {
         open={activeModal === 'copy'}
         folder={selectedFolder ?? null}
         tree={tree}
-        isSubmitting={copyFolder.isLoading}
+        isSubmitting={isCopying}
         onClose={closeModal}
         onSubmit={handleCopySubmit}
       />
       <DeleteFolderDialog
         open={activeModal === 'delete'}
         folder={selectedFolder ?? null}
-        isSubmitting={deleteFolder.isLoading}
+        isSubmitting={isDeleting}
         onClose={closeModal}
         onConfirm={handleDeleteConfirm}
       />
-    </Stack>
+      <Footer />
+    </>
   )
 }
 

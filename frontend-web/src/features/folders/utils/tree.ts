@@ -1,13 +1,20 @@
-import orderBy from 'lodash-es/orderBy'
 import type { FolderDto, FolderTreeNode } from '@/api/types/folder.types'
 
-const sortNodes = (nodes: FolderTreeNode[]): FolderTreeNode[] => {
-  const sorted = orderBy(nodes, ['name'], ['asc'])
+const sortTreeInPlace = (nodes: FolderTreeNode[]): void => {
+  nodes.sort((a, b) => {
+    const orderDiff = (a.sortOrder ?? 0) - (b.sortOrder ?? 0)
+    if (orderDiff !== 0) {
+      return orderDiff
+    }
 
-  return sorted.map((node) => ({
-    ...node,
-    children: sortNodes(node.children),
-  }))
+    return a.name.localeCompare(b.name)
+  })
+
+  for (const node of nodes) {
+    if (node.children.length > 0) {
+      sortTreeInPlace(node.children)
+    }
+  }
 }
 
 export const buildFolderTree = (folders: FolderDto[]): FolderTreeNode[] => {
@@ -23,15 +30,16 @@ export const buildFolderTree = (folders: FolderDto[]): FolderTreeNode[] => {
       const parent = nodeMap.get(node.parentFolderId)
       if (parent) {
         parent.children.push(node)
-      } else {
-        roots.push(node)
+        continue
       }
-    } else {
-      roots.push(node)
     }
+
+    roots.push(node)
   }
 
-  return sortNodes(roots)
+  sortTreeInPlace(roots)
+
+  return roots
 }
 
 export const findFolderNode = (

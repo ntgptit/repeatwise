@@ -2,6 +2,7 @@ package com.repeatwise.entity;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import com.repeatwise.entity.base.SoftDeletableEntity;
 
@@ -68,6 +69,10 @@ public class Folder extends SoftDeletableEntity {
     @Column(name = "path", nullable = false, length = 1000)
     private String path;
 
+    @Builder.Default
+    @Column(name = "sort_order", nullable = false)
+    private Integer sortOrder = 0;
+
     // Relationships
     @Builder.Default
     @OneToMany(mappedBy = "parentFolder", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -108,6 +113,10 @@ public class Folder extends SoftDeletableEntity {
      * Build path from parent folder
      */
     public void buildPath() {
+        if (getId() == null) {
+            setId(UUID.randomUUID());
+        }
+
         if (this.parentFolder == null) {
             this.path = "/" + getId().toString();
             this.depth = 0;

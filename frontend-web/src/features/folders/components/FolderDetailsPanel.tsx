@@ -1,8 +1,10 @@
 import { Box, Chip, Divider, Stack, Typography } from '@mui/material'
-import type { FolderTreeNode } from '@/api/types/folder.types'
+import { format } from 'date-fns'
+import type { FolderDto, FolderTreeNode } from '@/api/types/folder.types'
 
 interface FolderDetailsPanelProps {
   folder: FolderTreeNode | null
+  allFolders: FolderDto[]
 }
 
 const formatDateTime = (value: string | null) => {
@@ -10,10 +12,51 @@ const formatDateTime = (value: string | null) => {
     return '—'
   }
 
-  return new Date(value).toLocaleString('vi-VN')
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) {
+    return '—'
+  }
+
+  return format(date, 'yyyy-MM-dd HH:mm:ss')
 }
 
-export const FolderDetailsPanel = ({ folder }: FolderDetailsPanelProps) => {
+const buildPathDisplay = (node: FolderTreeNode, allFolders: FolderDto[]): string => {
+  if (!node) {
+    return 'Root'
+  }
+
+  const map = new Map(allFolders.map((item) => [item.id, item]))
+  const segments: string[] = []
+
+  let current: FolderDto | FolderTreeNode | undefined = node
+  while (current) {
+    segments.unshift(current.name)
+
+    if (!current.parentFolderId) {
+      break
+    }
+
+    const parent = map.get(current.parentFolderId)
+    if (!parent) {
+      break
+    }
+
+    current = parent
+  }
+
+  return ['Root', ...segments].join(' / ')
+}
+
+const resolveParentName = (node: FolderTreeNode, allFolders: FolderDto[]): string => {
+  if (!node.parentFolderId) {
+    return 'Root'
+  }
+
+  const parent = allFolders.find((item) => item.id === node.parentFolderId)
+  return parent?.name ?? 'Root'
+}
+
+export const FolderDetailsPanel = ({ folder, allFolders }: FolderDetailsPanelProps) => {
   if (!folder) {
     return (
       <Box
@@ -34,6 +77,9 @@ export const FolderDetailsPanel = ({ folder }: FolderDetailsPanelProps) => {
       </Box>
     )
   }
+
+  const pathDisplay = buildPathDisplay(folder, allFolders)
+  const parentName = resolveParentName(folder, allFolders)
 
   return (
     <Box
@@ -58,10 +104,10 @@ export const FolderDetailsPanel = ({ folder }: FolderDetailsPanelProps) => {
             System information
           </Typography>
           <Typography variant="body2">
-            <strong>Path:</strong> {folder.path}
+            <strong>Path:</strong> {pathDisplay}
           </Typography>
           <Typography variant="body2">
-            <strong>Parent folder:</strong> {folder.parentFolderId ?? 'Root'}
+            <strong>Parent folder:</strong> {parentName}
           </Typography>
           <Typography variant="body2">
             <strong>Created at:</strong> {formatDateTime(folder.createdAt)}

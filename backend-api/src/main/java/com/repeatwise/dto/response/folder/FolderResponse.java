@@ -23,6 +23,7 @@ public class FolderResponse {
     private UUID parentFolderId;
     private Integer depth;
     private String path;
+    private Integer sortOrder;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

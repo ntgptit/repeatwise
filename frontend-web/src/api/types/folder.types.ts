@@ -5,6 +5,7 @@ export interface FolderDto {
   parentFolderId: string | null
   depth: number
   path: string
+  sortOrder: number
   createdAt: string
   updatedAt: string
 }

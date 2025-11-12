@@ -3,6 +3,7 @@ package com.repeatwise.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 import org.springframework.context.MessageSource;
@@ -73,7 +74,7 @@ public class FolderServiceImpl implements FolderService {
 
         // Validate name uniqueness within same parent (BR-FOLD-02)
         final var trimmedName = request.getName().trim();
-        if (this.folderRepository.existsByNameAndParent(userId, request.getParentFolderId(), trimmedName)) {
+        if (folderNameExists(userId, request.getParentFolderId(), trimmedName)) {
             throw new RepeatWiseException(
                     RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
                     trimmedName);
@@ -87,6 +88,8 @@ public class FolderServiceImpl implements FolderService {
         if (request.getDescription() != null) {
             folder.setDescription(request.getDescription().trim());
         }
+
+        folder.setSortOrder(getNextSortOrder(userId, request.getParentFolderId()));
 
         // Build materialized path and set depth
         folder.buildPath();
@@ -114,8 +117,7 @@ public class FolderServiceImpl implements FolderService {
             // Validate name uniqueness if name changed
             if (!trimmedName.equalsIgnoreCase(folder.getName())) {
                 final var parentId = folder.getParentFolder() != null ? folder.getParentFolder().getId() : null;
-
-                if (this.folderRepository.existsByNameAndParentExcludingId(userId, parentId, trimmedName, folderId)) {
+                if (folderNameExistsExcluding(userId, parentId, trimmedName, folderId)) {
                     throw new RepeatWiseException(
                             RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
                             trimmedName);
@@ -197,8 +199,7 @@ public class FolderServiceImpl implements FolderService {
         }
 
         // Validate name uniqueness at destination
-        if (this.folderRepository.existsByNameAndParentExcludingId(userId, targetParentId, sourceFolder.getName(),
-                folderId)) {
+        if (folderNameExistsExcluding(userId, targetParentId, sourceFolder.getName(), folderId)) {
             throw new RepeatWiseException(
                     RepeatWiseError.FOLDER_NAME_ALREADY_EXISTS,
                     sourceFolder.getName());
@@ -206,11 +207,18 @@ public class FolderServiceImpl implements FolderService {
 
         // Perform move operation
         final var oldPath = sourceFolder.getPath();
+        final var parentChanged = !Objects.equals(oldParentId, targetParentId);
+
+        if (parentChanged) {
+            sourceFolder.setSortOrder(getNextSortOrder(userId, targetParentId));
+        }
+
         sourceFolder.setParentFolder(targetParent);
         sourceFolder.buildPath(); // Rebuild path based on new parent
         final var newPath = sourceFolder.getPath();
 
-        sourceFolder.setUpdatedAt(LocalDateTime.now());
+        final var now = LocalDateTime.now();
+        sourceFolder.setUpdatedAt(now);
         this.folderRepository.save(sourceFolder);
 
         // Update all descendants' paths and depths
@@ -222,6 +230,8 @@ public class FolderServiceImpl implements FolderService {
 
             // Update depth
             descendant.setDepth(descendant.getDepth() + depthDelta);
+
+            descendant.setUpdatedAt(now);
 
             this.folderRepository.save(descendant);
         }
@@ -290,7 +300,7 @@ public class FolderServiceImpl implements FolderService {
         var copyName = baseName + " (copy)";
         var counter = 2;
 
-        while (this.folderRepository.existsByNameAndParent(userId, parentId, copyName)) {
+        while (folderNameExists(userId, parentId, copyName)) {
             copyName = baseName + " (copy " + counter + ")";
             counter++;
         }
@@ -307,6 +317,7 @@ public class FolderServiceImpl implements FolderService {
                 .parentFolder(newParent)
                 .name(newName)
                 .description(source.getDescription())
+                .sortOrder(getNextSortOrder(userId, newParent != null ? newParent.getId() : null))
                 .build();
 
         copiedFolder.buildPath();
@@ -469,5 +480,35 @@ public class FolderServiceImpl implements FolderService {
                 .orElseThrow(() -> new RepeatWiseException(
                         RepeatWiseError.USER_NOT_FOUND,
                         userId));
+    }
+
+    private int getNextSortOrder(UUID userId, UUID parentId) {
+        final Integer maxSortOrder = parentId == null
+                ? this.folderRepository.getMaxSortOrderForRoot(userId)
+                : this.folderRepository.getMaxSortOrderForParent(userId, parentId);
+
+        return (maxSortOrder != null ? maxSortOrder : 0) + 1;
+    }
+
+    private boolean folderNameExists(UUID userId, UUID parentId, String name) {
+        return parentId == null
+                ? this.folderRepository.existsByUserIdAndParentFolderIsNullAndNameIgnoreCaseAndDeletedAtIsNull(userId,
+                        name)
+                : this.folderRepository.existsByUserIdAndParentFolderIdAndNameIgnoreCaseAndDeletedAtIsNull(userId,
+                        parentId,
+                        name);
+    }
+
+    private boolean folderNameExistsExcluding(UUID userId, UUID parentId, String name, UUID excludeId) {
+        return parentId == null
+                ? this.folderRepository
+                        .existsByUserIdAndParentFolderIsNullAndNameIgnoreCaseAndIdNotAndDeletedAtIsNull(userId,
+                                name,
+                                excludeId)
+                : this.folderRepository.existsByUserIdAndParentFolderIdAndNameIgnoreCaseAndIdNotAndDeletedAtIsNull(
+                        userId,
+                        parentId,
+                        name,
+                        excludeId);
     }
 }

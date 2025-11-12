@@ -7,7 +7,7 @@ import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
+import com.repeatwise.entity.User;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -60,8 +60,8 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> createFolder(
             @Valid @RequestBody CreateFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} creating folder '{}'", userId, request.getName());
 
         final var response = this.folderService.createFolder(request, userId);
@@ -83,8 +83,8 @@ public class FolderController {
     public ResponseEntity<FolderResponse> updateFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody UpdateFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} updating folder {}", userId, folderId);
 
         final var response = this.folderService.updateFolder(folderId, request, userId);
@@ -106,8 +106,8 @@ public class FolderController {
     public ResponseEntity<FolderResponse> moveFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody MoveFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} moving folder {} to parent {}", userId, folderId, request.getTargetParentFolderId());
 
         final var response = this.folderService.moveFolder(folderId, request, userId);
@@ -129,8 +129,8 @@ public class FolderController {
     public ResponseEntity<FolderResponse> copyFolder(
             @PathVariable UUID folderId,
             @Valid @RequestBody CopyFolderRequest request,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} copying folder {} to destination {}", userId, folderId, request.getDestinationFolderId());
 
         final var response = this.folderService.copyFolder(
@@ -154,8 +154,8 @@ public class FolderController {
     })
     public ResponseEntity<Map<String, Object>> deleteFolder(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} deleting folder {}", userId, folderId);
 
         final var summary = this.folderService.deleteFolder(folderId, userId);
@@ -180,8 +180,8 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> restoreFolder(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
         log.info("User {} restoring folder {}", userId, folderId);
 
         final var response = this.folderService.restoreFolder(folderId, userId);
@@ -201,8 +201,8 @@ public class FolderController {
     })
     public ResponseEntity<FolderResponse> getFolderById(
             @PathVariable UUID folderId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
 
         final var response = this.folderService.getFolderById(folderId, userId);
 
@@ -219,8 +219,8 @@ public class FolderController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<FolderResponse>> getAllFolders(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
 
         final var folders = this.folderService.getAllFolders(userId);
 
@@ -237,8 +237,8 @@ public class FolderController {
             @ApiResponse(responseCode = "401", description = "Unauthorized")
     })
     public ResponseEntity<List<FolderResponse>> getRootFolders(
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
 
         final var folders = this.folderService.getRootFolders(userId);
 
@@ -257,8 +257,8 @@ public class FolderController {
     })
     public ResponseEntity<List<FolderResponse>> getChildFolders(
             @PathVariable UUID parentId,
-            @AuthenticationPrincipal UserDetails userDetails) {
-        final var userId = UUID.fromString(userDetails.getUsername());
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
 
         final var folders = this.folderService.getChildFolders(parentId, userId);
 

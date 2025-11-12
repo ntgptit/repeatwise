@@ -32,13 +32,13 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
     /**
      * Find all root folders for a user (no parent)
      */
-    @Query("SELECT f FROM Folder f WHERE f.user.id = :userId AND f.parentFolder IS NULL AND f.deletedAt IS NULL ORDER BY f.name")
+    @Query("SELECT f FROM Folder f WHERE f.user.id = :userId AND f.parentFolder IS NULL AND f.deletedAt IS NULL ORDER BY f.sortOrder ASC, f.name ASC")
     List<Folder> findRootFoldersByUserId(@Param("userId") UUID userId);
 
     /**
      * Find all child folders of a parent folder
      */
-    @Query("SELECT f FROM Folder f WHERE f.user.id = :userId AND f.parentFolder.id = :parentId AND f.deletedAt IS NULL ORDER BY f.name")
+    @Query("SELECT f FROM Folder f WHERE f.user.id = :userId AND f.parentFolder.id = :parentId AND f.deletedAt IS NULL ORDER BY f.sortOrder ASC, f.name ASC")
     List<Folder> findChildrenByUserIdAndParentId(@Param("userId") UUID userId, @Param("parentId") UUID parentId);
 
     /**
@@ -46,29 +46,6 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
      */
     @Query("SELECT f FROM Folder f WHERE f.user.id = :userId AND f.path LIKE CONCAT(:pathPrefix, '%') AND f.deletedAt IS NULL")
     List<Folder> findDescendantsByPath(@Param("userId") UUID userId, @Param("pathPrefix") String pathPrefix);
-
-    /**
-     * Check if folder name exists for user under same parent (case-insensitive)
-     */
-    @Query("""
-            SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId \
-            AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) \
-            AND LOWER(f.name) = LOWER(:name) AND f.deletedAt IS NULL""")
-    boolean existsByNameAndParent(@Param("userId") UUID userId,
-            @Param("parentId") UUID parentId,
-            @Param("name") String name);
-
-    /**
-     * Check if folder name exists for user under same parent, excluding specific folder ID
-     */
-    @Query("""
-            SELECT COUNT(f) > 0 FROM Folder f WHERE f.user.id = :userId \
-            AND (:parentId IS NULL AND f.parentFolder IS NULL OR f.parentFolder.id = :parentId) \
-            AND LOWER(f.name) = LOWER(:name) AND f.id <> :excludeId AND f.deletedAt IS NULL""")
-    boolean existsByNameAndParentExcludingId(@Param("userId") UUID userId,
-            @Param("parentId") UUID parentId,
-            @Param("name") String name,
-            @Param("excludeId") UUID excludeId);
 
     /**
      * Count total folders for a user (active only)
@@ -103,4 +80,22 @@ public interface FolderRepository extends JpaRepository<Folder, UUID> {
      */
     @Query("SELECT f FROM Folder f WHERE f.id = :folderId AND f.user.id = :userId AND f.deletedAt IS NOT NULL")
     Optional<Folder> findDeletedByIdAndUserId(@Param("folderId") UUID folderId, @Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(MAX(f.sortOrder), 0) FROM Folder f WHERE f.user.id = :userId AND f.parentFolder IS NULL AND f.deletedAt IS NULL")
+    Integer getMaxSortOrderForRoot(@Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(MAX(f.sortOrder), 0) FROM Folder f WHERE f.user.id = :userId AND f.parentFolder.id = :parentId AND f.deletedAt IS NULL")
+    Integer getMaxSortOrderForParent(@Param("userId") UUID userId, @Param("parentId") UUID parentId);
+
+    boolean existsByUserIdAndParentFolderIsNullAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, String name);
+
+    boolean existsByUserIdAndParentFolderIdAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, UUID parentFolderId, String name);
+
+    boolean existsByUserIdAndParentFolderIsNullAndNameIgnoreCaseAndIdNotAndDeletedAtIsNull(UUID userId, String name,
+            UUID id);
+
+    boolean existsByUserIdAndParentFolderIdAndNameIgnoreCaseAndIdNotAndDeletedAtIsNull(UUID userId,
+            UUID parentFolderId,
+            String name,
+            UUID id);
 }
