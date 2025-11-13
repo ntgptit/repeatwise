@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -39,7 +41,6 @@ import com.repeatwise.mapper.FolderMapper;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
 import com.repeatwise.repository.UserRepository;
-import com.repeatwise.service.FolderService.DeletionSummary;
 
 @ExtendWith(MockitoExtension.class)
 class FolderServiceImplTest {
@@ -74,10 +75,11 @@ class FolderServiceImplTest {
     @BeforeEach
     void setUp() {
         this.user = createUser(USER_ID);
-        when(this.userRepository.findById(USER_ID)).thenReturn(Optional.of(this.user));
+        lenient().when(this.userRepository.findById(USER_ID)).thenReturn(Optional.of(this.user));
     }
 
     @Test
+    @DisplayName("Create folder successfully when input valid")
     void should_CreateFolder_When_InputValid() {
         final var request = CreateFolderRequest.builder()
                 .name("  New Folder  ")
@@ -108,6 +110,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reject creation when folder name already exists")
     void should_ThrowException_When_CreateFolderNameExists() {
         final var request = CreateFolderRequest.builder()
                 .name("Existing")
@@ -126,6 +129,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Reject creation when depth limit exceeded")
     void should_ThrowException_When_CreateFolderDepthExceeded() {
         final var request = CreateFolderRequest.builder()
                 .name("Child")
@@ -144,6 +148,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Update folder name and description successfully")
     void should_UpdateFolder_When_NameAndDescriptionProvided() {
         final var request = UpdateFolderRequest.builder()
                 .name("  Updated Name ")
@@ -164,6 +169,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when renaming conflicts with sibling")
     void should_ThrowException_When_UpdateFolderNameConflicts() {
         final var request = UpdateFolderRequest.builder()
                 .name("Conflicting")
@@ -188,6 +194,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Move folder to new parent successfully")
     void should_MoveFolder_When_TargetDifferentParent() {
         final var targetId = UUID.randomUUID();
         final var request = MoveFolderRequest.builder()
@@ -224,6 +231,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Prevent moving folder into itself or descendant")
     void should_ThrowException_When_MoveFolderIntoDescendant() {
         final var targetId = UUID.randomUUID();
         final var request = MoveFolderRequest.builder()
@@ -245,6 +253,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Copy folder when within allowed limits")
     void should_CopyFolder_When_WithinLimits() {
         final var destinationId = UUID.randomUUID();
         final var destinationParent = createFolder(destinationId, null, 1, "/root/" + destinationId);
@@ -254,13 +263,15 @@ class FolderServiceImplTest {
 
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(sourceFolder));
         when(this.folderRepository.countItemsInSubtree(eq(USER_ID), anyString())).thenReturn(1L);
-        when(this.folderRepository.findByIdAndUserId(destinationId, USER_ID)).thenReturn(Optional.of(destinationParent));
+        when(this.folderRepository.findByIdAndUserId(destinationId, USER_ID)).thenReturn(Optional.of(
+                destinationParent));
         when(this.folderRepository.getMaxDepthInSubtree(eq(USER_ID), anyString())).thenReturn(2);
         when(this.folderRepository.existsByUserIdAndParentFolderIdAndNameIgnoreCaseAndDeletedAtIsNull(
-                USER_ID, destinationId, sourceFolder.getName())).thenReturn(false);
+                eq(USER_ID), eq(destinationId), anyString())).thenReturn(false);
         when(this.folderRepository.findChildrenByUserIdAndParentId(USER_ID, FOLDER_ID)).thenReturn(List.of(child));
         when(this.folderRepository.save(any(Folder.class))).thenAnswer(invocation -> invocation.getArgument(0));
-        when(this.folderMapper.toResponse(any(Folder.class))).thenReturn(FolderResponse.builder().id(FOLDER_ID).build());
+        when(this.folderMapper.toResponse(any(Folder.class))).thenReturn(FolderResponse.builder().id(FOLDER_ID)
+                .build());
 
         final var response = this.folderService.copyFolder(FOLDER_ID, destinationId, null, USER_ID);
 
@@ -271,6 +282,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when copying exceeds item limit")
     void should_ThrowException_When_CopyFolderTooLarge() {
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID))
                 .thenReturn(Optional.of(createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID)));
@@ -286,6 +298,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Soft delete folder and descendants successfully")
     void should_DeleteFolder_When_FolderExists() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         final var child = createFolder(UUID.randomUUID(), FOLDER_ID, 1, folder.getPath() + "/" + UUID.randomUUID());
@@ -297,7 +310,7 @@ class FolderServiceImplTest {
         when(this.messageSource.getMessage(anyString(), any(), eq(LocaleContextHolder.getLocale())))
                 .thenReturn("Deleted");
 
-        final DeletionSummary summary = this.folderService.deleteFolder(FOLDER_ID, USER_ID);
+        final var summary = this.folderService.deleteFolder(FOLDER_ID, USER_ID);
 
         assertThat(summary.deletedFolders()).isEqualTo(2);
         assertThat(summary.deletedDecks()).isEqualTo(3);
@@ -307,6 +320,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Return folder when fetching by ID")
     void should_GetFolderById_When_FolderExists() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(folder));
@@ -319,6 +333,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when folder ID not found")
     void should_ThrowException_When_GetFolderByIdNotFound() {
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.empty());
 
@@ -331,6 +346,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Fetch all folders for user")
     void should_GetAllFolders_When_UserHasFolders() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         final var response = FolderResponse.builder().id(FOLDER_ID).build();
@@ -345,6 +361,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Fetch root folders for user")
     void should_GetRootFolders_When_UserHasRootFolders() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         final var response = FolderResponse.builder().id(FOLDER_ID).build();
@@ -358,6 +375,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Fetch child folders when parent exists")
     void should_GetChildFolders_When_ParentExists() {
         final var parent = createFolder(PARENT_ID, null, 0, "/root/" + PARENT_ID);
         when(this.folderRepository.findByIdAndUserId(PARENT_ID, USER_ID)).thenReturn(Optional.of(parent));
@@ -373,6 +391,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when parent missing while fetching children")
     void should_ThrowException_When_GetChildFoldersParentMissing() {
         when(this.folderRepository.findByIdAndUserId(PARENT_ID, USER_ID)).thenReturn(Optional.empty());
 
@@ -386,6 +405,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Restore soft-deleted folder and descendants")
     void should_RestoreFolder_When_SoftDeletedExists() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         folder.setDeletedAt(LocalDateTime.now());
@@ -407,6 +427,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when folder to restore is missing")
     void should_ThrowException_When_RestoreFolderMissing() {
         when(this.folderRepository.findDeletedByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.empty());
 
@@ -420,6 +441,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Return folder entity when it exists")
     void should_GetFolderEntityById_When_FolderExists() {
         final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(folder));
@@ -430,6 +452,7 @@ class FolderServiceImplTest {
     }
 
     @Test
+    @DisplayName("Throw error when folder entity missing")
     void should_ThrowException_When_GetFolderEntityByIdMissing() {
         when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.empty());
 
@@ -477,5 +500,3 @@ class FolderServiceImplTest {
         return folder;
     }
 }
-
-

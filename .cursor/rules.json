@@ -1,0 +1,176 @@
+{
+    "rules": [
+      {
+        "id": "spring_boot_clean_code",
+        "description": "Clean Code, Maintainability, Reliability cho Spring Boot 3 + JPA",
+        "pattern": ["src/**/*.java", "test/**/*.java"],
+        "priority": "high",
+        "body": [
+          "Code phải rõ ràng, dễ đọc, dễ bảo trì và tuân thủ Clean Code.",
+          "Tên class, method, biến phải mô tả đúng chức năng; tránh viết tắt mơ hồ.",
+          "Một phương thức không được dài quá 30 dòng; nếu dài hơn phải tách nhỏ.",
+          "Tránh deep nesting; luôn ưu tiên Guard Clause và Early Return.",
+          "Không sử dụng else nếu không cần thiết.",
+          "Biến không thay đổi phải dùng final để tránh gán lại ngoài ý muốn.",
+          "Không truyền quá 3 tham số vào một method; dùng DTO hoặc Builder khi cần.",
+          "Ưu tiên sử dụng Apache Commons (lang3, collections4, io, beanutils, csv, validator).",
+          "Quản lý thông điệp lỗi bằng Spring MessageSource thay vì hard-code string.",
+          "Luôn validate tham số đầu vào ngay đầu method (Fail Fast).",
+          "Không trả Entity trực tiếp trong API; luôn dùng DTO.",
+          "Tránh NullPointerException bằng Optional hoặc null check rõ ràng.",
+          "Không dùng catch(Exception e); bắt exception cụ thể.",
+          "Sử dụng @ControllerAdvice để xử lý lỗi tập trung.",
+          "Tách tầng chuẩn: Controller -> Service -> Repository.",
+          "Service luôn có interface + implementation.",
+          "Tuân thủ SOLID hoàn chỉnh.",
+          "Ưu tiên Composition over Inheritance.",
+          "Dùng Factory/Builder khi tạo object phức tạp.",
+          "Sử dụng Stream API khi phù hợp.",
+          "Tránh vòng lặp lồng nhau; dùng break/continue để giảm nesting.",
+          "Tuân thủ DRY và KISS.",
+          "Phân nhóm method: constructor → public → protected → private.",
+          "Log phải đủ, rõ ngữ cảnh, không log dữ liệu nhạy cảm.",
+          "Exception phải có message rõ ràng.",
+          "Ưu tiên Lombok: @RequiredArgsConstructor, @Builder, @Slf4j, @Getter, @Setter."
+        ]
+      },
+      {
+        "id": "spring_boot_performance_rules",
+        "description": "Performance & Database Optimization cho Spring Boot 3 + JPA",
+        "pattern": ["src/**/*.java"],
+        "priority": "high",
+        "body": [
+          "Tránh N+1 query bằng FetchType.LAZY.",
+          "Chỉ dùng FetchType.EAGER khi thực sự cần thiết.",
+          "Ưu tiên batch insert/update.",
+          "Dùng Pageable cho danh sách lớn.",
+          "Redis/Caffeine cache cho dữ liệu ít thay đổi.",
+          "Cấu hình HikariCP đúng chuẩn.",
+          "Ưu tiên Java NIO2 khi làm việc với file.",
+          "Không làm logic nặng trực tiếp trong Controller."
+        ]
+      },
+      {
+        "id": "spring_boot_rest_rules",
+        "description": "REST API Best Practices",
+        "pattern": ["src/**/*.java"],
+        "priority": "normal",
+        "body": [
+          "Sử dụng ResponseEntity<?> cho mọi API.",
+          "Dùng HTTP status code phù hợp.",
+          "Không trả dữ liệu thừa; dùng DTO.",
+          "Khuyến khích OpenAPI/Swagger.",
+          "Luôn hỗ trợ phân trang khi danh sách lớn.",
+          "Không lộ thông tin nội bộ trong response lỗi."
+        ]
+      },
+      {
+        "id": "spring_boot_security_rules",
+        "description": "Security Best Practices cho Spring Boot",
+        "pattern": ["src/**/*.java"],
+        "priority": "high",
+        "body": [
+          "Không lưu mật khẩu plaintext; dùng BCrypt/Argon2.",
+          "Dùng JWT hoặc OAuth2 thay vì session truyền thống.",
+          "Không nối chuỗi khi viết query; dùng parameter binding.",
+          "Cấu hình CORS giới hạn domain.",
+          "Không trả stacktrace ra client.",
+          "Không hiển thị thông tin nhạy cảm trong error responses."
+        ]
+      },
+      {
+        "id": "spring_boot_review_output_rules",
+        "description": "Format phản hồi khi review code Spring",
+        "pattern": ["src/**/*.java", "test/**/*.java"],
+        "priority": "medium",
+        "body": [
+          "Phân tích rõ ràng từng vấn đề: vị trí, nguyên nhân, hậu quả.",
+          "Luôn đề xuất hướng sửa cụ thể.",
+          "Nếu mã đạt chuẩn: 'Mã đạt yêu cầu và không cần cải thiện thêm.'",
+          "Cấu trúc bắt buộc: lỗi -> nguyên nhân -> tác động -> cách sửa."
+        ]
+      },
+  
+      {
+        "id": "react_ts_clean_code",
+        "description": "Clean Code cho React + TypeScript",
+        "pattern": ["frontend/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+        "priority": "high",
+        "body": [
+          "Component phải nhỏ, rõ ràng, tối đa khoảng 200 dòng.",
+          "Tránh component God Component; tách nhỏ theo chức năng.",
+          "Không viết logic dài trong component; đưa vào hooks.",
+          "Sử dụng React Hooks đúng chuẩn: useState, useEffect, useCallback, useMemo.",
+          "useEffect phải có đầy đủ dependency; tránh empty deps khi bất hợp lý.",
+          "Không để useEffect thực hiện quá nhiều logic; tách thành custom hook.",
+          "Không đặt hàm inline trong JSX nếu gây re-render.",
+          "Ưu tiên React.memo, useMemo, useCallback khi tối ưu re-render.",
+          "Không sử dụng any; luôn dùng kiểu dữ liệu rõ ràng.",
+          "Khai báo type bằng interface hoặc type alias — không dùng class.",
+          "Props phải có interface riêng (PropsInterface).",
+          "Không lồng nhiều điều kiện JSX; dùng early return trong JSX.",
+          "Không đặt string literal hoặc kiểu magic number; dùng enum hoặc constant.",
+          "Không để logic gọi API trong component; phải đưa vào service layer.",
+          "Tuân thủ Single Responsibility: mỗi component chỉ làm 1 việc."
+        ]
+      },
+      {
+        "id": "react_ts_architecture",
+        "description": "Kiến trúc FE chuẩn cho React + TS",
+        "pattern": ["frontend/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+        "priority": "high",
+        "body": [
+          "Phân chia theo kiến trúc rõ ràng: components / hooks / services / utils / store / pages.",
+          "Tách API call thành service riêng, không gọi API trong component.",
+          "Sử dụng axios instance với interceptor cho: JWT refresh, logging, error handler.",
+          "Không lặp lại logic; đưa vào custom hook hoặc utilities.",
+          "Tối ưu import: không import sâu trong node_modules.",
+          "Store nên dùng Zustand / Redux Toolkit thay vì Redux raw.",
+          "State không được để quá lớn trong component, phải đưa lên store hoặc tách nhỏ.",
+          "Form xử lý bằng react-hook-form hoặc Formik."
+        ]
+      },
+      {
+        "id": "react_ts_ui_rules",
+        "description": "UI/UX và performance React",
+        "pattern": ["frontend/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+        "priority": "normal",
+        "body": [
+          "Không để component re-render không cần thiết.",
+          "React.memo cho component có props.",
+          "useMemo cho phép tính tốn nặng.",
+          "useCallback cho hàm truyền xuống children.",
+          "Không để danh sách map không có key.",
+          "Key phải là id duy nhất, không dùng index.",
+          "Hạn chế inline CSS; ưu tiên CSS modules hoặc styled components.",
+          "Không block UI bằng logic nặng; dùng web worker khi cần."
+        ]
+      },
+      {
+        "id": "react_ts_error_handling",
+        "description": "Xử lý lỗi chuẩn trong React + TS",
+        "pattern": ["frontend/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+        "priority": "high",
+        "body": [
+          "Không nuốt lỗi; luôn log hoặc hiển thị thông báo hợp lý.",
+          "Tất cả gọi API phải có try/catch hoặc interceptor error.",
+          "Error phải rõ ràng, không để message mơ hồ.",
+          "Không throw error trong component; xử lý ở service hoặc interceptor.",
+          "Không để UI crash; dùng ErrorBoundary khi cần."
+        ]
+      },
+      {
+        "id": "react_ts_review_format",
+        "description": "Quy tắc khi review code React",
+        "pattern": ["frontend/**/*.{ts,tsx}", "src/**/*.{ts,tsx}"],
+        "priority": "medium",
+        "body": [
+          "Luôn chỉ ra vấn đề cụ thể trong component.",
+          "Giải thích hiệu ứng re-render nếu có.",
+          "Đưa ra gợi ý tối ưu hóa cụ thể.",
+          "Nếu hợp lý: xác nhận component chất lượng tốt."
+        ]
+      }
+    ]
+  }
+  
