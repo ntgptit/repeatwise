@@ -41,6 +41,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import com.repeatwise.config.properties.AppProperties;
 import com.repeatwise.config.properties.AppProperties.Limits;
+import com.repeatwise.csv.CsvHelper;
+import com.repeatwise.csv.CsvRecord;
+import com.repeatwise.csv.CsvSchema;
+import com.repeatwise.csv.GenericCsvService;
+import com.repeatwise.csv.CsvUtils;
 import com.repeatwise.entity.AsyncJob;
 import com.repeatwise.entity.Card;
 import com.repeatwise.entity.CardBoxPosition;
@@ -80,6 +85,7 @@ public class CardImportServiceImpl implements CardImportService {
     private final AppProperties appProperties;
     private final TransactionTemplate transactionTemplate;
     private final Executor jobExecutor;
+    private final GenericCsvService genericCsvService;
 
     @Override
     public ImportResponse importCards(UUID deckId, UUID userId, MultipartFile file, DuplicateHandlingPolicy policy) {
@@ -107,7 +113,8 @@ public class CardImportServiceImpl implements CardImportService {
             MessageSource messageSource,
             AppProperties appProperties,
             org.springframework.transaction.PlatformTransactionManager transactionManager,
-            @org.springframework.beans.factory.annotation.Qualifier("jobTaskExecutor") Executor jobExecutor) {
+            @org.springframework.beans.factory.annotation.Qualifier("jobTaskExecutor") Executor jobExecutor,
+            GenericCsvService genericCsvService) {
         this.deckRepository = deckRepository;
         this.cardRepository = cardRepository;
         this.cardBoxPositionRepository = cardBoxPositionRepository;
@@ -117,6 +124,7 @@ public class CardImportServiceImpl implements CardImportService {
         this.appProperties = appProperties;
         this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.jobExecutor = jobExecutor;
+        this.genericCsvService = genericCsvService;
     }
 
     @Override
@@ -258,7 +266,7 @@ public class CardImportServiceImpl implements CardImportService {
         });
     }
 
-    private List<ImportRow> readRowsFromPayload(AsyncJob job) {
+    private List<CsvRecord<ImportRow>> readRowsFromPayload(AsyncJob job) {
         final var payloadPath = job.getPayloadPath();
         if (payloadPath == null) {
             throw new RepeatWiseException(RepeatWiseError.IMPORT_INVALID_FORMAT);
@@ -285,7 +293,7 @@ public class CardImportServiceImpl implements CardImportService {
             Deck deck,
             UUID userId,
             DuplicateHandlingPolicy policy,
-            List<ImportRow> rows,
+            List<CsvRecord<ImportRow>> records,
             AsyncJob job,
             Locale locale,
             Limits limits) {
@@ -304,9 +312,10 @@ public class CardImportServiceImpl implements CardImportService {
         var failed = 0;
         var processed = 0;
 
-        for (final ImportRow row : rows) {
+        for (final CsvRecord<ImportRow> record : records) {
             processed++;
-            final var check = validateRow(row);
+            final int rowNumber = record.rowNumber();
+            final var check = validateRow(record.data(), rowNumber);
             if (check.isInvalid()) {
                 failed++;
                 errors.add(check.error());
@@ -337,7 +346,7 @@ public class CardImportServiceImpl implements CardImportService {
                 case KEEP_BOTH -> {
                     if (wouldExceedCapacity(currentCount, cardsToCreate.size(), deckMaxCards)) {
                         failed++;
-                        errors.add(new RowError(row.index(), "error.import.deck.capacity.exceeded",
+                        errors.add(new RowError(rowNumber, "error.import.deck.capacity.exceeded",
                                 new Object[] { deckMaxCards }));
                         break;
                     }
@@ -353,7 +362,7 @@ public class CardImportServiceImpl implements CardImportService {
             } else {
                 if (wouldExceedCapacity(currentCount, cardsToCreate.size(), deckMaxCards)) {
                     failed++;
-                    errors.add(new RowError(row.index(), "error.import.deck.capacity.exceeded",
+                    errors.add(new RowError(rowNumber, "error.import.deck.capacity.exceeded",
                             new Object[] { deckMaxCards }));
                     continue;
                 }
@@ -365,7 +374,7 @@ public class CardImportServiceImpl implements CardImportService {
                 imported++;
             }
             if (job != null && shouldUpdateProgress(processed, limits.getImportBatchSize())) {
-                updateJobProgress(job.getId(), processed, imported, skipped, failed, rows.size(), locale);
+                updateJobProgress(job.getId(), processed, imported, skipped, failed, records.size(), locale);
             }
             if (Duration.between(start, LocalDateTime.now()).toMinutes() >= limits.getAsyncJobTimeoutMinutes()) {
                 markJobTimeout(job != null ? job.getId() : null);
@@ -408,25 +417,25 @@ public class CardImportServiceImpl implements CardImportService {
         return card;
     }
 
-    private RowValidation validateRow(ImportRow row) {
+    private RowValidation validateRow(ImportRow row, int rowNumber) {
         final var front = TextUtils.trimToNull(row.front());
         final var back = TextUtils.trimToNull(row.back());
         if (front == null && back == null) {
             return RowValidation.skip();
         }
         if (front == null) {
-            return RowValidation.invalid(new RowError(row.index(), "error.import.row.front.empty", new Object[] { row.index() }));
+            return RowValidation.invalid(new RowError(rowNumber, "error.import.row.front.empty", new Object[] { rowNumber }));
         }
         if (back == null) {
-            return RowValidation.invalid(new RowError(row.index(), "error.import.row.back.empty", new Object[] { row.index() }));
+            return RowValidation.invalid(new RowError(rowNumber, "error.import.row.back.empty", new Object[] { rowNumber }));
         }
         if (front.length() > MAX_CONTENT_LENGTH) {
-            return RowValidation.invalid(new RowError(row.index(), "error.import.row.front.too.long",
-                    new Object[] { row.index(), MAX_CONTENT_LENGTH }));
+            return RowValidation.invalid(new RowError(rowNumber, "error.import.row.front.too.long",
+                    new Object[] { rowNumber, MAX_CONTENT_LENGTH }));
         }
         if (back.length() > MAX_CONTENT_LENGTH) {
-            return RowValidation.invalid(new RowError(row.index(), "error.import.row.back.too.long",
-                    new Object[] { row.index(), MAX_CONTENT_LENGTH }));
+            return RowValidation.invalid(new RowError(rowNumber, "error.import.row.back.too.long",
+                    new Object[] { rowNumber, MAX_CONTENT_LENGTH }));
         }
         return RowValidation.valid(front, back);
     }
@@ -552,12 +561,12 @@ public class CardImportServiceImpl implements CardImportService {
         final var extension = StringUtils.substringAfterLast(StringUtils.defaultString(filename), ".").toLowerCase(Locale.ROOT);
         try (InputStream inputStream = file.getInputStream()) {
             if ("csv".equals(extension)) {
-                final var rows = parseCsv(inputStream);
-                return new ParsedFile(rows.size(), rows);
+                final var records = parseCsv(inputStream);
+                return new ParsedFile(records.size(), records);
             }
             if ("xlsx".equals(extension)) {
-                final var rows = parseXlsx(inputStream);
-                return new ParsedFile(rows.size(), rows);
+                final var records = parseXlsx(inputStream);
+                return new ParsedFile(records.size(), records);
             }
             throw new RepeatWiseException(RepeatWiseError.IMPORT_INVALID_FORMAT);
         } catch (IOException ex) {
@@ -565,29 +574,17 @@ public class CardImportServiceImpl implements CardImportService {
         }
     }
 
-    private List<ImportRow> parseCsv(InputStream inputStream) throws IOException {
-        try (Reader reader = new InputStreamReader(new BufferedInputStream(inputStream), StandardCharsets.UTF_8);
-                CSVParser parser = CSVFormat.DEFAULT.builder()
-                        .setHeader()
-                        .setSkipHeaderRecord(true)
-                        .setTrim(false)
-                        .build()
-                        .parse(reader)) {
-            final var headerMap = parser.getHeaderMap();
-            final var frontIndex = resolveHeaderIndex(headerMap, HEADER_FRONT);
-            final var backIndex = resolveHeaderIndex(headerMap, HEADER_BACK);
-            final List<ImportRow> rows = new ArrayList<>();
-            for (final CSVRecord record : parser) {
-                final var rowNumber = (int) record.getRecordNumber();
-                final var front = frontIndex >= 0 ? record.get(frontIndex) : null;
-                final var back = backIndex >= 0 ? record.get(backIndex) : null;
-                rows.add(new ImportRow(rowNumber, front, back));
-            }
-            return rows;
-        }
+    private List<CsvRecord<ImportRow>> parseCsv(InputStream inputStream) {
+        final var schema = CsvSchema.builder()
+                .headers(List.of("Front", "Back"))
+                .skipHeaderRecord(true)
+                .includeHeader(false)
+                .build();
+        final var helper = CardImportCsvHelper.INSTANCE;
+        return this.genericCsvService.read(inputStream, schema, helper);
     }
 
-    private List<ImportRow> parseXlsx(InputStream inputStream) throws IOException {
+    private List<CsvRecord<ImportRow>> parseXlsx(InputStream inputStream) throws IOException {
         try (Workbook workbook = WorkbookFactory.create(new BufferedInputStream(inputStream))) {
             final Sheet sheet = workbook.getNumberOfSheets() > 0 ? workbook.getSheetAt(0) : null;
             if (sheet == null) {
@@ -604,12 +601,16 @@ public class CardImportServiceImpl implements CardImportService {
                 throw new RepeatWiseException(RepeatWiseError.IMPORT_MISSING_COLUMNS, List.of("Front", "Back"));
             }
             final var formatter = new DataFormatter();
-            final List<ImportRow> rows = new ArrayList<>();
+            final List<CsvRecord<ImportRow>> rows = new ArrayList<>();
             for (int i = headerRow.getRowNum() + 1; i <= sheet.getLastRowNum(); i++) {
                 final Row row = sheet.getRow(i);
                 final var front = row != null && frontIndex >= 0 ? formatter.formatCellValue(row.getCell(frontIndex)) : null;
                 final var back = row != null && backIndex >= 0 ? formatter.formatCellValue(row.getCell(backIndex)) : null;
-                rows.add(new ImportRow(i + 1, front, back));
+                final var data = new ImportRow(front, back);
+                final Map<String, String> raw = new HashMap<>();
+                raw.put(HEADER_FRONT, front);
+                raw.put(HEADER_BACK, back);
+                rows.add(new CsvRecord<>(i + 1, data, raw));
             }
             return rows;
         }
@@ -629,15 +630,6 @@ public class CardImportServiceImpl implements CardImportService {
             }
         }
         return new HeaderIndexes(frontIndex, backIndex);
-    }
-
-    private int resolveHeaderIndex(Map<String, Integer> headerMap, String column) {
-        for (final Map.Entry<String, Integer> entry : headerMap.entrySet()) {
-            if (Objects.equals(StringUtils.lowerCase(entry.getKey()), column)) {
-                return entry.getValue();
-            }
-        }
-        return -1;
     }
 
     private void requireFile(MultipartFile file) {
@@ -660,10 +652,35 @@ public class CardImportServiceImpl implements CardImportService {
         }
     }
 
-    private record ParsedFile(int totalRows, List<ImportRow> rows) {
+    private record ParsedFile(int totalRows, List<CsvRecord<ImportRow>> rows) {
     }
 
-    private record ImportRow(int index, String front, String back) {
+    private record ImportRow(String front, String back) {
+    }
+
+    private static final class CardImportCsvHelper implements CsvHelper<ImportRow> {
+
+        private static final CardImportCsvHelper INSTANCE = new CardImportCsvHelper();
+        private static final String[] HEADERS = { "Front", "Back" };
+
+        @Override
+        public String[] getHeaders() {
+            return HEADERS;
+        }
+
+        @Override
+        public ImportRow readRecord(Map<String, String> values) {
+            final var front = values.get(HEADER_FRONT);
+            final var back = values.get(HEADER_BACK);
+            return new ImportRow(front, back);
+        }
+
+        @Override
+        public Map<String, String> writeRecord(ImportRow value) {
+            return Map.of(
+                    HEADER_FRONT, value.front(),
+                    HEADER_BACK, value.back());
+        }
     }
 
     private record RowError(int rowNumber, String messageKey, Object[] args) {
