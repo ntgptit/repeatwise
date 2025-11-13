@@ -12,6 +12,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -34,12 +35,16 @@ import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
 import com.repeatwise.entity.Folder;
+import com.repeatwise.entity.FolderStats;
 import com.repeatwise.entity.User;
 import com.repeatwise.exception.RepeatWiseError;
 import com.repeatwise.exception.RepeatWiseException;
 import com.repeatwise.mapper.FolderMapper;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
+import com.repeatwise.repository.FolderStatsRepository;
+import com.repeatwise.repository.CardBoxPositionRepository;
+import com.repeatwise.repository.projection.FolderCardStatsProjection;
 import com.repeatwise.repository.UserRepository;
 
 @ExtendWith(MockitoExtension.class)
@@ -48,12 +53,19 @@ class FolderServiceImplTest {
     private static final UUID USER_ID = UUID.randomUUID();
     private static final UUID FOLDER_ID = UUID.randomUUID();
     private static final UUID PARENT_ID = UUID.randomUUID();
+    private static final UUID DECK_ID = UUID.randomUUID();
 
     @Mock
     private FolderRepository folderRepository;
 
     @Mock
     private DeckRepository deckRepository;
+
+    @Mock
+    private FolderStatsRepository folderStatsRepository;
+
+    @Mock
+    private CardBoxPositionRepository cardBoxPositionRepository;
 
     @Mock
     private UserRepository userRepository;
@@ -462,6 +474,137 @@ class FolderServiceImplTest {
                 .isInstanceOf(RepeatWiseException.class)
                 .extracting("error")
                 .isEqualTo(RepeatWiseError.FOLDER_NOT_FOUND);
+    }
+
+    @Test
+    @DisplayName("Compute folder statistics when cache is missing")
+    void should_ComputeFolderStats_When_NoCache() {
+        final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
+        when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(folder));
+        when(this.folderRepository.findDescendantsByPath(USER_ID, folder.getPath() + "/")).thenReturn(List.of());
+        when(this.deckRepository.findActiveDeckIdsByUserIdAndFolderIds(USER_ID, List.of(FOLDER_ID)))
+                .thenReturn(List.of(DECK_ID));
+        when(this.userRepository.findById(USER_ID)).thenReturn(Optional.of(this.user));
+        when(this.folderStatsRepository.findByFolderIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.empty());
+        when(this.folderStatsRepository.save(any(FolderStats.class))).thenAnswer(invocation -> {
+            final FolderStats stats = invocation.getArgument(0);
+            stats.setLastComputedAt(LocalDateTime.now());
+            return stats;
+        });
+        when(this.cardBoxPositionRepository.aggregateStats(eq(USER_ID), eq(List.of(DECK_ID)), any(LocalDate.class)))
+                .thenReturn(new TestFolderCardStatsProjection(20, 5, 4, 3, 2, 11));
+
+        final var response = this.folderService.getFolderStats(FOLDER_ID, USER_ID, false);
+
+        assertThat(response.getTotalCards()).isEqualTo(20);
+        assertThat(response.getDueCards()).isEqualTo(5);
+        assertThat(response.getNewCards()).isEqualTo(4);
+        assertThat(response.getLearningCards()).isEqualTo(3);
+        assertThat(response.getReviewCards()).isEqualTo(2);
+        assertThat(response.getMasteredCards()).isEqualTo(11);
+        assertThat(response.getTotalDecks()).isEqualTo(1);
+        assertThat(response.getTotalFolders()).isEqualTo(0);
+        assertThat(response.getCached()).isFalse();
+        assertThat(response.getCompletionRate()).isEqualTo(55.0);
+    }
+
+    @Test
+    @DisplayName("Return cached folder statistics when not stale")
+    void should_ReturnCachedFolderStats_When_NotStale() {
+        final var folder = createFolder(FOLDER_ID, null, 0, "/root/" + FOLDER_ID);
+        when(this.folderRepository.findByIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(folder));
+        when(this.folderRepository.findDescendantsByPath(USER_ID, folder.getPath() + "/")).thenReturn(List.of());
+        when(this.deckRepository.findActiveDeckIdsByUserIdAndFolderIds(USER_ID, List.of(FOLDER_ID))).thenReturn(List.of());
+
+        final var cachedStats = createFolderStats(folder, this.user, 15, 2, 3, 4, 5, 6, 0, 0);
+        when(this.folderStatsRepository.findByFolderIdAndUserId(FOLDER_ID, USER_ID)).thenReturn(Optional.of(cachedStats));
+
+        final var response = this.folderService.getFolderStats(FOLDER_ID, USER_ID, false);
+
+        assertThat(response.getTotalCards()).isEqualTo(15);
+        assertThat(response.getLearningCards()).isEqualTo(4);
+        assertThat(response.getCached()).isTrue();
+        verify(this.cardBoxPositionRepository, never()).aggregateStats(any(), anyList(), any());
+    }
+
+    private FolderStats createFolderStats(Folder folder,
+            User user,
+            int totalCards,
+            int dueCards,
+            int newCards,
+            int learningCards,
+            int reviewCards,
+            int masteredCards,
+            int totalFolders,
+            int totalDecks) {
+        final var stats = FolderStats.builder()
+                .folder(folder)
+                .user(user)
+                .totalCardsCount(totalCards)
+                .dueCardsCount(dueCards)
+                .newCardsCount(newCards)
+                .learningCardsCount(learningCards)
+                .reviewCardsCount(reviewCards)
+                .matureCardsCount(masteredCards)
+                .totalFoldersCount(totalFolders)
+                .totalDecksCount(totalDecks)
+                .build();
+        stats.setLastComputedAt(LocalDateTime.now());
+        return stats;
+    }
+
+    private static final class TestFolderCardStatsProjection implements FolderCardStatsProjection {
+
+        private final long totalCards;
+        private final long dueCards;
+        private final long newCards;
+        private final long learningCards;
+        private final long reviewCards;
+        private final long masteredCards;
+
+        private TestFolderCardStatsProjection(long totalCards,
+                long dueCards,
+                long newCards,
+                long learningCards,
+                long reviewCards,
+                long masteredCards) {
+            this.totalCards = totalCards;
+            this.dueCards = dueCards;
+            this.newCards = newCards;
+            this.learningCards = learningCards;
+            this.reviewCards = reviewCards;
+            this.masteredCards = masteredCards;
+        }
+
+        @Override
+        public long getTotalCards() {
+            return this.totalCards;
+        }
+
+        @Override
+        public long getDueCards() {
+            return this.dueCards;
+        }
+
+        @Override
+        public long getNewCards() {
+            return this.newCards;
+        }
+
+        @Override
+        public long getLearningCards() {
+            return this.learningCards;
+        }
+
+        @Override
+        public long getReviewCards() {
+            return this.reviewCards;
+        }
+
+        @Override
+        public long getMasteredCards() {
+            return this.masteredCards;
+        }
     }
 
     private static User createUser(UUID userId) {

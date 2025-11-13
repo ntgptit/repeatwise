@@ -4,6 +4,7 @@ import type {
   CreateFolderRequest,
   DeleteFolderResponse,
   FolderDto,
+  FolderStatsDto,
   MoveFolderRequest,
   UpdateFolderRequest,
 } from '@/api/types/folder.types'
@@ -83,6 +84,13 @@ export const folderService = {
 
   delete: async (folderId: string): Promise<DeleteFolderResponse> => {
     const response = await apiClient.delete<DeleteFolderResponse>(`${basePath}/${folderId}`)
+    return response.data
+  },
+
+  getStats: async (folderId: string, options?: { refresh?: boolean }): Promise<FolderStatsDto> => {
+    const response = await apiClient.get<FolderStatsDto>(`${basePath}/${folderId}/stats`, {
+      params: options?.refresh ? { refresh: options.refresh } : undefined,
+    })
     return response.data
   },
 }

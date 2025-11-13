@@ -9,7 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * DTO for folder statistics response
+ * DTO for folder statistics response (UC-012).
  */
 @Data
 @Builder
@@ -18,9 +18,16 @@ import lombok.NoArgsConstructor;
 public class FolderStatsResponse {
 
     private UUID folderId;
-    private Integer totalCardsCount;
-    private Integer dueCardsCount;
-    private Integer newCardsCount;
-    private Integer matureCardsCount;
-    private LocalDateTime lastComputedAt;
+    private String folderName;
+    private Integer totalFolders;
+    private Integer totalDecks;
+    private Integer totalCards;
+    private Integer dueCards;
+    private Integer newCards;
+    private Integer learningCards;
+    private Integer reviewCards;
+    private Integer masteredCards;
+    private Double completionRate;
+    private Boolean cached;
+    private LocalDateTime lastUpdatedAt;
 }

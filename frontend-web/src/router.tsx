@@ -123,6 +123,10 @@ const routes: RouteObject[] = [
         path: 'folders',
         element: <FolderManagement />,
       },
+      {
+        path: 'decks',
+        element: <FolderManagement initialDeckScope="root" />,
+      },
     ],
   },
   {

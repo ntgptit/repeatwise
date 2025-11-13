@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.repeatwise.dto.request.folder.CopyFolderRequest;
@@ -22,6 +23,7 @@ import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
+import com.repeatwise.dto.response.folder.FolderStatsResponse;
 import com.repeatwise.service.FolderService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -263,5 +265,28 @@ public class FolderController {
         final var folders = this.folderService.getChildFolders(parentId, userId);
 
         return ResponseEntity.ok(folders);
+    }
+
+    /**
+     * UC-012: View folder statistics.
+     */
+    @GetMapping("/{folderId}/stats")
+    @Operation(summary = "View folder statistics", description = "Retrieves aggregated statistics for the selected folder and its descendants.")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Statistics retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Access denied"),
+            @ApiResponse(responseCode = "404", description = "Folder not found")
+    })
+    public ResponseEntity<FolderStatsResponse> getFolderStats(
+            @PathVariable UUID folderId,
+            @RequestParam(value = "refresh", defaultValue = "false") boolean refresh,
+            @AuthenticationPrincipal User user) {
+        final var userId = user.getId();
+        log.info("User {} requesting statistics for folder {} (refresh={})", userId, folderId, refresh);
+
+        final var stats = this.folderService.getFolderStats(folderId, userId, refresh);
+
+        return ResponseEntity.ok(stats);
     }
 }

@@ -41,3 +41,19 @@ export interface DeleteFolderResponse {
   deletedDecks: number
 }
 
+export interface FolderStatsDto {
+  folderId: string
+  folderName: string
+  totalFolders: number
+  totalDecks: number
+  totalCards: number
+  dueCards: number
+  newCards: number
+  learningCards: number
+  reviewCards: number
+  masteredCards: number
+  completionRate: number
+  cached: boolean
+  lastUpdatedAt: string | null
+}
+

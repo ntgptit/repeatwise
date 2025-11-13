@@ -70,6 +70,26 @@ public class FolderStats {
     @Column(name = "mature_cards_count", nullable = false)
     private Integer matureCardsCount = 0;
 
+    @Builder.Default
+    @Min(value = 0, message = "{error.folder.stats.learningcards.non.negative}")
+    @Column(name = "learning_cards_count", nullable = false)
+    private Integer learningCardsCount = 0;
+
+    @Builder.Default
+    @Min(value = 0, message = "{error.folder.stats.reviewcards.non.negative}")
+    @Column(name = "review_cards_count", nullable = false)
+    private Integer reviewCardsCount = 0;
+
+    @Builder.Default
+    @Min(value = 0, message = "{error.folder.stats.totalfolders.non.negative}")
+    @Column(name = "total_folders_count", nullable = false)
+    private Integer totalFoldersCount = 0;
+
+    @Builder.Default
+    @Min(value = 0, message = "{error.folder.stats.totaldecks.non.negative}")
+    @Column(name = "total_decks_count", nullable = false)
+    private Integer totalDecksCount = 0;
+
     @CreationTimestamp
     @Column(name = "last_computed_at", nullable = false)
     private LocalDateTime lastComputedAt;

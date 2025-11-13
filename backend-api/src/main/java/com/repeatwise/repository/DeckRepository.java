@@ -43,28 +43,13 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
     @Query("SELECT d FROM Deck d WHERE d.user.id = :userId AND d.folder IS NULL AND d.deletedAt IS NULL ORDER BY d.name")
     List<Deck> findRootDecksByUserId(@Param("userId") UUID userId);
 
-    /**
-     * Check if deck name exists in a folder for a user (case-insensitive)
-     */
-    @Query("""
-            SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId \
-            AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) \
-            AND LOWER(d.name) = LOWER(:name) AND d.deletedAt IS NULL""")
-    boolean existsByNameAndFolder(@Param("userId") UUID userId,
-            @Param("folderId") UUID folderId,
-            @Param("name") String name);
+    boolean existsByUserIdAndFolderIsNullAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, String name);
 
-    /**
-     * Check if deck name exists in a folder for a user, excluding specific deck ID
-     */
-    @Query("""
-            SELECT COUNT(d) > 0 FROM Deck d WHERE d.user.id = :userId \
-            AND (:folderId IS NULL AND d.folder IS NULL OR d.folder.id = :folderId) \
-            AND LOWER(d.name) = LOWER(:name) AND d.id <> :excludeId AND d.deletedAt IS NULL""")
-    boolean existsByNameAndFolderExcludingId(@Param("userId") UUID userId,
-            @Param("folderId") UUID folderId,
-            @Param("name") String name,
-            @Param("excludeId") UUID excludeId);
+    boolean existsByUserIdAndFolderIdAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, UUID folderId, String name);
+
+    boolean existsByUserIdAndFolderIsNullAndIdNotAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, UUID id, String name);
+
+    boolean existsByUserIdAndFolderIdAndIdNotAndNameIgnoreCaseAndDeletedAtIsNull(UUID userId, UUID folderId, UUID id, String name);
 
     /**
      * Count total decks for a user (active only)
@@ -83,6 +68,30 @@ public interface DeckRepository extends JpaRepository<Deck, UUID> {
      */
     @Query("SELECT COUNT(d) FROM Deck d WHERE d.folder.id IN :folderIds AND d.deletedAt IS NULL")
     long countByFolderIds(@Param("folderIds") List<UUID> folderIds);
+
+    /**
+     * Get active deck IDs within specified folders.
+     */
+    @Query("""
+            SELECT d.id FROM Deck d
+            WHERE d.user.id = :userId
+              AND d.deletedAt IS NULL
+              AND d.folder.id IN :folderIds
+            """)
+    List<UUID> findActiveDeckIdsByUserIdAndFolderIds(@Param("userId") UUID userId,
+            @Param("folderIds") List<UUID> folderIds);
+
+    /**
+     * Count active decks in specified folders.
+     */
+    @Query("""
+            SELECT COUNT(d) FROM Deck d
+            WHERE d.user.id = :userId
+              AND d.deletedAt IS NULL
+              AND d.folder.id IN :folderIds
+            """)
+    long countActiveDecksByUserIdAndFolderIds(@Param("userId") UUID userId,
+            @Param("folderIds") List<UUID> folderIds);
 
     /**
      * Soft delete all decks in a folder

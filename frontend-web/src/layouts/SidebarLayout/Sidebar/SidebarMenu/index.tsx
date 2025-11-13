@@ -4,6 +4,7 @@ import { useSidebar } from 'src/contexts/SidebarContext'
 
 import DesignServicesTwoToneIcon from '@mui/icons-material/DesignServicesTwoTone'
 import FolderSpecialIcon from '@mui/icons-material/FolderSpecialOutlined'
+import MenuBookTwoToneIcon from '@mui/icons-material/MenuBookTwoTone'
 import BrightnessLowTwoToneIcon from '@mui/icons-material/BrightnessLowTwoTone'
 import MmsTwoToneIcon from '@mui/icons-material/MmsTwoTone'
 import TableChartTwoToneIcon from '@mui/icons-material/TableChartTwoTone'
@@ -179,6 +180,17 @@ function SidebarMenu() {
                 startIcon={<FolderSpecialIcon />}
               >
                 Folder Management
+              </Button>
+            </ListItem>
+            <ListItem component="div">
+              <Button
+                disableRipple
+                component={RouterLink}
+                onClick={closeSidebar}
+                to="/workspace/decks"
+                startIcon={<MenuBookTwoToneIcon />}
+              >
+                Deck Management
               </Button>
             </ListItem>
           </List>

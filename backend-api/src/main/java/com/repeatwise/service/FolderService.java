@@ -7,6 +7,7 @@ import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
+import com.repeatwise.dto.response.folder.FolderStatsResponse;
 import com.repeatwise.entity.Folder;
 
 /**
@@ -114,6 +115,16 @@ public interface FolderService {
      * @return Folder entity
      */
     Folder getFolderEntityById(UUID folderId, UUID userId);
+
+    /**
+     * UC-012: View aggregated statistics for a folder.
+     *
+     * @param folderId ID của thư mục
+     * @param userId ID người dùng
+     * @param forceRefresh true nếu cần tính lại và bỏ qua cache
+     * @return FolderStatsResponse chứa thống kê
+     */
+    FolderStatsResponse getFolderStats(UUID folderId, UUID userId, boolean forceRefresh);
 
     /**
      * Deletion summary DTO for delete operation

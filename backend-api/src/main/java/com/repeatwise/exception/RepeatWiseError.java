@@ -45,11 +45,24 @@ public enum RepeatWiseError {
 
     /** Card cannot be found. */
     CARD_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.CARD_NOT_FOUND, "error.card.not.found"),
+    /** Card front content is required. */
+    CARD_FRONT_REQUIRED(HttpStatus.BAD_REQUEST, ApiErrorCode.CARD_FRONT_REQUIRED, "error.card.front.required"),
+    /** Card back content is required. */
+    CARD_BACK_REQUIRED(HttpStatus.BAD_REQUEST, ApiErrorCode.CARD_BACK_REQUIRED, "error.card.back.required"),
+    /** Card has already been deleted. */
+    CARD_ALREADY_DELETED(HttpStatus.GONE, ApiErrorCode.CARD_ALREADY_DELETED, "error.card.delete.already.deleted"),
 
     /** Deck cannot be found. */
     DECK_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.DECK_NOT_FOUND, "error.deck.not.found"),
+    /** Deck name is required. */
+    DECK_NAME_REQUIRED(HttpStatus.BAD_REQUEST, ApiErrorCode.DECK_NAME_REQUIRED, "error.deck.name.required"),
     /** Deck name already exists within the scope. */
     DECK_NAME_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, ApiErrorCode.DECK_NAME_ALREADY_EXISTS, "error.deck.name.exists"),
+    /** Deck is already located in the requested folder/root. */
+    DECK_ALREADY_IN_LOCATION(HttpStatus.BAD_REQUEST, ApiErrorCode.DECK_ALREADY_IN_LOCATION,
+            "error.deck.move.same.folder"),
+    /** Deck is too large to copy synchronously. */
+    DECK_TOO_LARGE(HttpStatus.BAD_REQUEST, ApiErrorCode.DECK_TOO_LARGE, "error.deck.too.large"),
 
     /** Folder cannot be found. */
     FOLDER_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.FOLDER_NOT_FOUND, "error.folder.not.found"),

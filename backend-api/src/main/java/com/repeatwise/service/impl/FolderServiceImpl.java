@@ -1,5 +1,6 @@
 package com.repeatwise.service.impl;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,13 +16,18 @@ import com.repeatwise.dto.request.folder.CreateFolderRequest;
 import com.repeatwise.dto.request.folder.MoveFolderRequest;
 import com.repeatwise.dto.request.folder.UpdateFolderRequest;
 import com.repeatwise.dto.response.folder.FolderResponse;
+import com.repeatwise.dto.response.folder.FolderStatsResponse;
 import com.repeatwise.entity.Folder;
+import com.repeatwise.entity.FolderStats;
 import com.repeatwise.entity.User;
 import com.repeatwise.exception.RepeatWiseError;
 import com.repeatwise.exception.RepeatWiseException;
 import com.repeatwise.mapper.FolderMapper;
 import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.FolderRepository;
+import com.repeatwise.repository.FolderStatsRepository;
+import com.repeatwise.repository.CardBoxPositionRepository;
+import com.repeatwise.repository.projection.FolderCardStatsProjection;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.FolderService;
 
@@ -42,6 +48,8 @@ public class FolderServiceImpl implements FolderService {
 
     private final FolderRepository folderRepository;
     private final DeckRepository deckRepository;
+    private final FolderStatsRepository folderStatsRepository;
+    private final CardBoxPositionRepository cardBoxPositionRepository;
     private final UserRepository userRepository;
     private final FolderMapper folderMapper;
     private final MessageSource messageSource;
@@ -460,6 +468,142 @@ public class FolderServiceImpl implements FolderService {
         log.info("Restored folder {} and {} descendants for user {}", folderId, descendants.size(), userId);
 
         return this.folderMapper.toResponse(folder);
+    }
+
+    @Override
+    @Transactional
+    public FolderStatsResponse getFolderStats(UUID folderId, UUID userId, boolean forceRefresh) {
+        final var folder = getFolderEntityByIdInternal(folderId, userId);
+        final var folderIds = collectFolderIds(folder, userId);
+        final var deckIds = getActiveDeckIds(userId, folderIds);
+
+        final int totalDescendants = Math.max(folderIds.size() - 1, 0);
+        final int totalDecks = deckIds.size();
+
+        final var folderStats = this.folderStatsRepository.findByFolderIdAndUserId(folderId, userId)
+                .orElseGet(() -> FolderStats.builder()
+                        .folder(folder)
+                        .user(getUserOrThrow(userId))
+                        .build());
+
+        final boolean needsRecompute = forceRefresh || folderStats.isStale();
+        CardStatsAggregate aggregate = null;
+
+        if (needsRecompute) {
+            aggregate = computeCardStats(userId, deckIds);
+            folderStats.setTotalCardsCount(intValue(aggregate.totalCards()));
+            folderStats.setDueCardsCount(intValue(aggregate.dueCards()));
+            folderStats.setNewCardsCount(intValue(aggregate.newCards()));
+            folderStats.setLearningCardsCount(intValue(aggregate.learningCards()));
+            folderStats.setReviewCardsCount(intValue(aggregate.reviewCards()));
+            folderStats.setMatureCardsCount(intValue(aggregate.masteredCards()));
+            folderStats.setTotalFoldersCount(totalDescendants);
+            folderStats.setTotalDecksCount(totalDecks);
+            folderStats.refreshTimestamp();
+            this.folderStatsRepository.save(folderStats);
+        } else {
+            boolean structureUpdated = false;
+            if (!folderStats.getTotalFoldersCount().equals(totalDescendants)) {
+                folderStats.setTotalFoldersCount(totalDescendants);
+                structureUpdated = true;
+            }
+            if (!folderStats.getTotalDecksCount().equals(totalDecks)) {
+                folderStats.setTotalDecksCount(totalDecks);
+                structureUpdated = true;
+            }
+            if (structureUpdated) {
+                this.folderStatsRepository.save(folderStats);
+            }
+        }
+
+        // Ensure aggregate is available for completion rate when stats recomputed
+        if (aggregate == null) {
+            aggregate = new CardStatsAggregate(
+                    folderStats.getTotalCardsCount(),
+                    folderStats.getDueCardsCount(),
+                    folderStats.getNewCardsCount(),
+                    folderStats.getLearningCardsCount(),
+                    folderStats.getReviewCardsCount(),
+                    folderStats.getMatureCardsCount());
+        }
+
+        final double completionRate = calculateCompletionRate(aggregate.masteredCards(), aggregate.totalCards());
+
+        return FolderStatsResponse.builder()
+                .folderId(folderId)
+                .folderName(folder.getName())
+                .totalFolders(folderStats.getTotalFoldersCount())
+                .totalDecks(folderStats.getTotalDecksCount())
+                .totalCards(folderStats.getTotalCardsCount())
+                .dueCards(folderStats.getDueCardsCount())
+                .newCards(folderStats.getNewCardsCount())
+                .learningCards(folderStats.getLearningCardsCount())
+                .reviewCards(folderStats.getReviewCardsCount())
+                .masteredCards(folderStats.getMatureCardsCount())
+                .completionRate(completionRate)
+                .cached(!needsRecompute)
+                .lastUpdatedAt(folderStats.getLastComputedAt())
+                .build();
+    }
+
+    private List<UUID> collectFolderIds(Folder folder, UUID userId) {
+        final List<UUID> ids = new ArrayList<>();
+        ids.add(folder.getId());
+        final var descendants = this.folderRepository.findDescendantsByPath(userId, folder.getPath() + PATH_DELIMITER);
+        descendants.forEach(descendant -> ids.add(descendant.getId()));
+        return ids;
+    }
+
+    private List<UUID> getActiveDeckIds(UUID userId, List<UUID> folderIds) {
+        if (folderIds.isEmpty()) {
+            return List.of();
+        }
+        return this.deckRepository.findActiveDeckIdsByUserIdAndFolderIds(userId, folderIds);
+    }
+
+    private CardStatsAggregate computeCardStats(UUID userId, List<UUID> deckIds) {
+        if (deckIds.isEmpty()) {
+            return CardStatsAggregate.empty();
+        }
+
+        final FolderCardStatsProjection projection = this.cardBoxPositionRepository.aggregateStats(userId, deckIds,
+                LocalDate.now());
+
+        if (projection == null) {
+            return CardStatsAggregate.empty();
+        }
+
+        return new CardStatsAggregate(
+                projection.getTotalCards(),
+                projection.getDueCards(),
+                projection.getNewCards(),
+                projection.getLearningCards(),
+                projection.getReviewCards(),
+                projection.getMasteredCards());
+    }
+
+    private double calculateCompletionRate(long masteredCards, long totalCards) {
+        if (totalCards <= 0) {
+            return 0d;
+        }
+        final double rate = (masteredCards * 100.0d) / totalCards;
+        return Math.round(rate * 10d) / 10d;
+    }
+
+    private int intValue(long value) {
+        return Math.toIntExact(value);
+    }
+
+    private record CardStatsAggregate(long totalCards,
+            long dueCards,
+            long newCards,
+            long learningCards,
+            long reviewCards,
+            long masteredCards) {
+
+        private static CardStatsAggregate empty() {
+            return new CardStatsAggregate(0L, 0L, 0L, 0L, 0L, 0L);
+        }
     }
 
     @Override

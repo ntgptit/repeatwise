@@ -38,11 +38,17 @@ public final class ApiErrorCode {
     public static final String CIRCULAR_FOLDER_REFERENCE = "CIRCULAR_FOLDER_REFERENCE";
     public static final String FOLDER_TOO_LARGE = "FOLDER_TOO_LARGE";
 
+    public static final String DECK_NAME_REQUIRED = "DECK_NAME_REQUIRED";
     public static final String DECK_NOT_FOUND = "DECK_NOT_FOUND";
     public static final String DECK_NAME_ALREADY_EXISTS = "DECK_NAME_ALREADY_EXISTS";
+    public static final String DECK_ALREADY_IN_LOCATION = "DECK_ALREADY_IN_LOCATION";
+    public static final String DECK_TOO_LARGE = "DECK_TOO_LARGE";
 
     public static final String CARD_NOT_FOUND = "CARD_NOT_FOUND";
     public static final String CARD_NOT_DUE_FOR_REVIEW = "CARD_NOT_DUE_FOR_REVIEW";
+    public static final String CARD_FRONT_REQUIRED = "CARD_FRONT_REQUIRED";
+    public static final String CARD_BACK_REQUIRED = "CARD_BACK_REQUIRED";
+    public static final String CARD_ALREADY_DELETED = "CARD_ALREADY_DELETED";
 
     public static final String DAILY_REVIEW_LIMIT_EXCEEDED = "DAILY_REVIEW_LIMIT_EXCEEDED";
     public static final String SRS_SETTINGS_NOT_FOUND = "SRS_SETTINGS_NOT_FOUND";

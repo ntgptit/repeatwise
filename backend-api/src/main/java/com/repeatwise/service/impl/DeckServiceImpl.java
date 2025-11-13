@@ -3,7 +3,6 @@ package com.repeatwise.service.impl;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -28,12 +27,13 @@ import com.repeatwise.repository.DeckRepository;
 import com.repeatwise.repository.UserRepository;
 import com.repeatwise.service.DeckService;
 import com.repeatwise.service.FolderService;
+import com.repeatwise.util.TextUtils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Triển khai DeckService, bao phủ UC-013 đến UC-017.
+ * DeckService implementation that covers UC-013 through UC-017.
  */
 @Service
 @RequiredArgsConstructor
@@ -53,13 +53,15 @@ public class DeckServiceImpl implements DeckService {
     @Override
     @Transactional
     public DeckResponse createDeck(CreateDeckRequest request, UUID userId) {
-        log.debug("User {} yêu cầu tạo deck mới: {}", userId, request);
+        log.debug("User {} requests deck creation: {}", userId, request);
 
         final var user = getUserOrThrow(userId);
         final var folder = getFolderIfPresent(request.getFolderId(), userId);
 
-        final var trimmedName = trimAndValidateName(request.getName());
-        final var trimmedDescription = trimToNull(request.getDescription());
+        final var trimmedName = TextUtils.trimAndRequireNonBlank(
+                request.getName(),
+                () -> new RepeatWiseException(RepeatWiseError.DECK_NAME_REQUIRED));
+        final var trimmedDescription = TextUtils.trimToNull(request.getDescription());
 
         validateDeckNameUnique(trimmedName, userId, request.getFolderId());
 
@@ -72,7 +74,7 @@ public class DeckServiceImpl implements DeckService {
 
         deck = this.deckRepository.save(deck);
 
-        log.info("Tạo deck {} ({}) cho user {}", deck.getName(), deck.getId(), userId);
+        log.info("Created deck {} ({}) for user {}", deck.getName(), deck.getId(), userId);
 
         return this.deckMapper.toResponse(deck);
     }
@@ -80,13 +82,15 @@ public class DeckServiceImpl implements DeckService {
     @Override
     @Transactional
     public DeckResponse updateDeck(UUID deckId, UpdateDeckRequest request, UUID userId) {
-        log.debug("User {} cập nhật deck {} với payload {}", userId, deckId, request);
+        log.debug("User {} updates deck {} with payload {}", userId, deckId, request);
 
         final var deck = getDeckOrThrow(deckId, userId);
         var changed = false;
 
         if (request.getName() != null) {
-            final var trimmedName = trimAndValidateName(request.getName());
+            final var trimmedName = TextUtils.trimAndRequireNonBlank(
+                    request.getName(),
+                    () -> new RepeatWiseException(RepeatWiseError.DECK_NAME_REQUIRED));
             if (!trimmedName.equals(deck.getName())) {
                 validateDeckNameUniqueExcluding(trimmedName, userId, deck.getFolder() != null ? deck.getFolder().getId() : null,
                         deckId);
@@ -96,7 +100,7 @@ public class DeckServiceImpl implements DeckService {
         }
 
         if (request.getDescription() != null) {
-            final var trimmedDescription = trimToNull(request.getDescription());
+            final var trimmedDescription = TextUtils.trimToNull(request.getDescription());
             if (!Objects.equals(trimmedDescription, deck.getDescription())) {
                 deck.setDescription(trimmedDescription);
                 changed = true;
@@ -104,7 +108,7 @@ public class DeckServiceImpl implements DeckService {
         }
 
         if (!changed) {
-            log.debug("Deck {} không thay đổi dữ liệu, trả về hiện trạng", deckId);
+            log.debug("Deck {} remains unchanged, returning current state", deckId);
             return this.deckMapper.toResponse(deck);
         }
 
@@ -112,7 +116,7 @@ public class DeckServiceImpl implements DeckService {
 
         final var updatedDeck = this.deckRepository.save(deck);
 
-        log.info("Deck {} đã được cập nhật bởi user {}", deckId, userId);
+        log.info("Deck {} updated by user {}", deckId, userId);
 
         return this.deckMapper.toResponse(updatedDeck);
     }
@@ -120,7 +124,7 @@ public class DeckServiceImpl implements DeckService {
     @Override
     @Transactional
     public DeckResponse moveDeck(UUID deckId, MoveDeckRequest request, UUID userId) {
-        log.debug("User {} di chuyển deck {} tới thư mục {}", userId, deckId, request.getTargetFolderId());
+        log.debug("User {} moves deck {} to folder {}", userId, deckId, request.getTargetFolderId());
 
         final var deck = getDeckOrThrow(deckId, userId);
         final var currentFolderId = deck.getFolder() != null ? deck.getFolder().getId() : null;
@@ -139,7 +143,7 @@ public class DeckServiceImpl implements DeckService {
 
         final var savedDeck = this.deckRepository.save(deck);
 
-        log.info("Deck {} đã được di chuyển tới thư mục {} bởi user {}", deckId, targetFolderId, userId);
+        log.info("Deck {} moved to folder {} by user {}", deckId, targetFolderId, userId);
 
         return this.deckMapper.toResponse(savedDeck);
     }
@@ -147,7 +151,7 @@ public class DeckServiceImpl implements DeckService {
     @Override
     @Transactional
     public DeckCopyResult copyDeck(UUID deckId, CopyDeckRequest request, UUID userId) {
-        log.debug("User {} sao chép deck {} với request {}", userId, deckId, request);
+        log.debug("User {} copies deck {} with request {}", userId, deckId, request);
 
         final var sourceDeck = getDeckOrThrow(deckId, userId);
         final var destinationFolderId = request.getDestinationFolderId();
@@ -182,7 +186,7 @@ public class DeckServiceImpl implements DeckService {
                 new Object[] { savedDeck.getName(), cardsToCopy.size() },
                 locale);
 
-        log.info("User {} sao chép deck {} -> deck mới {} ({})", userId, deckId, savedDeck.getId(), savedDeck.getName());
+        log.info("User {} copied deck {} to new deck {} ({})", userId, deckId, savedDeck.getId(), savedDeck.getName());
 
         return new DeckCopyResult(this.deckMapper.toResponse(savedDeck), message, cardsToCopy.size());
     }
@@ -190,7 +194,7 @@ public class DeckServiceImpl implements DeckService {
     @Override
     @Transactional
     public DeckDeletionResult deleteDeck(UUID deckId, UUID userId) {
-        log.debug("User {} xóa deck {}", userId, deckId);
+        log.debug("User {} deletes deck {}", userId, deckId);
 
         final var deck = getDeckOrThrow(deckId, userId);
 
@@ -204,7 +208,7 @@ public class DeckServiceImpl implements DeckService {
                 new Object[] { deck.getName() },
                 locale);
 
-        log.info("Deck {} đã được soft delete bởi user {}", deckId, userId);
+        log.info("Deck {} soft deleted by user {}", deckId, userId);
 
         return new DeckDeletionResult(deck.getId(), message, now);
     }
@@ -220,7 +224,7 @@ public class DeckServiceImpl implements DeckService {
     @Transactional(readOnly = true)
     public List<DeckResponse> getDecks(UUID userId, UUID folderId) {
         if (folderId != null) {
-            // đảm bảo thư mục thuộc về user
+            // Ensure the folder belongs to the user
             getFolderIfPresent(folderId, userId);
             return this.deckRepository.findByUserIdAndFolderId(userId, folderId)
                     .stream()
@@ -258,7 +262,9 @@ public class DeckServiceImpl implements DeckService {
         String baseName = sourceName;
 
         if ((request.getNewName() != null) && !request.getNewName().isBlank()) {
-            baseName = trimAndValidateName(request.getNewName());
+            baseName = TextUtils.trimAndRequireNonBlank(
+                    request.getNewName(),
+                    () -> new RepeatWiseException(RepeatWiseError.DECK_NAME_REQUIRED));
         }
 
         if (!deckNameExists(baseName, userId, destinationFolderId)) {
@@ -269,7 +275,7 @@ public class DeckServiceImpl implements DeckService {
             throw new RepeatWiseException(RepeatWiseError.DECK_NAME_ALREADY_EXISTS, baseName);
         }
 
-        // Thử với suffix (copy), sau đó (copy 2), (copy 3)...
+        // Attempt suffix "(copy)", then "(copy 2)", "(copy 3)", etc.
         var candidate = baseName + COPY_SUFFIX;
         var counter = 2;
         while (deckNameExists(candidate, userId, destinationFolderId)) {
@@ -280,7 +286,10 @@ public class DeckServiceImpl implements DeckService {
     }
 
     private boolean deckNameExists(String name, UUID userId, UUID folderId) {
-        return this.deckRepository.existsByNameAndFolder(userId, folderId, name);
+        if (folderId == null) {
+            return this.deckRepository.existsByUserIdAndFolderIsNullAndNameIgnoreCaseAndDeletedAtIsNull(userId, name);
+        }
+        return this.deckRepository.existsByUserIdAndFolderIdAndNameIgnoreCaseAndDeletedAtIsNull(userId, folderId, name);
     }
 
     private void validateDeckNameUnique(String name, UUID userId, UUID folderId) {
@@ -290,7 +299,12 @@ public class DeckServiceImpl implements DeckService {
     }
 
     private void validateDeckNameUniqueExcluding(String name, UUID userId, UUID folderId, UUID deckId) {
-        final var exists = this.deckRepository.existsByNameAndFolderExcludingId(userId, folderId, name, deckId);
+        final boolean exists;
+        if (folderId == null) {
+            exists = this.deckRepository.existsByUserIdAndFolderIsNullAndIdNotAndNameIgnoreCaseAndDeletedAtIsNull(userId, deckId, name);
+        } else {
+            exists = this.deckRepository.existsByUserIdAndFolderIdAndIdNotAndNameIgnoreCaseAndDeletedAtIsNull(userId, folderId, deckId, name);
+        }
         if (exists) {
             throw new RepeatWiseException(RepeatWiseError.DECK_NAME_ALREADY_EXISTS, name);
         }
@@ -317,20 +331,5 @@ public class DeckServiceImpl implements DeckService {
                         userId));
     }
 
-    private String trimAndValidateName(String name) {
-        final var trimmed = name != null ? name.trim() : "";
-        if (trimmed.isEmpty()) {
-            throw new RepeatWiseException(RepeatWiseError.DECK_NAME_ALREADY_EXISTS, trimmed);
-        }
-        return trimmed;
-    }
-
-    private String trimToNull(String value) {
-        if (value == null) {
-            return null;
-        }
-        final var trimmed = value.trim();
-        return trimmed.isEmpty() ? null : trimmed;
-    }
 }
 

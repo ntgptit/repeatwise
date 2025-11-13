@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Alert, Button, Container, Grid, Stack } from '@mui/material'
 import PageHelmet from '@/components/PageHelmet'
 import PageTitleWrapper from '@/components/PageTitleWrapper'
@@ -13,11 +13,26 @@ import type {
   MoveFolderRequest,
   UpdateFolderRequest,
 } from '@/api/types/folder.types'
+import type {
+  CopyDeckRequest,
+  CreateDeckRequest,
+  DeckDto,
+  MoveDeckRequest,
+  UpdateDeckRequest,
+} from '@/api/types/deck.types'
 import { FolderTree } from '@/features/folders/components/FolderTree'
 import { FolderActionsPanel } from '@/features/folders/components/FolderActionsPanel'
 import { FolderDetailsPanel } from '@/features/folders/components/FolderDetailsPanel'
 import { FolderStatsPanel } from '@/features/folders/components/FolderStatsPanel'
-import { FolderDeckListPlaceholder } from '@/features/folders/components/FolderDeckListPlaceholder'
+import { DeckListPanel, type DeckScope } from '@/features/decks/components/DeckListPanel'
+import {
+  CopyDeckModal,
+  CreateDeckModal,
+  DeleteDeckDialog,
+  EditDeckModal,
+  MoveDeckModal,
+} from '@/features/decks/components/modals'
+import { CardManagerDialog } from '@/features/cards/components'
 import {
   CopyFolderModal,
   CreateFolderModal,
@@ -26,6 +41,7 @@ import {
   RenameFolderModal,
 } from '@/features/folders/components/modals'
 import { useFolderTree } from '@/features/folders/hooks/useFolderQueries'
+import { useFolderStats } from '@/features/folders/hooks/useFolderStats'
 import {
   useCopyFolder,
   useCreateFolder,
@@ -34,8 +50,21 @@ import {
   useUpdateFolder,
 } from '@/features/folders/hooks/useFolderMutations'
 import { findFolderNode } from '@/features/folders/utils/tree'
+import { useDecks } from '@/features/decks/hooks/useDeckQueries'
+import {
+  useCopyDeck,
+  useCreateDeck,
+  useDeleteDeck,
+  useMoveDeck,
+  useUpdateDeck,
+} from '@/features/decks/hooks/useDeckMutations'
 
 type ModalType = 'create' | 'rename' | 'move' | 'copy' | 'delete' | null
+type DeckModalType = 'create' | 'edit' | 'move' | 'copy' | 'delete' | null
+
+interface FolderManagementPageProps {
+  initialDeckScope?: DeckScope
+}
 
 const EMPTY_TREE: FolderTreeNode[] = []
 
@@ -70,7 +99,7 @@ const useInitialSelection = (nodes: FolderTreeNode[], currentId: string | null) 
   return [value, setValue] as const
 }
 
-export const FolderManagementPage = () => {
+export const FolderManagementPage = ({ initialDeckScope }: FolderManagementPageProps) => {
   const { data, isLoading, isError, refetch } = useFolderTree()
   const tree = data?.tree ?? EMPTY_TREE
   const [selectedId, setSelectedId] = useInitialSelection(tree, null)
@@ -78,6 +107,29 @@ export const FolderManagementPage = () => {
     () => findFolderNode(tree, selectedId ?? null),
     [tree, selectedId]
   )
+  const selectedFolderId = selectedFolder?.id ?? null
+
+  const {
+    data: folderStats,
+    isLoading: isStatsLoading,
+    isFetching: isStatsFetching,
+    isError: isStatsError,
+    error: statsError,
+    refetch: refetchFolderStats,
+    refresh: refreshFolderStats,
+  } = useFolderStats(selectedFolderId)
+
+  const folderStatsErrorMessage = isStatsError
+    ? resolveErrorMessage(statsError, 'Failed to load folder statistics. Please try again.')
+    : null
+  const isStatsRefreshing = isStatsFetching && !isStatsLoading
+  const refreshStatsSafely = useCallback(async () => {
+    try {
+      await refreshFolderStats()
+    } catch {
+      // no-op: keep UI responsive even if stats refresh fails
+    }
+  }, [refreshFolderStats])
   const [activeModal, setActiveModal] = useState<ModalType>(null)
   const [createParent, setCreateParent] = useState<FolderTreeNode | null>(null)
 
@@ -87,10 +139,60 @@ export const FolderManagementPage = () => {
   const { mutateAsync: copyFolder, isPending: isCopying } = useCopyFolder()
   const { mutateAsync: deleteFolder, isPending: isDeleting } = useDeleteFolder()
 
+  const [deckModal, setDeckModal] = useState<DeckModalType>(null)
+  const [activeDeck, setActiveDeck] = useState<DeckDto | null>(null)
+  const [cardManagerDeckId, setCardManagerDeckId] = useState<string | null>(null)
+  const [deckScope, setDeckScope] = useState<DeckScope>(() => {
+    if (initialDeckScope) {
+      return initialDeckScope
+    }
+    return selectedId ? 'selected' : 'root'
+  })
+
+  useEffect(() => {
+    if (!selectedId && deckScope === 'selected') {
+      setDeckScope('root')
+    }
+  }, [selectedId, deckScope])
+
   const closeModal = () => {
     setActiveModal(null)
     setCreateParent(null)
   }
+
+  const closeDeckModal = () => {
+    setDeckModal(null)
+    setActiveDeck(null)
+  }
+
+  const folderIdForDecks = deckScope === 'selected' ? selectedId ?? null : null
+  const {
+    data: deckData,
+    isLoading: isDecksLoading,
+    isFetching: isDecksFetching,
+    isError: isDecksError,
+    error: decksError,
+    refetch: refetchDecks,
+  } = useDecks(folderIdForDecks)
+  const decks = useMemo(() => deckData ?? [], [deckData])
+  const cardManagerDeck = useMemo(
+    () => (cardManagerDeckId ? decks.find(deck => deck.id === cardManagerDeckId) ?? null : null),
+    [decks, cardManagerDeckId]
+  )
+  const deckErrorMessage = isDecksError
+    ? resolveErrorMessage(decksError, 'Failed to load deck data. Please try again.')
+    : null
+
+  const { mutateAsync: createDeck, isPending: isCreatingDeck } = useCreateDeck()
+  const { mutateAsync: updateDeck, isPending: isUpdatingDeck } = useUpdateDeck()
+  const { mutateAsync: moveDeck, isPending: isMovingDeck } = useMoveDeck()
+  const { mutateAsync: copyDeck, isPending: isCopyingDeck } = useCopyDeck()
+  const { mutateAsync: deleteDeck, isPending: isDeletingDeck } = useDeleteDeck()
+
+  const activeDeckFolder = useMemo(
+    () => (activeDeck?.folderId ? findFolderNode(tree, activeDeck.folderId) : null),
+    [tree, activeDeck]
+  )
 
   const handleSelect = (folderId: string | null) => {
     setSelectedId(folderId)
@@ -138,6 +240,7 @@ export const FolderManagementPage = () => {
         payload,
       })
       notificationService.success('Folder updated successfully')
+      await refreshStatsSafely()
       closeModal()
     } catch (error) {
       notificationService.error(resolveErrorMessage(error, 'Unable to update folder'))
@@ -156,6 +259,7 @@ export const FolderManagementPage = () => {
       })
       notificationService.success('Folder moved successfully')
       setSelectedId(result.id)
+      await refreshStatsSafely()
       closeModal()
     } catch (error) {
       notificationService.error(resolveErrorMessage(error, 'Unable to move folder'))
@@ -194,6 +298,135 @@ export const FolderManagementPage = () => {
       notificationService.error(resolveErrorMessage(error, 'Unable to delete folder'))
     }
   }
+
+  const handleOpenCreateDeck = () => {
+    setActiveDeck(null)
+    setDeckModal('create')
+  }
+
+  const handleOpenEditDeck = (deck: DeckDto) => {
+    setActiveDeck(deck)
+    setDeckModal('edit')
+  }
+
+  const handleOpenMoveDeck = (deck: DeckDto) => {
+    setActiveDeck(deck)
+    setDeckModal('move')
+  }
+
+  const handleOpenCopyDeck = (deck: DeckDto) => {
+    setActiveDeck(deck)
+    setDeckModal('copy')
+  }
+
+  const handleOpenDeleteDeck = (deck: DeckDto) => {
+    setActiveDeck(deck)
+    setDeckModal('delete')
+  }
+
+  const handleOpenCardManager = (deck: DeckDto) => {
+    setCardManagerDeckId(deck.id)
+  }
+
+  const handleCloseCardManager = () => {
+    setCardManagerDeckId(null)
+  }
+
+  const handleCreateDeckSubmit = async (payload: CreateDeckRequest) => {
+    try {
+      await createDeck(payload)
+      notificationService.success('Deck created successfully')
+      await refreshStatsSafely()
+      closeDeckModal()
+    } catch (error) {
+      notificationService.error(resolveErrorMessage(error, 'Unable to create deck'))
+    }
+  }
+
+  const handleUpdateDeckSubmit = async (payload: UpdateDeckRequest) => {
+    if (!activeDeck) {
+      return
+    }
+
+    try {
+      await updateDeck({
+        deckId: activeDeck.id,
+        payload,
+      })
+      notificationService.success('Deck updated successfully')
+      await refreshStatsSafely()
+      closeDeckModal()
+    } catch (error) {
+      notificationService.error(resolveErrorMessage(error, 'Unable to update deck'))
+    }
+  }
+
+  const handleMoveDeckSubmit = async (payload: MoveDeckRequest) => {
+    if (!activeDeck) {
+      return
+    }
+
+    try {
+      await moveDeck({
+        deckId: activeDeck.id,
+        payload,
+      })
+      notificationService.success('Deck moved successfully')
+      await refreshStatsSafely()
+      closeDeckModal()
+    } catch (error) {
+      notificationService.error(resolveErrorMessage(error, 'Unable to move deck'))
+    }
+  }
+
+  const handleCopyDeckSubmit = async (payload: CopyDeckRequest) => {
+    if (!activeDeck) {
+      return
+    }
+
+    try {
+      const result = await copyDeck({
+        deckId: activeDeck.id,
+        payload,
+      })
+      notificationService.success(result?.message ?? 'Deck copied successfully')
+      await refreshStatsSafely()
+      closeDeckModal()
+    } catch (error) {
+      notificationService.error(resolveErrorMessage(error, 'Unable to copy deck'))
+    }
+  }
+
+  const handleDeleteDeckConfirm = async () => {
+    if (!activeDeck) {
+      return
+    }
+
+    try {
+      const result = await deleteDeck(activeDeck.id)
+      notificationService.success(result?.message ?? 'Deck deleted successfully')
+      await refreshStatsSafely()
+      closeDeckModal()
+    } catch (error) {
+      notificationService.error(resolveErrorMessage(error, 'Unable to delete deck'))
+    }
+  }
+
+  const handleCardsChanged = async (deckId: string) => {
+    await Promise.allSettled([refreshStatsSafely(), refetchDecks()])
+    if (cardManagerDeckId === deckId && !isDecksLoading) {
+      const latestDeck = decks.find(deck => deck.id === deckId)
+      if (!latestDeck) {
+        setCardManagerDeckId(null)
+      }
+    }
+  }
+
+  const createDeckLocationLabel =
+    deckScope === 'selected' && selectedFolder ? selectedFolder.name : 'Root level'
+  const createDeckFolderId =
+    deckScope === 'selected' && selectedFolder ? selectedFolder.id : null
+  const activeDeckLocationLabel = activeDeckFolder?.name ?? 'Root level'
 
 
   if (isLoading) {
@@ -250,9 +483,37 @@ export const FolderManagementPage = () => {
           </Grid>
           <Grid item xs={12} md={8}>
             <Stack spacing={3} sx={{ height: '100%' }}>
-              <FolderStatsPanel />
+              <FolderStatsPanel
+                folder={selectedFolder ?? null}
+                stats={folderStats ?? null}
+                isLoading={isStatsLoading}
+                isRefreshing={isStatsRefreshing}
+                error={folderStatsErrorMessage}
+                onRefresh={refreshStatsSafely}
+                onRetry={() => {
+                  void refetchFolderStats()
+                }}
+              />
               <FolderDetailsPanel folder={selectedFolder ?? null} allFolders={data?.list ?? []} />
-              <FolderDeckListPlaceholder />
+              <DeckListPanel
+                decks={decks}
+                isLoading={isDecksLoading}
+                isFetching={isDecksFetching}
+                error={deckErrorMessage}
+                scope={deckScope}
+                hasFolderSelection={Boolean(selectedFolder)}
+                currentFolderName={selectedFolder?.name ?? null}
+                onScopeChange={setDeckScope}
+                onCreateDeck={handleOpenCreateDeck}
+                onRetry={() => {
+                  void refetchDecks()
+                }}
+                onEditDeck={handleOpenEditDeck}
+                onMoveDeck={handleOpenMoveDeck}
+                onCopyDeck={handleOpenCopyDeck}
+                onDeleteDeck={handleOpenDeleteDeck}
+                onManageCards={handleOpenCardManager}
+              />
             </Stack>
           </Grid>
         </Grid>
@@ -294,6 +555,53 @@ export const FolderManagementPage = () => {
         isSubmitting={isDeleting}
         onClose={closeModal}
         onConfirm={handleDeleteConfirm}
+      />
+      <CreateDeckModal
+        open={deckModal === 'create'}
+        locationLabel={createDeckLocationLabel}
+        folderId={createDeckFolderId}
+        isSubmitting={isCreatingDeck}
+        onClose={closeDeckModal}
+        onSubmit={handleCreateDeckSubmit}
+      />
+      <EditDeckModal
+        open={deckModal === 'edit'}
+        deck={activeDeck}
+        locationLabel={activeDeckLocationLabel}
+        isSubmitting={isUpdatingDeck}
+        onClose={closeDeckModal}
+        onSubmit={handleUpdateDeckSubmit}
+      />
+      <MoveDeckModal
+        open={deckModal === 'move'}
+        deckName={activeDeck?.name ?? null}
+        currentFolderName={activeDeckLocationLabel}
+        currentFolderId={activeDeck?.folderId ?? null}
+        tree={tree}
+        isSubmitting={isMovingDeck}
+        onClose={closeDeckModal}
+        onSubmit={handleMoveDeckSubmit}
+      />
+      <CopyDeckModal
+        open={deckModal === 'copy'}
+        deck={activeDeck}
+        tree={tree}
+        isSubmitting={isCopyingDeck}
+        onClose={closeDeckModal}
+        onSubmit={handleCopyDeckSubmit}
+      />
+      <DeleteDeckDialog
+        open={deckModal === 'delete'}
+        deck={activeDeck}
+        isSubmitting={isDeletingDeck}
+        onClose={closeDeckModal}
+        onConfirm={handleDeleteDeckConfirm}
+      />
+      <CardManagerDialog
+        open={Boolean(cardManagerDeckId)}
+        deck={cardManagerDeck}
+        onClose={handleCloseCardManager}
+        onCardsChanged={handleCardsChanged}
       />
       <Footer />
     </>
