@@ -16,6 +16,7 @@ public class AppProperties {
     private final Srs srs = new Srs();
     private final Security security = new Security();
     private final Limits limits = new Limits();
+    private final Storage storage = new Storage();
 
     @Getter
     @Setter
@@ -46,5 +47,20 @@ public class AppProperties {
         private int maxCardsPerDeck;
         private int maxImportRows;
         private int maxFileSizeMb;
+        private int importSyncThreshold;
+        private int importBatchSize;
+        private int exportSyncThreshold;
+        private int maxExportRows;
+        private int exportBatchSize;
+        private int asyncJobTimeoutMinutes;
+    }
+
+    @Getter
+    @Setter
+    public static class Storage {
+        private String basePath;
+        private String importUploadsDir;
+        private String importErrorDir;
+        private String exportDir;
     }
 }

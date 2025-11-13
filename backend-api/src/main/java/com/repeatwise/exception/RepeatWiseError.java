@@ -12,6 +12,11 @@ import lombok.Getter;
 @Getter
 public enum RepeatWiseError {
 
+    /** Resource không tồn tại. */
+    RESOURCE_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.RESOURCE_NOT_FOUND, "error.resource.not.found"),
+    /** Lỗi hệ thống chung. */
+    INTERNAL_SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, ApiErrorCode.INTERNAL_SERVER_ERROR, "error.internal.server"),
+
     /** User attempts to access a forbidden resource. */
     UNAUTHORIZED_ACCESS(HttpStatus.FORBIDDEN, ApiErrorCode.UNAUTHORIZED_ACCESS, "error.auth.forbidden"),
     /** Login failed because credentials are incorrect. */
@@ -84,6 +89,42 @@ public enum RepeatWiseError {
             "error.review.daily.limit.reached"),
     /** User does not have configured SRS settings. */
     SRS_SETTINGS_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.SRS_SETTINGS_NOT_FOUND, "error.srs.settings.not.found"),
+
+    /** Import file is missing. */
+    IMPORT_FILE_REQUIRED(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_FILE_REQUIRED, "error.import.file.required"),
+    /** Import file exceeds size limit. */
+    IMPORT_FILE_TOO_LARGE(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_FILE_TOO_LARGE, "error.import.file.too.large"),
+    /** Import file has too many rows. */
+    IMPORT_TOO_MANY_ROWS(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_TOO_MANY_ROWS,
+            "error.import.row.limit.exceeded"),
+    /** Import file format invalid. */
+    IMPORT_INVALID_FORMAT(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_INVALID_FORMAT, "error.import.invalid.format"),
+    /** Import file missing required columns. */
+    IMPORT_MISSING_COLUMNS(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_MISSING_COLUMNS,
+            "error.import.missing.columns"),
+    /** Import file empty. */
+    IMPORT_EMPTY_FILE(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_EMPTY_FILE, "error.import.file.empty"),
+    /** Import would exceed deck capacity. */
+    IMPORT_DECK_CAPACITY_EXCEEDED(HttpStatus.BAD_REQUEST, ApiErrorCode.IMPORT_DECK_CAPACITY_EXCEEDED,
+            "error.import.deck.capacity.exceeded"),
+
+    /** Export format invalid. */
+    EXPORT_INVALID_FORMAT(HttpStatus.BAD_REQUEST, ApiErrorCode.EXPORT_INVALID_FORMAT, "error.export.invalid.format"),
+    /** Export scope invalid. */
+    EXPORT_INVALID_SCOPE(HttpStatus.BAD_REQUEST, ApiErrorCode.EXPORT_INVALID_SCOPE, "error.export.invalid.scope"),
+    /** Export too many cards. */
+    EXPORT_TOO_MANY_CARDS(HttpStatus.BAD_REQUEST, ApiErrorCode.EXPORT_TOO_MANY_CARDS,
+            "error.export.too.many.cards"),
+    /** Export file expired or missing. */
+    EXPORT_FILE_EXPIRED(HttpStatus.GONE, ApiErrorCode.EXPORT_FILE_EXPIRED, "error.export.file.expired"),
+    /** Export file generation failed. */
+    EXPORT_GENERATION_FAILED(HttpStatus.INTERNAL_SERVER_ERROR, ApiErrorCode.EXPORT_GENERATION_FAILED,
+            "error.export.generation.failed"),
+
+    /** Async job not found. */
+    JOB_NOT_FOUND(HttpStatus.NOT_FOUND, ApiErrorCode.JOB_NOT_FOUND, "error.job.not.found"),
+    /** Async job timeout. */
+    JOB_TIMEOUT(HttpStatus.REQUEST_TIMEOUT, ApiErrorCode.JOB_TIMEOUT, "error.job.timeout"),
 
     /** New password and confirmation do not match. */
     PASSWORD_MISMATCH(HttpStatus.BAD_REQUEST, ApiErrorCode.PASSWORD_MISMATCH, "error.user.password.mismatch"),

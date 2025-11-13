@@ -52,5 +52,22 @@ public final class ApiErrorCode {
 
     public static final String DAILY_REVIEW_LIMIT_EXCEEDED = "DAILY_REVIEW_LIMIT_EXCEEDED";
     public static final String SRS_SETTINGS_NOT_FOUND = "SRS_SETTINGS_NOT_FOUND";
+
+    public static final String IMPORT_FILE_REQUIRED = "IMPORT_FILE_REQUIRED";
+    public static final String IMPORT_FILE_TOO_LARGE = "IMPORT_FILE_TOO_LARGE";
+    public static final String IMPORT_TOO_MANY_ROWS = "IMPORT_TOO_MANY_ROWS";
+    public static final String IMPORT_INVALID_FORMAT = "IMPORT_INVALID_FORMAT";
+    public static final String IMPORT_MISSING_COLUMNS = "IMPORT_MISSING_COLUMNS";
+    public static final String IMPORT_EMPTY_FILE = "IMPORT_EMPTY_FILE";
+    public static final String IMPORT_DECK_CAPACITY_EXCEEDED = "IMPORT_DECK_CAPACITY_EXCEEDED";
+
+    public static final String EXPORT_INVALID_FORMAT = "EXPORT_INVALID_FORMAT";
+    public static final String EXPORT_INVALID_SCOPE = "EXPORT_INVALID_SCOPE";
+    public static final String EXPORT_TOO_MANY_CARDS = "EXPORT_TOO_MANY_CARDS";
+    public static final String EXPORT_FILE_EXPIRED = "EXPORT_FILE_EXPIRED";
+    public static final String EXPORT_GENERATION_FAILED = "EXPORT_GENERATION_FAILED";
+
+    public static final String JOB_NOT_FOUND = "JOB_NOT_FOUND";
+    public static final String JOB_TIMEOUT = "JOB_TIMEOUT";
 }
 

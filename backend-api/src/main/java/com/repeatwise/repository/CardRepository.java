@@ -66,5 +66,46 @@ public interface CardRepository extends JpaRepository<Card, UUID> {
             ORDER BY c.createdAt DESC
             """)
     List<Card> findActiveByDeckIdAndUserId(@Param("deckId") UUID deckId, @Param("userId") UUID userId);
+
+    /**
+     * Đếm số thẻ đang hoạt động trong deck.
+     */
+    @Query("""
+            SELECT COUNT(c) FROM Card c
+            WHERE c.deck.id = :deckId
+              AND c.deck.user.id = :userId
+              AND c.deletedAt IS NULL
+              AND c.deck.deletedAt IS NULL
+            """)
+    long countActiveByDeckIdAndUserId(@Param("deckId") UUID deckId, @Param("userId") UUID userId);
+
+    /**
+     * Đếm số thẻ đến hạn ôn (scope DUE_ONLY).
+     */
+    @Query("""
+            SELECT COUNT(c) FROM Card c
+            JOIN c.cardBoxPositions p
+            WHERE c.deck.id = :deckId
+              AND c.deck.user.id = :userId
+              AND c.deletedAt IS NULL
+              AND c.deck.deletedAt IS NULL
+              AND p.user.id = :userId
+              AND p.deletedAt IS NULL
+              AND p.dueDate <= CURRENT_DATE
+            """)
+    long countDueCardsByDeckIdAndUserId(@Param("deckId") UUID deckId, @Param("userId") UUID userId);
+
+    /**
+     * Lấy thẻ cùng CardBoxPosition tương ứng.
+     */
+    @EntityGraph(attributePaths = "cardBoxPositions")
+    @Query("""
+            SELECT c FROM Card c
+            WHERE c.deck.id = :deckId
+              AND c.deck.user.id = :userId
+              AND c.deletedAt IS NULL
+              AND c.deck.deletedAt IS NULL
+            """)
+    List<Card> findActiveWithPositionsByDeckIdAndUserId(@Param("deckId") UUID deckId, @Param("userId") UUID userId);
 }
 
